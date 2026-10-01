@@ -2,53 +2,20 @@
 from dataclasses import asdict
 import logging
 
-from django.conf import settings
 from django.db import DatabaseError, transaction
 from django.utils import timezone
 
 from catalog import audit
-from catalog.hashes import content_digest, digest
+from catalog.builds import input_from_job, check_fixed_input
+from config.runtime import require_available
 from catalog.models import ContextUnit, EvidenceUnit, ImportJob
-from catalog.profiles import validate_index
 from catalog.selectors import maintenance_job
 from catalog.services import check_import_allowed, check_source_access, submit_import
 from config import components
 from contracts.errors import DomainError
-from contracts.types import ImportInput
-from contracts.text import normalize_text
 from ingestion.validation import validate_document
 
 logger = logging.getLogger(__name__)
-
-
-def require_available():
-    if settings.KB_MAINTENANCE:
-        raise DomainError("MAINTENANCE", "服务处于维护窗口", 503, retryable=True)
-
-
-def input_from_job(job):
-    return ImportInput(source_id=job.source_id, build_id=job.id, input_text=job.input_text,
-                       title=job.title, format=job.format, source_type=job.source.source_type,
-                       document_schema=job.document_schema, schema_version=job.schema_version,
-                       content_hash=job.content_hash, source_date=job.source_date,
-                       domain_metadata=job.domain_metadata)
-
-
-def check_fixed_input(job):
-    try:
-        validate_index(job.index_profile)
-        if digest(job.index_profile) != job.index_profile_hash:
-            raise ValueError("profile_hash")
-    except (DomainError, ValueError, TypeError):
-        raise DomainError("IMPORT_CONFIGURATION_ERROR", "固定构建配置不受支持或已损坏") from None
-    data = {key: getattr(job, key) for key in (
-        "input_text", "title", "author", "source_date", "document_schema",
-        "schema_version", "source_metadata", "domain_metadata")}
-    if (content_digest(data) != job.content_hash or job.domain_metadata != {}
-            or job.source_metadata != {} or not job.input_text
-            or len(job.input_text) > 8000 or len(job.input_text.split("\n")) > 200
-            or normalize_text(job.input_text) != job.input_text):
-        raise DomainError("CONTENT_SCHEMA_INVALID", "固定输入校验失败")
 
 
 def run_import_job(job_id, actor, retry=False, builder=None):

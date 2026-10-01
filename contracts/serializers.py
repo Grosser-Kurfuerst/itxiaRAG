@@ -181,3 +181,80 @@ class JobReportSerializer(JobSummarySerializer):
     started_at = serializers.DateTimeField(allow_null=True)
     finished_at = serializers.DateTimeField(allow_null=True)
     error_detail = serializers.CharField(allow_null=True)
+
+
+class ReviewSerializer(StrictSerializer):
+    decision = StrictChoice(choices=["approved", "rejected"])
+    note = StrictString(max_length=2000)
+
+
+class SourcePatchSerializer(StrictSerializer):
+    source_url = StrictString(max_length=2048, allow_null=True, required=False)
+    visibility = StrictChoice(choices=["public", "internal"], required=False)
+    authorization_status = StrictChoice(choices=["confirmed", "pending", "revoked"], required=False)
+    authorization_note = StrictString(max_length=2000, required=False)
+    status = StrictChoice(choices=["active", "disabled"], required=False)
+    validate_source_url = SourceImportSerializer.validate_source_url
+
+    def validate(self, attrs):
+        if not attrs:
+            raise serializers.ValidationError("PATCH 至少需要一个可维护字段")
+        return attrs
+
+
+class SourceResponseSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    source_type = serializers.CharField()
+    canonical_locator = serializers.CharField()
+    source_url = serializers.CharField(allow_null=True)
+    visibility = serializers.CharField()
+    authorization_status = serializers.CharField()
+    authorization_note = serializers.CharField()
+    status = serializers.CharField()
+    current_build_id = serializers.UUIDField(allow_null=True)
+    created_at = serializers.DateTimeField()
+    updated_at = serializers.DateTimeField()
+
+
+class CitationSerializer(serializers.Serializer):
+    evidence_id = serializers.UUIDField()
+    context_role = serializers.CharField()
+    knowledge_type = serializers.CharField()
+    evidence_role = serializers.CharField()
+    locator = serializers.JSONField()
+
+
+class ContextResponseSerializer(serializers.Serializer):
+    context_id = serializers.UUIDField()
+    title = serializers.CharField()
+    text = serializers.CharField(trim_whitespace=False)
+    scope_fields = serializers.JSONField()
+    source_id = serializers.UUIDField()
+    source_title = serializers.CharField()
+    source_url = serializers.CharField(allow_null=True)
+    build_id = serializers.UUIDField()
+    content_hash = serializers.CharField()
+    source_date = serializers.DateField(allow_null=True)
+    source_type = serializers.CharField()
+    document_schema = serializers.CharField()
+    schema_version = serializers.IntegerField()
+    knowledge_types = serializers.ListField(child=serializers.CharField())
+    locator = serializers.JSONField()
+    field_sources = serializers.JSONField()
+    citations = CitationSerializer(many=True)
+    match_status = serializers.CharField()
+    warnings = serializers.ListField(child=serializers.CharField())
+    flags = serializers.ListField(child=serializers.CharField())
+
+
+class EvidenceResponseSerializer(serializers.Serializer):
+    evidence_id = serializers.UUIDField()
+    context_id = serializers.UUIDField()
+    body = serializers.CharField(trim_whitespace=False)
+    knowledge_type = serializers.CharField()
+    evidence_role = serializers.CharField()
+    context_role = serializers.CharField()
+    locator = serializers.JSONField()
+    structured_fields = serializers.JSONField()
+    warnings = serializers.ListField(child=serializers.CharField())
+    context = ContextResponseSerializer()

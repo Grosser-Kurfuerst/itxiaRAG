@@ -26,3 +26,36 @@ def job_report(job):
             "contexts": contexts, **{key: getattr(job, key) for key in (
                 "quality_report", "current_step", "attempt_count", "created_at",
                 "started_at", "finished_at", "error_detail")}}
+
+
+def source_summary(source):
+    return {key: getattr(source, key) for key in (
+        "id", "source_type", "canonical_locator", "source_url", "visibility",
+        "authorization_status", "authorization_note", "status", "current_build_id", "created_at", "updated_at")}
+
+
+def context_response(parent, matched_evidence_ids=None):
+    job, source = parent.build, parent.build.source
+    result = {
+        "context_id": parent.pk, "title": parent.title, "text": parent.body,
+        "scope_fields": parent.scope_fields, "source_id": source.pk, "source_title": job.title,
+        "source_url": source.source_url, "build_id": job.pk, "content_hash": job.content_hash,
+        "source_date": job.source_date, "source_type": source.source_type,
+        "document_schema": job.document_schema, "schema_version": job.schema_version,
+        "knowledge_types": parent.knowledge_types, "locator": parent.locator,
+        "field_sources": parent.field_sources, "match_status": "uncertain",
+        "warnings": parent.warnings, "flags": ["date_unknown"] if job.source_date is None else [],
+        "citations": [{"evidence_id": child.pk, "context_role": child.context_role,
+                       "knowledge_type": child.knowledge_type, "evidence_role": child.evidence_role,
+                       "locator": child.locator} for child in parent.children.all()],
+    }
+    if matched_evidence_ids is not None:
+        result["matched_evidence_ids"] = matched_evidence_ids
+    return result
+
+
+def evidence_response(child):
+    return {"evidence_id": child.pk, "context_id": child.context_id,
+            **{key: getattr(child, key) for key in (
+                "body", "knowledge_type", "evidence_role", "context_role", "locator", "structured_fields", "warnings")},
+            "context": context_response(child.context)}

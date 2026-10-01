@@ -64,7 +64,13 @@ REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "api.errors.exception_handler",
 }
 PROFILE_DIR = Path(os.environ.get("PROFILE_DIR", str(BASE_DIR / "profiles/iteration1")))
-SPECTACULAR_SETTINGS = {"TITLE": "itxiaAgent Knowledge API", "VERSION": "1.0.0", "SERVE_INCLUDE_SCHEMA": False}
+SPECTACULAR_SETTINGS = {
+    "TITLE": "itxiaAgent Knowledge API", "VERSION": "1.0.0", "SERVE_INCLUDE_SCHEMA": False,
+    "ENUM_NAME_OVERRIDES": {
+        "ImportStatusEnum": ["pending", "running", "succeeded", "failed"],
+        "SourcePatchStatusEnum": ["active", "disabled"],
+    },
+}
 LOGGING = {
     "version": 1, "disable_existing_loggers": False,
     "formatters": {"json": {"()": "config.logging.SafeJSONFormatter"}},

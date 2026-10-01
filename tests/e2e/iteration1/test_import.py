@@ -43,8 +43,7 @@ def test_real_http_and_cli_import_dedup_report_and_visibility(tmp_path):
     command("kb_job", "--id", first["build_id"], "--actor", name, "--resume", expected=4)
     assert request("GET", job_path, token)[1]["contexts"][0]["context_id"] == parent["context_id"]
     assert request("POST", job_path + "retry/", token, {})[0] == 409
-    # 本步不开放发布、详情和搜索。
-    for path in (job_path + "publish/", f"/api/v1/contexts/{parent['context_id']}/"):
-        assert request("GET", path, token)[0] == 404
+    # 未发布的候选即使存在详情入口也不可见。
+    assert request("GET", f"/api/v1/contexts/{parent['context_id']}/", token)[0] == 404
     code, invalid = request("POST", "/api/v1/sources/", token, {**data, "domain_metadata": {"conflicts": []}})
     assert code == 400 and invalid["error"]["code"] == "INVALID_ARGUMENT"

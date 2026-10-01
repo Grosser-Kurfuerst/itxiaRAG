@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.db import DatabaseError
+from rest_framework.exceptions import ValidationError
 
 from contracts.errors import DomainError
 
@@ -9,7 +10,10 @@ class KBCommand(BaseCommand):
         try:
             return self.run(*args, **options)
         except DomainError as exc:
-            raise CommandError(f"{exc.code}: {exc.message}", returncode=5 if exc.status == 503 else 2) from None
+            status = 5 if exc.status == 503 else (3 if exc.status == 409 else 2)
+            raise CommandError(f"{exc.code}: {exc.message}", returncode=status) from None
+        except ValidationError:
+            raise CommandError("INVALID_ARGUMENT: 输入字段不符合约定", returncode=2) from None
         except DatabaseError:
             raise CommandError("DEPENDENCY_UNAVAILABLE", returncode=5) from None
         except (OSError, UnicodeError):

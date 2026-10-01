@@ -1,0 +1,18 @@
+{
+  "source_type": "manual",
+  "canonical_locator": "manual:demo-basic-001",
+  "source_url": null,
+  "visibility": "public",
+  "authorization_status": "confirmed",
+  "authorization_note": "社团自编合成样本，允许公开试用",
+  "title": "电脑维护基础",
+  "author": "演示维护者",
+  "source_date": null,
+  "format": "txt",
+  "document_schema": "generic_note",
+  "schema_version": 1,
+  "source_metadata": {},
+  "domain_metadata": {},
+  "redaction_confirmed": true,
+  "require_manual_review": false
+}

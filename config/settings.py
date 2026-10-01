@@ -56,6 +56,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DATA_UPLOAD_MAX_MEMORY_SIZE = 131072
 KB_MAINTENANCE = boolean("KB_MAINTENANCE")
 REST_FRAMEWORK = {
+    "DEFAULT_PARSER_CLASSES": ["api.parsers.LimitedJSONParser"],
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework.authentication.TokenAuthentication"],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],

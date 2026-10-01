@@ -1,0 +1,50 @@
+from drf_spectacular.utils import extend_schema
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from catalog.policies import require_permission
+from catalog.presenters import job_report, job_summary
+from catalog.selectors import maintenance_job
+from contracts.serializers import (EmptyObject, ImportContentSerializer, JobReportSerializer,
+                                   JobSummarySerializer, SourceImportSerializer)
+from ingestion.pipeline import import_text, resume_import
+
+
+def validated(serializer_class, data):
+    serializer = serializer_class(data=data)
+    serializer.is_valid(raise_exception=True)
+    return serializer.validated_data
+
+
+class SourceImportView(APIView):
+    @extend_schema(request=SourceImportSerializer, responses={200: JobSummarySerializer})
+    def post(self, request):
+        require_permission(request.user, "maintain_source")
+        data = validated(SourceImportSerializer, request.data)
+        job, reused = import_text(data, request.user)
+        return Response(JobSummarySerializer(job_summary(job, reused)).data)
+
+
+class SourceUpdateImportView(APIView):
+    @extend_schema(request=ImportContentSerializer, responses={200: JobSummarySerializer})
+    def post(self, request, id):
+        require_permission(request.user, "maintain_source")
+        data = validated(ImportContentSerializer, request.data)
+        job, reused = import_text(data, request.user, source_id=id)
+        return Response(JobSummarySerializer(job_summary(job, reused)).data)
+
+
+class JobView(APIView):
+    @extend_schema(responses={200: JobReportSerializer})
+    def get(self, request, id):
+        job = maintenance_job(id, request.user)
+        return Response(JobReportSerializer(job_report(job)).data)
+
+
+class JobRetryView(APIView):
+    @extend_schema(request=EmptyObject, responses={200: JobSummarySerializer})
+    def post(self, request, id):
+        require_permission(request.user, "maintain_source")
+        validated(EmptyObject, request.data)
+        job = resume_import(id, request.user, retry=True)
+        return Response(JobSummarySerializer(job_summary(job)).data)

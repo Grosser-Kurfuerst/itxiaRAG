@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | S0 | 容器、依赖、健康检查、日志和验收入口 | 验证通过；第 1 轮只读评审无阻塞 |
 | S1 | 五表、配置、身份与初始化 | 验证通过；第 1 轮只读评审无阻塞 |
-| S2 | 同步导入、固定输入、报告与恢复 | 待实现 |
+| S2 | 同步导入、固定输入、报告与恢复 | 验证通过；第 1 轮有效只读评审无阻塞 |
 | S3 | 人工发布、引用、撤回与更新 | 待实现 |
 | S4 | 关键词检索与最终权限复核 | 待实现 |
 | S5 | 自动放行和成功构建恢复 | 待实现 |
@@ -36,3 +36,13 @@
 - 独立 Compose 空库完成 up／全部迁移／初始化／HTTP 验收；主项目 down/up 和重复 migrate 前后账号 ID、配置 hash 快照一致。验收另输出源码摘要、依赖版本和实际配置 hash。
 - 专用 reviewer 角色沿用 S0 的模型不可用限制，默认只读 reviewer 第 1 轮 `NO_BLOCKING_ISSUES`。
 - 提交：`feat(catalog): 实现 S1 存储初始化与账号权限`（提交 hash 见 Git 历史）。
+
+## S2
+
+- 新增严格 Serializer、保真规范化／内容 hash、纯解析器／处理器与 DTO、同步 T1/T2 编排、来源锁去重、维护 selector／报告、四个 API、`kb_import`／`kb_job` 和合成样本。所有候选保持 pending，未提前发布。
+- `make test-unit` 35 passed、`make test-integration` 15 passed、`make acceptance STEP=S2` 3 passed。覆盖并发首建去重、Markdown 保真、失败／中断回滚与恢复、固定输入／成功父子 ID、权限／复核冲突、审计失败、维护模式和大小限制；OpenAPI 使用实际 Serializer 验证。
+- 验收发现并修复了空元数据字段在 OpenAPI 中被省略的问题。未连接外部资料／模型；失败注入只在测试中，HTTP／命令主链路使用真实服务和 PostgreSQL。
+- 独立项目 `itxia-phase1-s2fresh` 从空库 up／全部迁移／init／S2 验收通过；主项目重启及重复迁移前后账号、Token 摘要、来源／任务／父子 ID、内容／配置 hash 和审计快照一致，再次 S2 HTTP 验收通过。
+- Django 系统检查、`makemigrations --check --dry-run` 和 `spectacular --validate --fail-on-warn` 均通过。
+- 评审启动曾三次遇到模型容量不足，随后原模型恢复，未切换模型；第 1 轮有效只读评审 `NO_BLOCKING_ISSUES`。
+- 提交：`feat(ingestion): 实现 S2 同步候选导入与恢复`（提交 hash 见 Git 历史）。

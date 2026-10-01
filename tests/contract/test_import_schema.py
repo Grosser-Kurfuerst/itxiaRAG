@@ -16,4 +16,4 @@ def test_example_matches_serializer_and_generated_openapi():
     properties = schema["components"]["schemas"]["SourceImport"]["properties"]
     assert set(properties) == set(serializer.fields)
     assert properties["schema_version"]["type"] == "integer"
-    assert "/api/v1/search/" not in schema["paths"]
+    assert "/api/v1/search/" in schema["paths"]

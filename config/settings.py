@@ -69,6 +69,7 @@ SPECTACULAR_SETTINGS = {
     "ENUM_NAME_OVERRIDES": {
         "ImportStatusEnum": ["pending", "running", "succeeded", "failed"],
         "SourcePatchStatusEnum": ["active", "disabled"],
+        "ScenarioEnum": ["general", "purchase", "repair"],
     },
 }
 LOGGING = {

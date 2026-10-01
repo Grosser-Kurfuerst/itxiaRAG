@@ -2,8 +2,10 @@ from django.urls import path
 
 from api.views import JobRetryView, JobView, SourceImportView, SourceUpdateImportView
 from api.views import JobReviewView, JobPublishView, SourceView, SourceWithdrawView, ContextView, EvidenceView
+from api.views import SearchView
 
 urlpatterns = [
+    path("search/", SearchView.as_view(), name="search"),
     path("sources/", SourceImportView.as_view(), name="source-import"),
     path("sources/<uuid:id>/imports/", SourceUpdateImportView.as_view(), name="source-update-import"),
     path("import-jobs/<uuid:id>/", JobView.as_view(), name="job"),

@@ -13,10 +13,10 @@ make up ITERATION=1 ENV_FILE=/tmp/itxiaRAG.env
 make migrate ITERATION=1 ENV_FILE=/tmp/itxiaRAG.env
 make test-unit ENV_FILE=/tmp/itxiaRAG.env
 make test-integration ENV_FILE=/tmp/itxiaRAG.env
-make acceptance ITERATION=1 STEP=S3 ENV_FILE=/tmp/itxiaRAG.env
+make acceptance ITERATION=1 STEP=S4 ENV_FILE=/tmp/itxiaRAG.env
 ```
 
-服务仅监听 `127.0.0.1:18080`；可通过 APP_PORT 改端口。`/health/live/` 返回 200；S0～S3 尚无知识查询，`/health/ready/` 返回 503。S3 开放短笔记导入、人工复核、发布、父／子引用和来源撤回；关键词查询尚未开放。app 的容器健康检查只检查 live。
+服务仅监听 `127.0.0.1:18080`；可通过 APP_PORT 改端口。`/health/live/` 返回 200；S4 在迁移与配置就绪后 `/health/ready/` 返回 200，否则 503。现已开放短笔记导入、人工复核、发布、关键词检索、父／子引用和来源撤回。app 的容器健康检查只检查 live。
 
 `make acceptance` 不指定 STEP 时验收最终 S6；请求未完成步骤会报错。验收通过真实 HTTP 调用运行中的服务，JUnit 报告在 app 容器 `/tmp/itxia-acceptance/`，可用 `docker compose cp` 导出到仓库外。`make test-unit` 在相同 Python 容器内执行全量离线单元／契约测试。
 
@@ -75,3 +75,16 @@ python manage.py kb_withdraw --source <来源UUID> --actor maintainer
 复核只记录结论，批准后仍需显式发布。发布指针与审计同事务提交；重复发布当前构建幂等，过时候选返回 409。`GET /api/v1/contexts/{id}/` 和 `/api/v1/evidence/{id}/` 只返回当前已发布资料；候选、旧引用、无权对象均 404。更新内容重新导入，新稿发布前保留旧稿可读。
 
 `PATCH /api/v1/sources/{id}/` 只维护链接、授权、visibility 与 active／disabled；`POST /api/v1/sources/{id}/withdraw/` 幂等撤回，保留正文、指针和审计。public 可收紧为 internal，反向操作须另建已脱敏且获公开授权的来源。withdrawn 不可恢复。维护模式允许报告、停用和撤回，拒绝发布及读者详情；S3 自动放行清单仍为空。
+
+
+## 关键词检索（S4）
+
+已认证账号调用 `POST /api/v1/search/`，例如：
+
+```json
+{"query":"备份", "preprocess":"auto", "scenario":"general", "filters":{}, "top_k":5}
+```
+
+返回完整 `contexts` 和引用、实际配置 hash、`query_id`，不生成答案。连续中文按短语匹配，可用空格分隔关键词；本阶段只支持 general 与空 confirmed_context。`filters.source_ids`／`knowledge_types` 只缩小范围，普通账号看不到 internal 或未发布候选。
+
+`preprocess=bypass` 跳过处理器，auto 默认 NoOp。未来适配器通过 `config.components` 注入，并须自行限制外部 I/O 超时；当前没有 LLM 或线程池。返回前再次复核权限与当前构建，64 KiB 预算不足时整父段跳过并返回 `context_incomplete`。`no_result` 表示正常未命中；空结果且降级时为 `insufficient_evidence`。S4 仍需人工批准并发布。

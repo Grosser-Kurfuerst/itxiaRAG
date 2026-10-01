@@ -12,7 +12,7 @@
 | S1 | 五表、配置、身份与初始化 | 验证通过；第 1 轮只读评审无阻塞 |
 | S2 | 同步导入、固定输入、报告与恢复 | 验证通过；第 1 轮有效只读评审无阻塞 |
 | S3 | 人工发布、引用、撤回与更新 | 验证通过；2 轮只读评审均无阻塞 |
-| S4 | 关键词检索与最终权限复核 | 待实现 |
+| S4 | 关键词检索与最终权限复核 | 已实现；70 项离线、36 项 PostgreSQL 集成、5 项真实 HTTP／命令验收通过；空库、升级、重启和 OpenAPI 严格校验通过；第 1 轮有效只读评审无阻塞 |
 | S5 | 自动放行和成功构建恢复 | 待实现 |
 | S6 | 全量验收、演示与运行交接 | 待实现 |
 
@@ -56,3 +56,12 @@
 - 主项目 down/up、重复 migrate 前后完整状态快照一致；随后 S3 HTTP／命令验收再次 4 passed。
 - 两轮只读评审均为 `NO_BLOCKING_ISSUES`，第 2 轮检查配置枚举命名修复与最终文档。
 - 提交：`feat(publish): 实现 S3 人工发布与父子引用`（提交 hash 见 Git 历史）。
+
+## S4
+
+- 新增严格查询 Serializer（general／空条件子集）、NoOp／bypass／失败回退处理器协议、PostgreSQL 参数化关键词后端、SearchScope、父段聚合和 64 KiB 整段预算；新增 `POST /api/v1/search/`，ready 在配置与查询后端可用时返回 200。
+- 查询只读取当前 active、授权 confirmed、已发布且与活动 IndexProfile 匹配的父段；按证据分数、稳定 ID 在数据库排序后取候选，再按父段返回完整正文和全部引用，最终再次读取账号与当前指针。
+- `domain_metadata`、场景条件和反馈仍未参与查询；本步固定 concept/general，响应 `feedback_available=false`。没有引入向量、LLM、Worker 或 QueryRecord。
+- `make test-unit` 70 passed、`make test-integration` 36 passed、`make acceptance STEP=S4` 5 passed；独立空库、S3 数据升级／重启和留存发布资料检索均通过。`spectacular --validate --fail-on-warn`、`makemigrations --check --dry-run` 和 Django system check 通过。
+- 旧 S0～S3 断言已按真实开放的 search 路由更新；README、AGENTS 和实施文档入口同步到 S4。专用 reviewer 角色因模型供应方不可用未能启动，默认只读 reviewer 第 1 轮有效评审为 `NO_BLOCKING_ISSUES`。
+- 提交：`feat(retrieval): 实现 S4 关键词检索与父段返回`（hash 见 Git 历史）。

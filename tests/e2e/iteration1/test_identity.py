@@ -39,7 +39,7 @@ def test_account_command_and_real_http_token_revocation(tmp_path):
     assert key not in output and token_path.stat().st_mode & 0o777 == 0o600
     status, document = schema(key)
     assert status == 200 and document["openapi"].startswith("3.")
-    assert "/api/v1/search/" not in document["paths"]
+    assert "/api/v1/search/" in document["paths"]
     command("kb_account", "--username", name + "-plain", "--permissions", "", "--token-file", str(tmp_path / "plain.token"))
     assert schema((tmp_path / "plain.token").read_text().strip())[0] == 403
     command("kb_account", "--username", name, "--revoke-token")

@@ -2,7 +2,7 @@
 
 ## 项目结构
 
-当前实现到迭代一 S3，进度见 `docs/phase1/implementation-progress.md`。`config/` 负责启动，`catalog/` 负责存储和权限，`contracts/` 与 `api/` 提供边界契约，`ingestion/` 负责纯解析与同步编排；测试在 `tests/`，固定配置在 `profiles/iteration1/`，合成样本在 `fixtures/iteration1/`。
+当前实现到迭代一 S4，进度见 `docs/phase1/implementation-progress.md`。`config/` 负责启动，`catalog/` 负责存储和权限，`contracts/` 与 `api/` 提供边界契约，`ingestion/` 负责纯解析与同步编排，`retrieval/` 负责关键词检索；测试在 `tests/`，固定配置在 `profiles/iteration1/`，合成样本在 `fixtures/iteration1/`。
 
 - `docs/requirements.md`：总体业务需求、边界和验收目标。
 - `docs/technology-selection.md`：总体技术调研与选型理由。
@@ -20,7 +20,7 @@ make up ITERATION=1
 make migrate ITERATION=1
 make test-unit
 make test-integration
-make acceptance ITERATION=1 STEP=S3
+make acceptance ITERATION=1 STEP=S4
 ```
 
 `test-unit` 运行离线单元／契约测试，`test-integration` 使用隔离 PostgreSQL 测试库。阶段发布另验收空库启动、升级、放行和实际业务链路。

@@ -12,6 +12,9 @@ from catalog.selectors import maintenance_job
 from contracts.serializers import (EmptyObject, ImportContentSerializer, JobReportSerializer,
                                    JobSummarySerializer, SourceImportSerializer)
 from ingestion.pipeline import import_text, resume_import
+from contracts.query import QuerySerializer, SearchResponseSerializer
+from retrieval.service import search
+from uuid import uuid4
 
 
 def validated(serializer_class, data):
@@ -102,3 +105,11 @@ class EvidenceView(APIView):
     def get(self, request, id):
         child = selectors.evidence_detail(id, request.user)
         return Response(EvidenceResponseSerializer(presenters.evidence_response(child)).data)
+
+
+class SearchView(APIView):
+    @extend_schema(request=QuerySerializer, responses={200: SearchResponseSerializer})
+    def post(self, request):
+        data = validated(QuerySerializer, request.data)
+        result = search(data, request.user, request_id=str(uuid4()))
+        return Response(SearchResponseSerializer(result).data)

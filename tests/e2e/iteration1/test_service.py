@@ -18,12 +18,12 @@ def get(path):
         return response.status, response.read()
 
 
-def test_http_service_is_live_and_query_is_not_yet_ready():
+def test_http_service_and_query_are_ready():
     code, body = get("/health/live/")
     assert code == 200 and json.loads(body) == {"status": "live"}
     code, body = get("/health/ready/")
-    assert code == 503 and json.loads(body) == {"status": "not_ready"}
+    assert code == 200 and json.loads(body) == {"status": "ready"}
     assert get("/api/schema/")[0] == 401
     assert get("/api/v1/sources/")[0] == 401
-    for path in ("/api/v1/search/",):
-        assert get(path)[0] == 404
+    assert get("/api/v1/search/")[0] == 401
+    assert get("/api/v1/feedback/")[0] == 404

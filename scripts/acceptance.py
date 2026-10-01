@@ -60,6 +60,8 @@ def main():
         files.append("tests/e2e/iteration1/test_import.py")
     if step >= 3:
         files.append("tests/e2e/iteration1/test_publish.py")
+    if step >= 4:
+        files.append("tests/e2e/iteration1/test_search.py")
     return subprocess.call([
         sys.executable, "-m", "pytest", *files, "-q",
         "--step", args.step, "--junitxml", str(report / (args.step + ".xml")),

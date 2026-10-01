@@ -11,7 +11,8 @@ class SafeJSONFormatter(logging.Formatter):
                 "level": record.levelname, "logger": record.name,
                 "event": getattr(record, "event", "application_event")}
         for key in ("request_id", "query_id", "actor_id", "source_id", "job_id",
-                    "error_code", "error_class", "duration_ms", "status"):
+                    "error_code", "error_class", "duration_ms", "status",
+                    "index_profile_hash", "query_profile_hash", "context_ids"):
             if hasattr(record, key):
                 data[key] = getattr(record, key)
         return json.dumps(data, ensure_ascii=False, default=str)

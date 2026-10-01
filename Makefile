@@ -12,6 +12,7 @@ up:
 	$(COMPOSE) up -d --build --wait
 migrate:
 	$(COMPOSE) exec -T app python manage.py migrate --noinput
+	$(COMPOSE) exec -T app python manage.py kb_init --profiles profiles/iteration1
 test-unit:
 	$(COMPOSE) exec -T app python -m pytest tests/unit tests/contract -q
 test-integration:

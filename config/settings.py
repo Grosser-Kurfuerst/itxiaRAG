@@ -13,11 +13,18 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.admin",
     "rest_framework",
+    "rest_framework.authtoken",
+    "drf_spectacular",
+    "catalog",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
 ]
 ROOT_URLCONF = "config.urls"
 TEMPLATES = [{
@@ -48,7 +55,15 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DATA_UPLOAD_MAX_MEMORY_SIZE = 131072
 KB_MAINTENANCE = boolean("KB_MAINTENANCE")
-REST_FRAMEWORK = {"DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"]}
+REST_FRAMEWORK = {
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
+    "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework.authentication.TokenAuthentication"],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "EXCEPTION_HANDLER": "api.errors.exception_handler",
+}
+PROFILE_DIR = Path(os.environ.get("PROFILE_DIR", str(BASE_DIR / "profiles/iteration1")))
+SPECTACULAR_SETTINGS = {"TITLE": "itxiaAgent Knowledge API", "VERSION": "1.0.0", "SERVE_INCLUDE_SCHEMA": False}
 LOGGING = {
     "version": 1, "disable_existing_loggers": False,
     "formatters": {"json": {"()": "config.logging.SafeJSONFormatter"}},

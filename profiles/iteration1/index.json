@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "document_processing": {
+    "format_parsers": {
+      "txt": {"id": "plain-text", "version": "1.0.0"},
+      "markdown": {"id": "plain-text", "version": "1.0.0"}
+    },
+    "schema_processors": {"generic_note.v1": {"id": "generic-note", "version": "1.0.0"}}
+  },
+  "normalization_version": 1,
+  "max_body_chars": 8000,
+  "max_body_lines": 200,
+  "context_schema_version": 1,
+  "evidence_schema_version": 1,
+  "retrieval_text_template_version": 1,
+  "lexical_backend": "postgres-keyword-v1",
+  "tokenizer": null,
+  "embedding": null
+}

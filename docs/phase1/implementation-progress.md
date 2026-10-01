@@ -9,7 +9,7 @@
 | 步骤 | 能力 | 验证／评审／提交 |
 | --- | --- | --- |
 | S0 | 容器、依赖、健康检查、日志和验收入口 | 验证通过；第 1 轮只读评审无阻塞 |
-| S1 | 五表、配置、身份与初始化 | 待实现 |
+| S1 | 五表、配置、身份与初始化 | 验证通过；第 1 轮只读评审无阻塞 |
 | S2 | 同步导入、固定输入、报告与恢复 | 待实现 |
 | S3 | 人工发布、引用、撤回与更新 | 待实现 |
 | S4 | 关键词检索与最终权限复核 | 待实现 |
@@ -26,3 +26,13 @@
 - Python 3.12.14、Django 5.2.17、PostgreSQL 17 固定镜像；配置与报告放仓库外，未修改忽略规则。
 - 专用 reviewer 角色因模型供应方不可用无法启动，改用同等只读职责的默认子智能体评审；第 1 轮 NO_BLOCKING_ISSUES。
 - 提交：`feat(platform): 实现 S0 服务启动与健康验收`（提交 hash 见 Git 历史）。
+
+## S1
+
+- 新增 `catalog` 五表及累积迁移、Profile 校验／hash、Token 认证、visibility 权限策略、审计基础和 `kb_init`／`kb_account` 命令；仅开放受维护权限保护的 `/api/schema/`，不开放来源或查询空壳。
+- `make migrate`（含 `kb_init`，重复执行幂等）、`make test-unit`（13 passed）、`make test-integration`（3 passed）、`make acceptance STEP=S1`（2 passed）通过；迁移 `makemigrations --check --dry-run` 无漂移。
+- 集成测试使用真实 PostgreSQL 验证五表约束、单例、FK、配置冲突、Token 文件 0600、撤销和 `is_staff` 不替代 `read_internal`；真实 HTTP 验证无 Token=401、维护 Token=200、普通 Token=403。
+- S1 仍保持 `ready=503`，尚无导入、发布、详情和查询；配置／Token 不写入仓库。
+- 独立 Compose 空库完成 up／全部迁移／初始化／HTTP 验收；主项目 down/up 和重复 migrate 前后账号 ID、配置 hash 快照一致。验收另输出源码摘要、依赖版本和实际配置 hash。
+- 专用 reviewer 角色沿用 S0 的模型不可用限制，默认只读 reviewer 第 1 轮 `NO_BLOCKING_ISSUES`。
+- 提交：`feat(catalog): 实现 S1 存储初始化与账号权限`（提交 hash 见 Git 历史）。

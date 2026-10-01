@@ -9,3 +9,5 @@ def test_health_routes_exist_without_business_route_stubs():
     assert resolve("/health/ready/").url_name == "health-ready"
     with pytest.raises(Resolver404):
         resolve("/api/v1/search/")
+    with pytest.raises(Resolver404):
+        resolve("/api/v1/sources/")

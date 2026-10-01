@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "query_processing": {"processor_id": "noop-v1", "timeout_ms": 50},
+  "keyword": {"tokenizer_version": 1, "scorer_version": 1, "candidate_limit": 100, "max_terms": 16},
+  "response_context_bytes": 65536,
+  "default_top_k": 5,
+  "max_top_k": 20,
+  "embedding": null,
+  "rrf": null,
+  "reranker": null
+}

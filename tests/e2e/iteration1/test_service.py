@@ -23,5 +23,6 @@ def test_http_service_is_live_and_query_is_not_yet_ready():
     assert code == 200 and json.loads(body) == {"status": "live"}
     code, body = get("/health/ready/")
     assert code == 503 and json.loads(body) == {"status": "not_ready"}
-    for path in ("/api/schema/", "/api/v1/search/"):
+    assert get("/api/schema/")[0] == 401
+    for path in ("/api/v1/sources/", "/api/v1/search/"):
         assert get(path)[0] == 404

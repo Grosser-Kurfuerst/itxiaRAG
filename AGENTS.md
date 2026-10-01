@@ -2,7 +2,7 @@
 
 ## 项目结构
 
-当前仅有设计文档，尚无业务源码、测试目录、素材目录或构建脚本。
+当前实现到迭代一 S1，进度见 `docs/phase1/implementation-progress.md`。`config/` 负责启动，`catalog/` 负责存储和权限，`contracts/` 与 `api/` 提供边界契约；测试在 `tests/`，固定配置在 `profiles/iteration1/`。
 
 - `docs/requirements.md`：总体业务需求、边界和验收目标。
 - `docs/technology-selection.md`：总体技术调研与选型理由。
@@ -13,14 +13,17 @@
 
 ## 开发与验证命令
 
-目前没有应用启动或构建命令。用 `rg --files docs` 查阅文档；文档修改后检查表格、代码块、JSON 示例和本地链接。以下为实现阶段约定，当前不可运行：
+用 `rg --files docs` 查阅文档；修改后检查表格、代码块、JSON 示例和本地链接。容器运行说明见 README，私有配置放仓库外：
 
 ```sh
-python3 -m pytest tests/unit tests/contract
-python3 -m pytest tests/integration
+make up ITERATION=1
+make migrate ITERATION=1
+make test-unit
+make test-integration
+make acceptance ITERATION=1 STEP=S1
 ```
 
-第一条运行离线测试，第二条需隔离 PostgreSQL 及必要扩展。阶段发布另按技术设计验收空库启动、升级、自动放行／异常复核和实际业务链路。
+`test-unit` 运行离线单元／契约测试，`test-integration` 使用隔离 PostgreSQL 测试库。阶段发布另验收空库启动、升级、放行和实际业务链路。
 
 ## 编码与命名
 
@@ -28,13 +31,13 @@ python3 -m pytest tests/integration
 
 ## 测试要求
 
-计划使用 pytest、pytest-django，测试文件命名为 `test_*.py`，用例命名为 `test_<条件>_<结果>`。覆盖业务行为和主要失败分支，不追求 100% 覆盖率；单测不连接真实网络、数据库或模型。
+使用 pytest、pytest-django，测试文件命名为 `test_*.py`，用例命名为 `test_<条件>_<结果>`。覆盖业务行为和主要失败分支，不追求 100% 覆盖率；单测不连接真实网络、数据库或模型。
 
 功能完成须满足需求、接入实际入口、通过旧功能回归及全量单元／契约测试；按影响补充集成、模型效果或迁移验证。必需检查未完成时标记“验证未完成”。详细规则见 `docs/unit-testing-guidelines.md`。
 
 ## 提交与评审
 
-按项目约定使用 `类型(范围): 简短描述`，例如 `docs(phase1): 明确查询字段`、`test(retrieval): 补充回归用例`。PR 说明目的、影响范围、关联需求／问题、验证命令及未验证项；接口变化同步文档，界面变化再附截图。当前工作区无法读取 Git 历史，上述格式来自项目约定。
+按项目约定使用 `类型(范围): 简短描述`，例如 `docs(phase1): 明确查询字段`、`test(retrieval): 补充回归用例`。PR 说明目的、影响范围、关联需求／问题、验证命令及未验证项；接口变化同步文档，界面变化再附截图。
 
 ## 协作与数据约束
 

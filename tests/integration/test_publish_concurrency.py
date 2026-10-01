@@ -23,7 +23,7 @@ def test_concurrent_publish_has_one_winner_and_no_partial_switch():
     actor = configure_account("parallel", ["maintain_source", "review_import"])
     jobs = []
     for text in ["候选 A", "候选 B"]:
-        data = SourceImportSerializer(data=source_input(input_text=text))
+        data = SourceImportSerializer(data=source_input(input_text=text, require_manual_review=True))
         data.is_valid(raise_exception=True)
         job, _ = import_text(data.validated_data, actor)
         review_job(job.pk, "approved", "合成并发验收", actor)

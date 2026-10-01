@@ -13,7 +13,7 @@
 | S2 | 同步导入、固定输入、报告与恢复 | 验证通过；第 1 轮有效只读评审无阻塞 |
 | S3 | 人工发布、引用、撤回与更新 | 验证通过；2 轮只读评审均无阻塞 |
 | S4 | 关键词检索与最终权限复核 | 已实现；70 项离线、36 项 PostgreSQL 集成、5 项真实 HTTP／命令验收通过；空库、升级、重启和 OpenAPI 严格校验通过；第 1 轮有效只读评审无阻塞 |
-| S5 | 自动放行和成功构建恢复 | 待实现 |
+| S5 | 自动放行和成功构建恢复 | 已实现；76 项离线、47 项 PostgreSQL 集成、6 项真实 HTTP／命令验收通过；第 1 轮只读评审无阻塞 |
 | S6 | 全量验收、演示与运行交接 | 待实现 |
 
 每步细节在完成验收后追加；未完成的检查不能据此标记通过。
@@ -65,3 +65,12 @@
 - `make test-unit` 70 passed、`make test-integration` 36 passed、`make acceptance STEP=S4` 5 passed；独立空库、S3 数据升级／重启和留存发布资料检索均通过。`spectacular --validate --fail-on-warn`、`makemigrations --check --dry-run` 和 Django system check 通过。
 - 旧 S0～S3 断言已按真实开放的 search 路由更新；README、AGENTS 和实施文档入口同步到 S4。专用 reviewer 角色因模型供应方不可用未能启动，默认只读 reviewer 第 1 轮有效评审为 `NO_BLOCKING_ISSUES`。
 - 提交：`feat(retrieval): 实现 S4 关键词检索与父段返回`（hash 见 Git 历史）。
+
+## S5
+
+- 增加受版本管理的自动资格清单校验和合成样本核对记录，`try_auto_release` 在硬校验后记录系统账号批准；导入／retry／resume 统一恢复 T3 并调用既有发布事务。
+- 主动人工复核和无匹配资格保持候选；date_unknown 不阻断；已有人工结论不覆盖。自动批准尚未发布时重验清单，资格失效或 base_build 冲突保留旧指针与成功产物，并记录安全错误。清单删除不自动撤回历史发布。
+- `make test-unit` 76 passed、`make test-integration` 47 passed、`make acceptance STEP=S5` 6 passed；覆盖 T2 完成／自动批准后中断、清单／账号不可用、自动审核／发布审计失败、幂等恢复与人工拒绝不可绕过。
+- S4→S5 初始化前后状态摘要一致，未重建、未扫描发布旧候选；独立空库初始化与 6 项真实入口验收通过。主项目重启＋重复迁移后摘要一致，HTTP 验收再次 6 passed；OpenAPI 严格校验、系统检查和迁移无漂移通过。
+- 第 1 轮只读评审 `NO_BLOCKING_ISSUES`。reviewer 自身 Docker socket 受限，测试依据主智能体实跑记录；主智能体验证无跳过。
+- 提交：`feat(ingestion): 实现 S5 自动放行与发布恢复`（hash 见 Git 历史）。

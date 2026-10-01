@@ -11,9 +11,13 @@ from catalog.models import ImportJob, KnowledgeSource
 from catalog.services import publish_build, review_job, update_source, withdraw_source
 from contracts.errors import DomainError
 from ingestion.pipeline import import_text, resume_import
-from tests.integration.test_import import actor, validated
+from tests.integration.test_import import actor, validated as base_validated
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db]
+
+
+def validated(**changes):
+    return base_validated(**{"require_manual_review": True, **changes})
 
 
 def approve(job, actor):

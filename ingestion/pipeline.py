@@ -1,4 +1,4 @@
-"""同步导入编排：T1 提交与 T2 构建分开提交，当前阶段不发布。"""
+"""同步导入编排：T1 提交、T2 构建、T3 放行／发布分别提交。"""
 from dataclasses import asdict
 import logging
 
@@ -6,6 +6,7 @@ from django.db import DatabaseError, transaction
 from django.utils import timezone
 
 from catalog import audit
+from catalog import services, release_policy
 from catalog.builds import input_from_job, check_fixed_input
 from config.runtime import require_available
 from catalog.models import ContextUnit, EvidenceUnit, ImportJob
@@ -58,7 +59,7 @@ def run_import_job(job_id, actor, retry=False, builder=None):
                 for child in parent.children:
                     EvidenceUnit.objects.create(context=context, **asdict(child),
                                                 retrieval_text=f"{parent.title}\n{child.body}")
-            reasons = ["配置未列入自动放行清单"]
+            reasons = ["待检查自动放行资格"]
             if job.quality_report["requested_manual_review"]:
                 reasons.append("调用方要求人工复核")
             job.quality_report.update(
@@ -101,6 +102,8 @@ def import_text(validated_input, actor, source_id=None, builder=None):
     job, reused = submit_import(validated_input, actor, source_id)
     if job.status == "pending":
         job = run_import_job(job.pk, actor, builder=builder)
+    if job.status == "succeeded":
+        job = finish_import(job.pk, actor)
     return job, reused
 
 
@@ -110,5 +113,27 @@ def resume_import(job_id, actor, retry=False):
     if job.review_status == "rejected":
         raise DomainError("REVIEW_REJECTED", "拒绝任务不能恢复或重试", 409)
     if job.status == "succeeded" and not retry:
-        return job
-    return run_import_job(job_id, actor, retry=retry)
+        return finish_import(job_id, actor)
+    job = run_import_job(job_id, actor, retry=retry)
+    return finish_import(job.pk, actor) if job.status == "succeeded" else job
+
+
+def finish_import(job_id, actor):
+    """成功产物只恢复放行／发布；不会再次运行解析或重写父子。"""
+    job = maintenance_job(job_id, actor, ("maintain_source",))
+    if job.review_status == "rejected":
+        raise DomainError("REVIEW_REJECTED", "拒绝任务不能恢复", 409)
+    try:
+        if job.review_status == "pending":
+            job = services.try_auto_release(job_id)
+        if job.review_status == "approved":
+            publisher = release_policy.system_actor() if job.quality_report["review_method"] == "auto" else actor
+            job = services.publish_build(job_id, publisher)
+    except DomainError as exc:
+        if exc.status == 409:
+            job = services.record_publish_error(job_id, actor, exc)
+        else:
+            if exc.status == 503:
+                services.record_publish_error(job_id, actor, exc)
+            raise
+    return job

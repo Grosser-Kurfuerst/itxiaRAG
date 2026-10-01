@@ -26,7 +26,7 @@ def query(**changes):
 
 
 def published(actor, **changes):
-    job, _ = import_text(validated(canonical_locator="manual:" + uuid4().hex, **changes), actor)
+    job, _ = import_text(validated(canonical_locator="manual:" + uuid4().hex, require_manual_review=True, **changes), actor)
     review_job(job.pk, "approved", "合成样本核对", actor)
     return publish_build(job.pk, actor)
 
@@ -34,7 +34,7 @@ def published(actor, **changes):
 def test_scope_filters_and_response_contract_use_only_current_visible_sources(actor):
     public = published(actor)
     internal = published(actor, visibility="internal", title="内部备份")
-    import_text(validated(canonical_locator="manual:candidate"), actor)
+    import_text(validated(canonical_locator="manual:candidate", require_manual_review=True), actor)
     reader = configure_account("reader", [])
     result = search(query(), reader)
     assert [item["source_id"] for item in result["contexts"]] == [str(public.source_id)]

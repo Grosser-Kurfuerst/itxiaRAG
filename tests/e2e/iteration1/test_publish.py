@@ -12,7 +12,7 @@ def test_manual_publish_update_reference_and_withdraw_through_real_entries(tmp_p
     name = "s3-" + uuid4().hex
     token = account(name, "maintain_source,review_import,read_internal", tmp_path)
     reader = account(name + "-reader", "", tmp_path)
-    data = source_input(canonical_locator="manual:" + name)
+    data = source_input(canonical_locator="manual:" + name, require_manual_review=True)
     code, first = request("POST", "/api/v1/sources/", token, data)
     assert code == 200 and first["review_status"] == "pending"
     job_id = first["build_id"]

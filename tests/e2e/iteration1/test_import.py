@@ -13,7 +13,7 @@ def test_real_http_and_cli_import_dedup_report_and_visibility(tmp_path):
     name = "s2-" + uuid4().hex
     token = account(name, "maintain_source,review_import,read_internal", tmp_path)
     plain = account(name + "-reader", "", tmp_path)
-    data = source_input(canonical_locator="manual:" + name, format="markdown",
+    data = source_input(canonical_locator="manual:" + name, format="markdown", require_manual_review=True,
                         input_text="\ufeff\r\n  备份第一行  \r\n\r\n第二行\t\r\n")
     code, first = request("POST", "/api/v1/sources/", token, data)
     assert code == 200 and first["status"] == "succeeded" and first["review_status"] == "pending", first

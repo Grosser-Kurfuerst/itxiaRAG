@@ -435,6 +435,8 @@ NoOp 透传文本和场景，未传场景设 general／default，显式 general 
 | 发布过时／配置不符／来源不允许发布 | 显式发布为 409，自动流程写任务响应；旧构建不变 | BUILD_CONFLICT／PROFILE_CONFLICT／SOURCE_NOT_PUBLISHABLE |
 | 人工拒绝的等价输入／错误状态动作 | 409 | REVIEW_REJECTED／INVALID_JOB_STATE |
 | 数据库／权限查询失败 | 503，事务回滚 | DEPENDENCY_UNAVAILABLE，不伪装为空结果 |
+| 自动放行清单损坏／缺失或系统账号异常 | 503，已成功构建的父子保留，可修复后 resume | RELEASE_POLICY_UNAVAILABLE／SYSTEM_ACCOUNT_UNAVAILABLE |
+| 已自动批准但尚未发布的任务资格失效 | 显式 publish 为 409；导入／resume 返回实际任务结果并保留旧构建 | AUTO_RELEASE_NOT_QUALIFIED；清单撤销资格不自动撤回已发布内容 |
 | 服务处于维护窗口 | 503 | MAINTENANCE |
 | 非预期实现异常 | 500，安全 request_id | INTERNAL_ERROR；能安全保存时记录 failed，不暴露堆栈 |
 

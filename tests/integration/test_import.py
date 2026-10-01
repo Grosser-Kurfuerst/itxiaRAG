@@ -33,7 +33,7 @@ def validated(**changes):
 def test_api_creates_one_parent_and_child_and_reuses_ids(actor):
     client = APIClient()
     client.force_authenticate(actor)
-    data = source_input(input_text="  备份前  \r\n\r\n确认恢复\t", format="markdown")
+    data = source_input(input_text="  备份前  \r\n\r\n确认恢复\t", format="markdown", require_manual_review=True)
     first = client.post("/api/v1/sources/", data, format="json")
     assert first.status_code == 200, first.data
     assert first.data["status"] == "succeeded" and first.data["review_status"] == "pending"
@@ -128,7 +128,9 @@ def test_action_permissions_and_internal_preview_are_separate(actor):
     assert result.status_code == 404  # 不泄露稳定键对应的内部来源。
 
 
-def test_metadata_and_review_requirement_conflicts_do_not_mutate(actor):
+def test_metadata_and_review_requirement_conflicts_do_not_mutate(actor, settings, tmp_path):
+    settings.PROFILE_DIR = tmp_path
+    (tmp_path / "auto-release.json").write_text('{"schema_version":1,"entries":[]}')
     job, _ = import_text(validated(), actor)
     for changed, code in [({"authorization_note": "不同授权"}, "SOURCE_METADATA_CONFLICT"),
                           ({"require_manual_review": True}, "REVIEW_REQUIREMENT_CONFLICT")]:

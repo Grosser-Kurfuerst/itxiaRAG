@@ -10,6 +10,8 @@ from catalog.profiles import active_profiles
 from contracts.errors import DomainError
 from catalog.builds import validate_build
 from config.runtime import require_available
+from catalog import release_policy
+from catalog.hashes import digest
 
 SOURCE_FIELDS = ("source_type", "canonical_locator", "source_url", "visibility",
                  "authorization_status", "authorization_note")
@@ -123,6 +125,32 @@ def review_job(job_id, decision, note, actor):
 
 
 @transaction.atomic
+def try_auto_release(job_id):
+    """内部 T3 放行命令；入口授权由导入编排负责，系统账号记录结论。"""
+    require_available()
+    actor = release_policy.system_actor()
+    _, job = _locked_job(job_id, actor, "review_import")
+    if job.review_status != "pending":
+        return job
+    if job.status != "succeeded":
+        raise DomainError("INVALID_JOB_STATE", "只有构建成功的任务可放行", 409)
+    validate_build(job)
+    policy = release_policy.load_policy()
+    reasons = release_policy.review_reasons(policy, job)
+    job.quality_report.update(review_reasons=reasons, release_policy_hash=digest(policy))
+    job.quality_report.pop("publish_error", None)
+    if reasons:
+        job.save(update_fields=["quality_report"])
+        return job
+    job.review_status, job.reviewed_by, job.reviewed_at = "approved", actor, timezone.now()
+    job.quality_report.update(review_method="auto", review_note=None)
+    job.save(update_fields=["quality_report", "review_status", "reviewed_by", "reviewed_at"])
+    audit.record(actor, job, "import_reviewed", decision="approved", method="auto",
+                 release_policy_hash=digest(policy))
+    return job
+
+
+@transaction.atomic
 def _publish_transaction(job_id, actor):
     source, job = _locked_job(job_id, actor, "maintain_source")
     if source.status != "active" or source.authorization_status != "confirmed":
@@ -140,7 +168,9 @@ def _publish_transaction(job_id, actor):
         return job
     if job.base_build_id != source.current_build_id:
         raise DomainError("BUILD_CONFLICT", "候选基于过时的当前构建", 409)
-    if job.quality_report.get("review_method") != "manual":
+    if job.quality_report.get("review_method") == "auto":
+        release_policy.require_auto_qualification(job)
+    elif job.quality_report.get("review_method") != "manual":
         raise DomainError("INVALID_JOB_STATE", "该放行方式尚未获发布资格", 409)
     previous_id = source.current_build_id
     source.current_build = job
@@ -157,11 +187,17 @@ def publish_build(job_id, actor):
         return _publish_transaction(job_id, actor)
     except DomainError as exc:
         if exc.status == 409:
-            with transaction.atomic():
-                _, job = _locked_job(job_id, actor, "maintain_source")
-                job.quality_report["publish_error"] = {"code": exc.code, "message": exc.message}
-                job.save(update_fields=["quality_report"])
+            record_publish_error(job_id, actor, exc)
         raise
+
+
+@transaction.atomic
+def record_publish_error(job_id, actor, error):
+    _, job = _locked_job(job_id, actor, "maintain_source")
+    if job.source.current_build_id != job.pk or error.code != "BUILD_CONFLICT":
+        job.quality_report["publish_error"] = {"code": error.code, "message": error.message}
+        job.save(update_fields=["quality_report"])
+    return job
 
 
 @transaction.atomic

@@ -1,54 +1,50 @@
-from django.db.models import F
-from catalog.models import ContextUnit, EvidenceUnit, ImportJob
-from catalog.policies import require_permission, visible_scopes
-from catalog.profiles import active_profiles
-from config.runtime import require_available
-from contracts.errors import DomainError
+from catalog.models import ContextUnit, EvidenceUnit
 
 
-def maintenance_job(job_id, actor, permissions=("maintain_source", "review_import")):
-    require_permission(actor, *permissions)
-    try:
-        return (ImportJob.objects.select_related("source")
-                .prefetch_related("contexts__children")
-                .get(pk=job_id, source__visibility__in=visible_scopes(actor)))
-    except ImportJob.DoesNotExist:
-        raise DomainError("NOT_FOUND", "对象不存在", 404) from None
+def scoped_contexts(scope):
+    rows = ContextUnit.objects.filter(source__visibility__in=scope.visibilities,
+                                      source__embedding_space=scope.embedding_space)
+    if scope.source_ids is not None:
+        rows = rows.filter(source_id__in=scope.source_ids)
+    return rows
 
 
-def published_contexts(actor, index_profile_hash):
-    return ContextUnit.objects.filter(
-        build__source__visibility__in=visible_scopes(actor),
-        build__source__status="active", build__source__authorization_status="confirmed",
-        build__source__current_build_id=F("build_id"),
-        build__status="succeeded", build__review_status="approved",
-        build__index_profile_hash=index_profile_hash,
-    )
+def scoped_evidence(scope):
+    rows = EvidenceUnit.objects.filter(context__in=scoped_contexts(scope))
+    if scope.knowledge_types is not None:
+        rows = rows.filter(knowledge_type__in=scope.knowledge_types)
+    return rows
 
 
-def context_detail(context_id, actor):
-    require_available()
-    config = active_profiles()
-    scope = published_contexts(actor, config.index_profile_hash)
-    try:
-        parent = scope.select_related("build__source").prefetch_related("children").get(pk=context_id)
-    except ContextUnit.DoesNotExist:
-        raise DomainError("NOT_FOUND", "对象不存在", 404) from None
-    if not scope.filter(pk=context_id).exists():
-        raise DomainError("NOT_FOUND", "对象不存在", 404)
-    return parent
-
-
-def evidence_detail(evidence_id, actor):
-    require_available()
-    config = active_profiles()
-    scope = published_contexts(actor, config.index_profile_hash)
-    try:
-        child = (EvidenceUnit.objects.filter(context__in=scope)
-                 .select_related("context__build__source").prefetch_related("context__children")
-                 .get(pk=evidence_id))
-    except EvidenceUnit.DoesNotExist:
-        raise DomainError("NOT_FOUND", "对象不存在", 404) from None
-    if not scope.filter(pk=child.context_id).exists():
-        raise DomainError("NOT_FOUND", "对象不存在", 404)
-    return child
+class DjangoContextReader:
+    def read(self, candidates, scope, top_k):
+        groups = {}
+        for candidate in candidates:
+            groups.setdefault(candidate.context_id, []).append(candidate)
+        # 父段以最佳子块的 RRF 名次排序，不因拆出更多子块而累加加权。
+        parents = {parent.pk: parent for parent in scoped_contexts(scope).filter(pk__in=groups)
+                   .select_related("source").prefetch_related("children")}
+        results = []
+        for context_id, matches in groups.items():
+            parent = parents.get(context_id)
+            if parent is None:
+                continue
+            source = parent.source
+            results.append({
+                "context_id": str(parent.pk), "key": parent.key, "title": parent.title, "text": parent.body,
+                "locator": parent.locator, "metadata": parent.metadata,
+                "warnings": source.warnings + parent.warnings,
+                "source": {"id": str(source.pk), "title": source.title, "url": source.source_url,
+                           "source_type": source.source_type, "source_date": source.source_date,
+                           "document_schema": source.document_schema, "schema_version": source.schema_version},
+                "score": matches[0].score,
+                "matches": [{"evidence_id": str(item.evidence_id), "score": item.score,
+                             "ranks": item.ranks} for item in matches],
+                "citations": [{"evidence_id": str(child.pk), "key": child.key,
+                               "knowledge_type": child.knowledge_type, "locator": child.locator,
+                               "metadata": child.metadata, "warnings": child.warnings}
+                              for child in parent.children.all()],
+            })
+            if len(results) == top_k:
+                break
+        return results

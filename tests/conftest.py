@@ -1,9 +1,25 @@
-import os
+import json
+from pathlib import Path
 
-# pytest-django 在测试导入前读取设置；仅为离线检查提供测试配置。
-os.environ.setdefault("DJANGO_SECRET_KEY", "test-only-secret-not-for-running-the-app")
-os.environ.setdefault("POSTGRES_PASSWORD", "test-only-password")
+import pytest
 
 
-def pytest_addoption(parser):
-    parser.addoption("--step", default="S6", help="迭代一验收范围 S0～S6")
+@pytest.fixture
+def document_payload():
+    return json.loads((Path(__file__).resolve().parents[1] / "fixtures/iteration1/basic.json").read_text())
+
+
+class TestEmbedding:
+    """只用于断言检索行为；不代表真实模型效果。"""
+    space_id = "test-space-v1"
+
+    def embed_documents(self, texts):
+        return [[1.0, 0.0] if "续航" in text else [0.0, 1.0] for text in texts]
+
+    def embed_query(self, text):
+        return [1.0, 0.0] if "电池" in text or "续航" in text else [0.0, 1.0]
+
+
+@pytest.fixture
+def embedder():
+    return TestEmbedding()

@@ -6,7 +6,7 @@ from django.contrib.auth.models import Permission
 from django.db import transaction
 from rest_framework.authtoken.models import Token
 
-from catalog.policies import PERMISSIONS, SYSTEM_USERNAME
+from catalog.policies import PERMISSIONS
 from contracts.errors import DomainError
 
 
@@ -15,7 +15,7 @@ def permissions_for(names):
         raise DomainError("INVALID_ARGUMENT", "权限名称无效")
     permissions = list(Permission.objects.filter(content_type__app_label="catalog", codename__in=names))
     if len(permissions) != len(set(names)):
-        raise DomainError("INITIALIZATION_REQUIRED", "请先运行迁移和 kb_init", 503)
+        raise DomainError("INITIALIZATION_REQUIRED", "请先运行数据库迁移", 503)
     return permissions
 
 
@@ -37,7 +37,7 @@ def write_token_file(path, key):
 
 @transaction.atomic
 def configure_account(username, permission_names=None, token_file=None, revoke=False):
-    if not username or username == SYSTEM_USERNAME:
+    if not username:
         raise DomainError("INVALID_ARGUMENT", "该账号名不允许用于账号发放")
     permissions = permissions_for(permission_names or [])
     user, created = get_user_model().objects.get_or_create(username=username)

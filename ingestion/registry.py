@@ -1,20 +1,24 @@
+"""显式注册的策略表。只提供插件接线，不内置解析、分段或自动类型识别。"""
 from contracts.errors import DomainError
-from contracts.types import DocumentProcessContext
-from ingestion.parsers import PlainTextParser
-from ingestion.processors import GenericNoteProcessor
-
-PARSERS = {("plain-text", "1.0.0"): PlainTextParser}
-PROCESSORS = {("generic-note", "1.0.0"): GenericNoteProcessor}
+from contracts.serializers import validate_document
+from contracts.types import DocumentPreprocessor, RawDocument, ProcessedDocument
 
 
-def parse_and_chunk(input, profile):
-    try:
-        mapping = profile["document_processing"]
-        parser = mapping["format_parsers"][input.format]
-        processor = mapping["schema_processors"][f"{input.document_schema}.v{input.schema_version}"]
-        parser_cls = PARSERS[(parser["id"], parser["version"])]
-        processor_cls = PROCESSORS[(processor["id"], processor["version"])]
-    except (KeyError, TypeError):
-        raise DomainError("IMPORT_CONFIGURATION_ERROR", "指定解析器或处理器未注册") from None
-    parsed = parser_cls().parse(input)
-    return processor_cls().process(parsed, DocumentProcessContext(input, profile))
+class PreprocessorRegistry:
+    def __init__(self):
+        self._processors: dict[tuple[str, int], DocumentPreprocessor] = {}
+
+    def register(self, schema: str, version: int, processor: DocumentPreprocessor):
+        key = (schema, version)
+        if key in self._processors:
+            raise ValueError(f"处理器已注册: {key}")
+        self._processors[key] = processor
+
+    def process(self, raw: RawDocument, schema: str, version: int) -> ProcessedDocument:
+        processor = self._processors.get((schema, version))
+        if processor is None:
+            raise DomainError("PREPROCESSOR_NOT_REGISTERED", "尚未接入该文档类型的预处理插件")
+        document = validate_document(processor.process(raw))
+        if (document.document_schema, document.schema_version) != (schema, version):
+            raise DomainError("SCHEMA_MISMATCH", "插件输出与注册的文档类型不符")
+        return document

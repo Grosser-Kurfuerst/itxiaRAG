@@ -1,105 +1,64 @@
 # itxiaAgent 知识库
 
-按 [迭代一实现方案](docs/phase1/phase1-iteration1-implementation.md) 逐步实现。当前完成范围见 [实施记录](docs/phase1/implementation-progress.md)。尚未包含笔吧推文、Worker 或模型。
+当前仓库实现的是一个可运行的最小混合检索知识库：调用方提交已经整理好的标准化文档，系统保存父段和子块，使用关键词与向量两路召回，经 RRF 排序后返回完整父上下文。文章抓取、解析、父子分段和最终回答由后续模块负责，当前没有 Agent 或审核发布流程。
 
-## 本地启动
+详细契约见 [首期技术设计](docs/phase1/phase1-technical-design.md) 和 [迭代一实现](docs/phase1/phase1-iteration1-implementation.md)。合成请求见 [fixtures/iteration1/basic.json](fixtures/iteration1/basic.json)。
 
-需要 Docker Engine、Compose v2 和 Make。镜像固定 Python 3.12／PostgreSQL 17 的 digest，安装依赖时需要访问镜像与包仓库，应用运行不访问外部平台。
+## 本地运行
 
-将 `.env.example` 复制到仓库外的私有文件，例如 `/tmp/itxiaRAG.env`，用随机值替换两个密码占位并设置 `chmod 600`。不要把私有配置写进仓库。随后运行：
-
-```sh
-make up ITERATION=1 ENV_FILE=/tmp/itxiaRAG.env
-make migrate ITERATION=1 ENV_FILE=/tmp/itxiaRAG.env
-make seed-demo ITERATION=1 ENV_FILE=/tmp/itxiaRAG.env
-make acceptance ITERATION=1 STEP=S6 ENV_FILE=/tmp/itxiaRAG.env
-```
-
-服务仅监听 `127.0.0.1:18080`；可通过 APP_PORT 改端口。`/health/live/` 返回 200；S4 在迁移与配置就绪后 `/health/ready/` 返回 200，否则 503。现已开放短笔记导入、人工复核、发布、关键词检索、父／子引用和来源撤回。app 的容器健康检查只检查 live。
-
-`make acceptance` 不指定 STEP 时验收 S6，包含全量离线、PostgreSQL 集成和真实 HTTP／命令测试。较早 STEP 只选择已交付能力的回归范围。验收通过真实 HTTP 调用运行中的服务，JUnit 报告在 app 容器 `/tmp/itxia-acceptance/`，可用 `docker compose cp` 导出到仓库外。`make test-unit` 在相同 Python 容器内执行全量离线单元／契约测试。
-
-## 停止与恢复
+需要 Python 3.12、PostgreSQL 和兼容 OpenAI `/embeddings` 协议的模型服务（本地或已获准的外部服务）。安装依赖：
 
 ```sh
-make down ENV_FILE=/tmp/itxiaRAG.env
-make up ENV_FILE=/tmp/itxiaRAG.env
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-dev.txt
 ```
 
-down 保留数据库卷，重复 migrate 不删除数据。不要使用 `down -v` 处理需要保留的数据。调试数据库中断时，仅停止当前隔离 Compose 项目的 db，检查 live=200、ready=503 后重新启动 db；结构化日志记录 `database_unavailable`，不打印数据库凭据。
-
-当前 Compose 的 app 使用 development 构建目标以运行测试；`docker build --target runtime` 只安装运行依赖。生产部署需另行配置 HTTPS 和私有环境变量。
-
-## 初始化和账号（S1）
-
-`make migrate` 执行累积迁移及 `kb_init`，幂等创建五张业务表、配置单例和无 Token／密码的 `kb-system` 审计账号。已有不同配置会报错，不能通过重跑初始化覆盖。
-
-在 app 容器内执行以下部署侧命令；Token 文件只保存在受控文件路径中（权限 0600），终端不会打印密钥：
+私有配置放仓库外：
 
 ```sh
-python manage.py kb_account --username maintainer --permissions maintain_source,review_import,read_internal --token-file /tmp/maintainer.token
-python manage.py kb_account --username reader --permissions '' --token-file /tmp/reader.token
-python manage.py kb_account --username maintainer --revoke-token
+cp .env.example /tmp/itxia.env
+# 编辑 /tmp/itxia.env 的密钥、数据库连接和 Embedding 服务参数
+set -a; . /tmp/itxia.env; set +a
+.venv/bin/python manage.py migrate
+.venv/bin/python manage.py runserver 127.0.0.1:8000
 ```
 
-命令可通过 `docker compose --env-file /tmp/itxiaRAG.env -p itxia-phase1 exec -T app ...` 执行。账号默认无可用密码；已有账号权限不同会报冲突。Token 撤销后重新发放需使用新的文件路径。访问 API 使用 `Authorization: Token <token>`，schema 可指定 `Accept: application/vnd.oai.openapi+json`。不提供 Admin 或公开账号注册端点。
+必须配置 `EMBEDDING_BASE_URL`、模型名、维度和 revision；缺少时导入／检索返回 503，不使用伪向量代替语义模型。更换模型、revision 或 query 指令后须重新导入资料。`.env.example` 的模型名只是配置示例，不会自动部署或下载模型。
 
-## 候选导入和报告（S2）
-
-以下命令在 app 容器执行，使用合成样本；自己的文件先安全复制进容器，再指定容器内路径：
+账号只通过部署侧创建：
 
 ```sh
-python manage.py kb_import --file fixtures/iteration1/basic.txt --metadata fixtures/iteration1/basic.json --actor maintainer
-python manage.py kb_job --id <任务UUID> --actor maintainer --report /tmp/job-report.md
-python manage.py kb_job --id <任务UUID> --actor maintainer --resume
-python manage.py kb_job --id <失败任务UUID> --actor maintainer --retry
+.venv/bin/python manage.py kb_account --username maintainer --permissions maintain_source,read_internal --token-file /tmp/maintainer.token
 ```
 
-正常自动发布的导入退出码为 **0**；主动要求人工复核或配置未登记时为 **4**；报告成功退出 0；非法输入为 2、任务失败／状态冲突为 3、依赖故障为 5。终端只输出 ID／状态；含原文的报告使用 0600 权限且拒绝覆盖已有文件。`resume` 恢复 pending 构建或 succeeded 的放行／发布，成功产物不会重写；failed 必须显式 `retry`。没有后台队列。
-
-HTTP 使用 `POST /api/v1/sources/`，请求为样本 metadata 加 `input_text`；更新使用 `POST /api/v1/sources/{id}/imports/`，只提交内容字段。正常同步处理均返回 200，仍须检查 `status`、`review_status` 和 `is_current`。通过 `GET /api/v1/import-jobs/{id}/` 查看固定输入、质量报告和父子预览。所有入口需要 Token，维护动作和 public/internal 范围分别检查。
-
-只接受 `manual + generic_note.v1`、1–8000 字且不超过 200 行的 TXT／Markdown；保留 Markdown 行尾空格。`domain_metadata` 仅可省略或 `{}`，知识类型固定 concept。来源授权和脱敏须事先确认。同一稳定键和同文复用，来源管理字段不同或要求提高已有候选的人工复核要求时返回 409。维护模式拒绝新导入和恢复，任务报告仍可读。
-
-## 人工发布和引用（S3）
-
-先核对任务报告，再执行以下容器内命令；也可通过 `/api/v1/import-jobs/{id}/review/`（`{decision, note}`）和 `publish/`（`{}`）完成：
+导入接口需要 `maintain_source`：
 
 ```sh
-python manage.py kb_job --id <任务UUID> --actor maintainer --review approved --note "已核对完整原文与定位"
-python manage.py kb_publish --id <任务UUID> --actor maintainer
-python manage.py kb_withdraw --source <来源UUID> --actor maintainer
+curl -H "Authorization: Token $(cat /tmp/maintainer.token)" \
+  -H 'Content-Type: application/json' \
+  -d @fixtures/iteration1/basic.json \
+  http://127.0.0.1:8000/api/v1/sources/
 ```
 
-复核只记录结论，批准后仍需显式发布。发布指针与审计同事务提交；重复发布当前构建幂等，过时候选返回 409。`GET /api/v1/contexts/{id}/` 和 `/api/v1/evidence/{id}/` 只返回当前已发布资料；候选、旧引用、无权对象均 404。更新内容重新导入，新稿发布前保留旧稿可读。
+返回 `source_id`、`context_ids` 和 `reused`。更新同一来源时保留同 key 段落的 ID；相同内容返回 `reused=true`。Embedding 完成后才开启数据库事务，任意写入失败会回滚。
 
-`PATCH /api/v1/sources/{id}/` 只维护链接、授权、visibility 与 active／disabled；`POST /api/v1/sources/{id}/withdraw/` 幂等撤回，保留正文、指针和审计。public 可收紧为 internal，反向操作须另建已脱敏且获公开授权的来源。withdrawn 不可恢复。维护模式允许报告、停用和撤回，拒绝发布及读者详情；正常资料按已验收配置自动发布；需手动演示时提交 `require_manual_review=true`。
+查询接口：
 
-
-## 关键词检索（S4）
-
-已认证账号调用 `POST /api/v1/search/`，例如：
-
-```json
-{"query":"备份", "preprocess":"auto", "scenario":"general", "filters":{}, "top_k":5}
+```sh
+curl -H "Authorization: Token $(cat /tmp/maintainer.token)" \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"电池能用多久","top_k":5}' \
+  http://127.0.0.1:8000/api/v1/search/
 ```
 
-返回完整 `contexts` 和引用、实际配置 hash、`query_id`，不生成答案。连续中文按短语匹配，可用空格分隔关键词；本阶段只支持 general 与空 confirmed_context。`filters.source_ids`／`knowledge_types` 只缩小范围，普通账号看不到 internal 或未发布候选。
+普通账号只获得公开来源；`read_internal` 才能检索内部来源。Embedding 故障返回 502，不静默降级为空结果。
 
-`preprocess=bypass` 跳过处理器，auto 默认 NoOp。未来适配器通过 `config.components` 注入，并须自行限制外部 I/O 超时；当前没有 LLM 或线程池。返回前再次复核权限与当前构建，64 KiB 预算不足时整父段跳过并返回 `context_incomplete`。`no_result` 表示正常未命中；空结果且降级时为 `insufficient_evidence`。S5 正常导入后即可查询，待审资料仍需人工批准和发布。
+## 验证
 
+```sh
+make test-unit
+make test-integration
+make test
+```
 
-## 自动放行与恢复（S5）
-
-`profiles/iteration1/auto-release.json` 将 `generic_note/1 + index_profile_hash` 关联到 [合成样本验收记录](docs/phase1/generic-note-sample-qualification.md)。正常短笔记通过硬检查后由无登录能力的 `kb-system` 记录自动结论并发布。`require_manual_review=true` 或无匹配资格时保留候选；日期未知只返回警告。真实资料的授权和脱敏由提交维护者确认。
-
-`kb_job --resume` 不重试 failed，也不重写成功父子；它恢复缺失的放行或发布步骤。failed 使用 `--retry`，人工 rejected 必须修订内容。自动批准后清单资格失效会阻断尚未完成的发布；恢复已确认清单后再次 resume。清单文件损坏／缺失或系统审计账号异常返回 503，修复配置或执行受控 `kb_init` 后恢复。发布冲突在任务报告 `publish_error` 中说明，保留旧构建；过时候选应基于当前版本重新提交。
-
-S4→S5 升级不会自动发布历史候选，也不改变索引 hash；需逐任务显式 resume 或人工复核。清单删除资格不会撤回已发布内容，停用传播请调用 withdraw 或 PATCH status=disabled。
-
-
-## 演示与交接（S6）
-
-`make seed-demo` 是显式演示操作，创建 reader/member/maintainer 账号，以及公开、内部和待审三份合成笔记。Token 文件默认位于 app 容器 `/tmp/itxia-demo-tokens/`（0600），不会打印密钥。该目录随容器重建消失，可重新执行命令导出原有 Token；需长久保管时安全复制到仓库外。
-
-重复 seed 不增加来源／任务，不覆盖维护者后续修改、不恢复撤回。完整操作示例、故障恢复及验收证据见 [迭代一运行手册](docs/phase1/iteration1-runbook.md) 和 [验收矩阵](docs/phase1/iteration1-acceptance-report.md)。
+测试使用合成资料和测试 Embedding。真实模型的语义质量、吞吐和容量需要单独用获准样本验证。旧数据库存在旧版业务数据时，精简迁移会主动中止；请使用新数据库并按标准 DTO 重新导入，不要手工删除旧数据绕过检查。

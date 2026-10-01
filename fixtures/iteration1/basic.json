@@ -1,18 +1,27 @@
 {
-  "source_type": "manual",
-  "canonical_locator": "manual:demo-basic-001",
-  "source_url": null,
-  "visibility": "public",
-  "authorization_status": "confirmed",
-  "authorization_note": "社团自编合成样本，允许公开试用",
-  "title": "电脑维护基础",
-  "author": "演示维护者",
-  "source_date": null,
-  "format": "txt",
-  "document_schema": "generic_note",
-  "schema_version": 1,
-  "source_metadata": {},
-  "domain_metadata": {},
-  "redaction_confirmed": true,
-  "require_manual_review": false
+  "source": {
+    "source_type": "manual",
+    "canonical_locator": "example:laptop-a",
+    "source_url": null,
+    "visibility": "public"
+  },
+  "document": {
+    "title": "笔记本 A 合成评测",
+    "document_schema": "product_review",
+    "schema_version": 1,
+    "metadata": {"note": "合成样本，不是真实笔吧推文"},
+    "contexts": [
+      {
+        "key": "laptop-a",
+        "title": "笔记本 A",
+        "body": "日常办公续航约 8 小时。\n高负载下风扇噪声较明显。",
+        "locator": {"heading": "笔记本 A"},
+        "metadata": {"model": "laptop-a"},
+        "children": [
+          {"key": "battery", "body": "日常办公续航约 8 小时。", "knowledge_type": "product_spec", "locator": {"paragraph": 1}},
+          {"key": "noise", "body": "高负载下风扇噪声较明显。", "knowledge_type": "product_spec", "locator": {"paragraph": 2}}
+        ]
+      }
+    ]
+  }
 }

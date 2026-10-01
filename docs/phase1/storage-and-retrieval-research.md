@@ -1,4 +1,6 @@
-# itxiaRAG 文档存储与召回方案调研
+# itxiaRAG 文档存储与召回方案调研（历史调研）
+
+> 历史调研与后续选项：本文的 Worker、解析、治理及部署建议不代表当前实现要求。当前范围以[最小混合检索技术设计](phase1-technical-design.md)为准；具体来源预处理暂未实现，仅保留插件接口。
 
 版本：v0.3（同步当前构建与父上下文契约）  
 调研截止：2026-09-30  
@@ -6,7 +8,7 @@
 
 > 本文是对[首期技术设计](/home/kurfuerst/Coding/nju/itxiaRAG/docs/phase1/phase1-technical-design.md)和[总体技术选型](/home/kurfuerst/Coding/nju/itxiaRAG/docs/technology-selection.md)的补充研究，不替换现有技术契约。开源项目的能力依据固定提交或官方文档，论文数字是论文作者在其数据集和协议下报告的结果。本项目尚未用真实 IT 侠语料、目标硬件和生产并发复现这些结果，因此文中的“建议”仍需通过 PoC 验证。
 
-> **契约更新（2026-10-01）：** 本项目移除独立的 source_version 表，由 import_job 承载固定输入、构建与审核，knowledge_source.current_build_id 指向当前已发布内容；更新后旧引用失效。采用 `context_unit` 父上下文 + `evidence_unit` 检索子块的两层持久化结构，父上下文替代 `context_group_id`，查询返回 `contexts[]`，`top_k` 计父段数。笔吧评测的第一个处理策略按“一篇文章中的一台笔记本一个父段”；这只是首个 Schema 处理器的具体规则，不限制语雀、维修记录或后续文档类型。本项目建议已同步该契约；开源实现和论文结论仍按原调研截止时间及固定来源引用。
+> **历史契约（已被当前最小实现取代）：** 本项目移除独立的 source_version 表，由 import_job 承载固定输入、构建与审核，knowledge_source.current_build_id 指向当前已发布内容；更新后旧引用失效。采用 `context_unit` 父上下文 + `evidence_unit` 检索子块的两层持久化结构，父上下文替代 `context_group_id`，查询返回 `contexts[]`，`top_k` 计父段数。笔吧评测的第一个处理策略按“一篇文章中的一台笔记本一个父段”；这只是首个 Schema 处理器的具体规则，不限制语雀、维修记录或后续文档类型。本项目建议已同步该契约；开源实现和论文结论仍按原调研截止时间及固定来源引用。
 
 ## 1. 结论
 

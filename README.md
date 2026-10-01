@@ -11,14 +11,13 @@
 ```sh
 make up ITERATION=1 ENV_FILE=/tmp/itxiaRAG.env
 make migrate ITERATION=1 ENV_FILE=/tmp/itxiaRAG.env
-make test-unit ENV_FILE=/tmp/itxiaRAG.env
-make test-integration ENV_FILE=/tmp/itxiaRAG.env
-make acceptance ITERATION=1 STEP=S5 ENV_FILE=/tmp/itxiaRAG.env
+make seed-demo ITERATION=1 ENV_FILE=/tmp/itxiaRAG.env
+make acceptance ITERATION=1 STEP=S6 ENV_FILE=/tmp/itxiaRAG.env
 ```
 
 服务仅监听 `127.0.0.1:18080`；可通过 APP_PORT 改端口。`/health/live/` 返回 200；S4 在迁移与配置就绪后 `/health/ready/` 返回 200，否则 503。现已开放短笔记导入、人工复核、发布、关键词检索、父／子引用和来源撤回。app 的容器健康检查只检查 live。
 
-`make acceptance` 不指定 STEP 时验收最终 S6；请求未完成步骤会报错。验收通过真实 HTTP 调用运行中的服务，JUnit 报告在 app 容器 `/tmp/itxia-acceptance/`，可用 `docker compose cp` 导出到仓库外。`make test-unit` 在相同 Python 容器内执行全量离线单元／契约测试。
+`make acceptance` 不指定 STEP 时验收 S6，包含全量离线、PostgreSQL 集成和真实 HTTP／命令测试。较早 STEP 只选择已交付能力的回归范围。验收通过真实 HTTP 调用运行中的服务，JUnit 报告在 app 容器 `/tmp/itxia-acceptance/`，可用 `docker compose cp` 导出到仓库外。`make test-unit` 在相同 Python 容器内执行全量离线单元／契约测试。
 
 ## 停止与恢复
 
@@ -97,3 +96,10 @@ python manage.py kb_withdraw --source <来源UUID> --actor maintainer
 `kb_job --resume` 不重试 failed，也不重写成功父子；它恢复缺失的放行或发布步骤。failed 使用 `--retry`，人工 rejected 必须修订内容。自动批准后清单资格失效会阻断尚未完成的发布；恢复已确认清单后再次 resume。清单文件损坏／缺失或系统审计账号异常返回 503，修复配置或执行受控 `kb_init` 后恢复。发布冲突在任务报告 `publish_error` 中说明，保留旧构建；过时候选应基于当前版本重新提交。
 
 S4→S5 升级不会自动发布历史候选，也不改变索引 hash；需逐任务显式 resume 或人工复核。清单删除资格不会撤回已发布内容，停用传播请调用 withdraw 或 PATCH status=disabled。
+
+
+## 演示与交接（S6）
+
+`make seed-demo` 是显式演示操作，创建 reader/member/maintainer 账号，以及公开、内部和待审三份合成笔记。Token 文件默认位于 app 容器 `/tmp/itxia-demo-tokens/`（0600），不会打印密钥。该目录随容器重建消失，可重新执行命令导出原有 Token；需长久保管时安全复制到仓库外。
+
+重复 seed 不增加来源／任务，不覆盖维护者后续修改、不恢复撤回。完整操作示例、故障恢复及验收证据见 [迭代一运行手册](docs/phase1/iteration1-runbook.md) 和 [验收矩阵](docs/phase1/iteration1-acceptance-report.md)。

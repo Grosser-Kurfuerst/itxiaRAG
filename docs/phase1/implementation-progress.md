@@ -14,7 +14,7 @@
 | S3 | 人工发布、引用、撤回与更新 | 验证通过；2 轮只读评审均无阻塞 |
 | S4 | 关键词检索与最终权限复核 | 已实现；70 项离线、36 项 PostgreSQL 集成、5 项真实 HTTP／命令验收通过；空库、升级、重启和 OpenAPI 严格校验通过；第 1 轮有效只读评审无阻塞 |
 | S5 | 自动放行和成功构建恢复 | 已实现；76 项离线、47 项 PostgreSQL 集成、6 项真实 HTTP／命令验收通过；第 1 轮只读评审无阻塞 |
-| S6 | 全量验收、演示与运行交接 | 待实现 |
+| S6 | 全量验收、演示与运行交接 | 已实现；138 项全量验收通过；第 1 轮只读评审无阻塞 |
 
 每步细节在完成验收后追加；未完成的检查不能据此标记通过。
 
@@ -74,3 +74,11 @@
 - S4→S5 初始化前后状态摘要一致，未重建、未扫描发布旧候选；独立空库初始化与 6 项真实入口验收通过。主项目重启＋重复迁移后摘要一致，HTTP 验收再次 6 passed；OpenAPI 严格校验、系统检查和迁移无漂移通过。
 - 第 1 轮只读评审 `NO_BLOCKING_ISSUES`。reviewer 自身 Docker socket 受限，测试依据主智能体实跑记录；主智能体验证无跳过。
 - 提交：`feat(ingestion): 实现 S5 自动放行与发布恢复`（hash 见 Git 历史）。
+
+## S6
+
+- 新增 `kb_seed_demo` 和运行交接手册；演示账号、公开／内部／待审合成资料均通过正式服务创建，重复 seed 不复制、不覆盖后续修改、不恢复撤回。
+- 修复 pytest 跨目录同名测试模块的收集冲突，统一使用 `--import-mode=importlib`；`scripts/acceptance.py --step S6` 组合全部测试层和 demo HTTP 验收。
+- `make acceptance ITERATION=1` 138 passed（76 离线、55 PostgreSQL 集成、7 真实入口）；S5 升级摘要一致，独立空库和同版本重启后全量验收均 138 passed；重复迁移与摘要一致、seed 重跑、OpenAPI 严格校验／系统检查／迁移无漂移均通过。逐项 I1-A01～I1-A18 见 [验收报告](iteration1-acceptance-report.md)。
+- 运行和故障交接见 [运行手册](iteration1-runbook.md)。独立 reviewer 已按手册用唯一合成前缀完成初始化、导入、报告、人工复核／发布、resume、查询和撤回；未声称真人已试用。实际停数据库时 live=200、ready/search=503，恢复后 ready/search=200。第 1 轮只读评审 `NO_BLOCKING_ISSUES`；reviewer 独立重跑 S6 验收 138 passed。
+- 提交：`feat(delivery): 完成 S6 演示与全量验收`（hash 见 Git 历史）。

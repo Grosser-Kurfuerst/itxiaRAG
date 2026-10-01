@@ -4,7 +4,7 @@
 日期：2026-09-30  
 适用范围：项目全部 Python 业务模块、查询／导入编排、校验器和适配器。具体业务契约见[首期技术设计](/home/kurfuerst/Coding/nju/itxiaRAG/docs/phase1/phase1-technical-design.md)。
 
-本文规定后续实现应遵守的测试规则与功能开发完成定义。当前仓库只有设计文档，以下目录、命令和 CI 检查均为待交付约定，不代表已有测试代码或测试已通过。
+本文规定项目实现应遵守的测试规则与功能开发完成定义。迭代一已提供 tests 目录、pytest 与容器验收入口；实际通过范围见 [实施记录](phase1/implementation-progress.md)。当前没有托管 CI 配置，不能把本地测试通过描述为 CI 通过。
 
 ## 1. 目标与边界
 
@@ -101,7 +101,7 @@ tests/
 
 ## 8. 运行与合并约定
 
-以下为实现后应支持的命令，当前不能据此宣称已有测试可运行：
+在配置好 Python 3.12 和依赖的环境中运行以下命令；仓库推荐使用 README 的对应容器命令：
 
 ```sh
 python3 -m pytest tests/unit tests/contract

@@ -64,6 +64,10 @@ def main():
         files.append("tests/e2e/iteration1/test_search.py")
     if step >= 5:
         files.append("tests/e2e/iteration1/test_auto_release.py")
+    if step >= 6:
+        # 最终验收含完整离线与数据库故障/并发矩阵，不能仅凭 HTTP 主链路声明通过。
+        files = ["tests/unit", "tests/contract", "tests/integration", *files,
+                 "tests/e2e/iteration1/test_demo.py"]
     return subprocess.call([
         sys.executable, "-m", "pytest", *files, "-q",
         "--step", args.step, "--junitxml", str(report / (args.step + ".xml")),

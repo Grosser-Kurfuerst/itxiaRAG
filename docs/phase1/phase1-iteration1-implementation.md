@@ -1,10 +1,10 @@
 # itxiaAgent 首期迭代一实现文档
 
-版本：v0.3（待实施）  
+版本：v0.4（迭代一实现基线，验收记录另列）
 日期：2026-10-01  
 依据：[首期技术设计](./phase1-technical-design.md)第 3～7 节及第 8.2 节 · [首期需求](./phase1-requirements-and-selection.md) · [项目测试规范](../unit-testing-guidelines.md)
 
-本文定义“来源维护与关键词查询”迭代的开发清单、模块、数据、接口及验收。当前仓库只有文档，以下文件、命令和测试均待实现。本次新增应用骨架，不存在需要兼容的业务代码；后续以本迭代通过验收的接口和迁移作为回归基线。
+本文定义“来源维护与关键词查询”迭代的开发清单、模块、数据、接口及验收。S0～S6 的实际实施和验证见 [实施记录](implementation-progress.md)，启动、演示与交接见 [运行手册](iteration1-runbook.md)。后续以本迭代通过验收的接口和迁移作为回归基线。
 
 首期技术设计定义跨迭代的公共契约；本文补齐迭代一允许的子集和此前未定的实现参数。请求／响应最终由共享 DRF Serializer 校验并生成 OpenAPI，本文示例进入契约测试。修改公共契约时同时更新技术设计，不各自维护两套字段。
 
@@ -32,9 +32,9 @@
 
 ### 2.1 新增工程文件
 
-采用 Python 3.12、Django 5.2 LTS、DRF 3.16、psycopg 3、PostgreSQL 17。实现时在依赖锁文件和容器配置中固定验证过的补丁版本；这些版本是实现起点，尚未在本仓库运行验证。
+采用 Python 3.12、Django 5.2 LTS、DRF 3.16、psycopg 3、PostgreSQL 17。实现时在依赖锁文件和容器配置中固定验证过的补丁版本；当前锁文件与容器已固定实际验证版本，详见依赖文件和验收报告。
 
-运行依赖为 Django、DRF、psycopg、Gunicorn、drf-spectacular；开发依赖增加 pytest、pytest-django、pytest-cov、pip-tools。用 `requirements.in` 声明直接依赖，生成包含精确版本的 `requirements.txt`；开发依赖同理。首次实现提供以下结构，不安装模型、Celery 或 PostgreSQL 搜索扩展：
+运行依赖为 Django、DRF、psycopg、Gunicorn、drf-spectacular；开发依赖增加 pytest、pytest-django、pytest-cov、pip-tools。用 `requirements.in` 声明直接依赖，生成包含精确版本的 `requirements.txt`；开发依赖同理。实现采用以下结构，不安装模型、Celery 或 PostgreSQL 搜索扩展：
 
 ```text
 manage.py
@@ -444,7 +444,7 @@ NoOp 透传文本和场景，未传场景设 general／default，显式 general 
 
 ### 8.4 命令与退出码
 
-命令位于 catalog/management/commands，示例均为待实现：
+命令位于 catalog/management/commands；容器内运行示例：
 
 ```sh
 python manage.py kb_init --profiles profiles/iteration1

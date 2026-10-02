@@ -1,6 +1,8 @@
 # 首期技术设计：最小混合检索知识库
 
-本文件按当前简化决定重写，替代原 S0～S6 的审核、发布和任务恢复设计。目标是：**接收已整理的文档，保存父子内容，关键词与向量混合召回，经 RRF 排序后返回完整父上下文**。知识库不生成最终答案。
+目标是：**接收已整理的文档，保存父子内容，关键词与向量混合召回，经 RRF 排序后返回完整父上下文**。知识库不生成最终答案。
+
+本文统一维护当前模块、数据契约、流程与阶段验收。业务范围见[总体需求](../requirements.md)，选择理由和研究出处见[技术选型](../technology-selection.md)，安装与调用见 [README](../../README.md)。
 
 ## 1. 系统边界
 
@@ -29,13 +31,13 @@ api → retrieval.service → HybridRetriever
 
 | 模块 | 责任 | 不负责 |
 | --- | --- | --- |
-| `contracts/` | DTO、Protocol、导入和查询 Serializer | ORM、模型调用和解析实现 |
-| `ingestion/` | 校验 → 编码 → 保存；预处理插件注册表 | 获取推文、解析或划分段落 |
-| `embeddings/` | HTTP 编码适配器、批次顺序与向量校验 | 数据库和召回排序 |
-| `catalog/` | 三张业务表、事务保存、可见范围、父段读取 | 模型供应商协议、审核发布 |
-| `retrieval/` | 关键词／向量召回、RRF、结果组装 | 导入与文章清洗 |
-| `config/components.py` | 组合根，选择和注入具体适配器 | 业务规则 |
-| `api/` | 两个 HTTP 入口、认证、输入校验和响应 | 另写一套导入或检索逻辑 |
+| [contracts/](../../contracts/) | DTO、Protocol、导入和查询 Serializer | ORM、模型调用和解析实现 |
+| [ingestion/](../../ingestion/) | 校验 → 编码 → 保存；预处理插件注册表 | 获取推文、解析或划分段落 |
+| [embeddings/](../../embeddings/) | HTTP 编码适配器、批次顺序与向量校验 | 数据库和召回排序 |
+| [catalog/](../../catalog/) | 三张业务表、事务保存、可见范围、父段读取 | 模型供应商协议、审核发布 |
+| [retrieval/](../../retrieval/) | 关键词／向量召回、RRF、结果组装 | 导入与文章清洗 |
+| [config/components.py](../../config/components.py) | 组合根，选择和注入具体适配器 | 业务规则 |
+| [api/](../../api/) | 两个 HTTP 入口、认证、输入校验和响应 | 另写一套导入或检索逻辑 |
 
 采用轻量的端口与适配器、策略模式和依赖注入，不给所有 ORM 操作套通用 Repository。只隔离确实会变化的文档保存、Embedding、召回、排序、上下文读取与预处理。
 
@@ -43,7 +45,7 @@ api → retrieval.service → HybridRetriever
 
 ### 3.1 数据契约
 
-`contracts/types.py` 是内部协议依据，`contracts/serializers.py` 是输入校验依据。JSON 样本见 `fixtures/iteration1/basic.json`。
+[contracts/types.py](../../contracts/types.py) 是内部协议依据，[contracts/serializers.py](../../contracts/serializers.py) 是导入校验依据。JSON 样本见 [basic.json](../../fixtures/iteration1/basic.json)。
 
 | DTO | 字段与含义 |
 | --- | --- |
@@ -54,6 +56,8 @@ api → retrieval.service → HybridRetriever
 | `EvidenceDraft` | `key` 父段内稳定子块键；`body` 检索正文；`knowledge_type` 知识类型；`locator`、`metadata`、`warnings` |
 
 数组顺序就是段落顺序，数据库保存为 `ordinal`。父子 key 在各自范围内唯一；正文非空，子块正文必须能在所属父段中找到。不自动补父段、生成摘要或拆段。Markdown 正文原样保存，包括行尾双空格。
+
+每篇 1～100 个父段，每父段 1～100 个子块，整篇最多 1000 个子块；JSON 请求体上限 2 MiB。父段正文上限 100000 字符、子块 32000 字符，key 最多 100 字符。字符上限不等于模型 token 上限，调用方仍需按所用模型准备合适长度的子块。
 
 `source_type` 表示平台，`document_schema` 表示内容类型，两者独立。例如同为 `yuque`，可以是 `repair_case` 或 `concept_note`。Schema 和知识类型接受规范化名称，不为每种文章增加表；类型专有字段放 `metadata`。可见范围只存在来源上，插件不能通过 metadata 改变权限。
 
@@ -66,6 +70,8 @@ api → retrieval.service → HybridRetriever
 - **本轮只有协议、注册机制和合约测试，没有具体预处理器，也没有原文导入 HTTP 入口。**当前 API 直接接收 `ProcessedDocument`。接入未来插件后，处理结果继续交给 `import_processed`，不改写存储与检索。
 
 第一种笔记本评测插件未来按“一台笔记本一个父段，多台分开”生成 DTO；这不是所有文档的固定划分模式。
+
+语雀、微信与维修记录的资料准备和后续读取方式见[来源接入说明](source-ingestion-plan.md)。
 
 ## 4. 存储设计
 
@@ -88,6 +94,8 @@ api → retrieval.service → HybridRetriever
 内容更新时按稳定 key 更新父子行，保留仍存在段落的 ID；删除本次输入中不存在的段落。返回 ID 指向当前内容，不承诺不可变历史引用。没有版本表、候选、发布指针或旧引用统一失效机制。
 
 Embedding 在数据库事务外完成；全部向量有效后一次事务保存来源、父段、子块。任意写入失败回滚本次写入，已有文档保留。这个事务用于防止半份文档，与版本发布流程无关。正常导入返回 HTTP 200；没有持久任务状态。
+
+统一入口为 [import_processed](../../ingestion/pipeline.py)，通过注入 `embedder` 与 `store` 组合编码和保存。权限与内容校验未通过时不调用模型；[HTTP 适配器](../../embeddings/openai_compatible.py) 验证返回索引、数量、维度、有限值与非零向量后才交给存储。
 
 ### 4.2 配置身份
 
@@ -117,18 +125,30 @@ RRF 的 k、每路候选数和最终 top_k 属于查询参数；修改它们不�
 | `POST /api/v1/sources/` | Token + maintain_source；请求 `{source, document}`；同步返回 `{source_id, context_ids, reused}`，新建和更新均 200 |
 | `POST /api/v1/search/` | Token；请求 `{query, filters?, top_k?}`；返回 `{mode: "hybrid", result_status, contexts}` |
 
-查询示例：`{"query":"电池能用多久","filters":{"knowledge_types":["product_spec"]},"top_k":5}`。`filters.source_ids` 接受 UUID 数组；top_k 默认 5，范围 1～20。不保留尚无实现的 scenario、confirmed_context、preprocess 参数。
+查询示例：`{"query":"电池能用多久","filters":{"knowledge_types":["product_spec"]},"top_k":5}`。`query` 最多 2000 字符；`filters.source_ids` 接受 1～50 个 UUID，`filters.knowledge_types` 接受 1～20 个名称，省略相应字段表示不按它过滤；top_k 默认 5，范围 1～20，计父段数。校验依据见 [contracts/query.py](../../contracts/query.py)。不保留尚无实现的 scenario、confirmed_context、preprocess 参数。
+
+导入成功响应示例：
+
+```json
+{"source_id":"00000000-0000-0000-0000-000000000001","context_ids":["00000000-0000-0000-0000-000000000002"],"reused":false}
+```
+
+查询返回 `result_status=found/no_result`。`contexts[]` 每项包含 `context_id/key/title/text/locator/metadata/warnings/source/score/matches/citations`：`source` 提供来源 ID、标题、URL、平台、日期及 Schema；`score` 是最佳命中子块的 RRF 分数；`matches` 是命中子块 ID、分数和各路名次；`citations` 是父段内全部子块的 ID、key、知识类型、定位、metadata 和警告。结果组装依据见 [DjangoContextReader](../../catalog/selectors.py)。
 
 输入未知字段或结构错误使用 DRF 400；认证失败 401，动作权限不足 403，范围外写入 404。领域或模型错误使用 `{error: {code, message}}`；配置缺失 503，模型失败／非法向量 502，意外服务异常 500。不返回 SQL、凭据或外部错误正文，不增加统一错误 Schema／OpenAPI 管理。
 
-## 7. 阶段与验收
+## 7. 分步实现与验收
 
-| 阶段 | 可独立运行的能力 | 验收 |
+以下步骤按依赖顺序构建；前三步可分别通过离线测试或隔离数据库运行验收，第四步提供完整 HTTP 服务。当前代码已包含前四步，具体来源插件留待后续实现。
+
+| 步骤 | 可独立运行的能力 | 验收 |
 | --- | --- | --- |
-| A：标准化存储 | Django + PostgreSQL；通过测试输入 DTO 与受控向量保存父子，无需模型服务 | 合约、重复导入、稳定 ID 更新、事务回滚、权限校验通过 |
-| B：混合检索 | 配置 Embedding 服务，API 可完成导入 → 双路召回 → RRF → 父段返回 | 单元及 PostgreSQL 集成测试通过；HTTP 协议验证通过；使用真实模型另做少量中文同义词试查 |
-| 后续 C：来源插件 | 增加已获准文章的连接器和具体预处理器，继续复用 B 的保存与检索 | 单／多机型边界、正文保真与定位样本通过；现有导入检索回归通过 |
+| 1：契约与插件边界 | DTO、Serializer、空注册表；无需数据库或模型 | 离线用例验证合法输入保真、非法结构拒绝、注册与替换行为 |
+| 2：标准化存储 | PostgreSQL 三表与事务保存；通过受控测试向量独立运行 | 新建、重复导入、稳定 ID 更新、删除缺席段落、权限与回滚通过 |
+| 3：混合召回 | 关键词、向量、RRF 与父段聚合；用模型替身运行检索服务 | 向量路与关键词路独立生效、过滤范围一致、RRF 次序及完整父段与引用正确 |
+| 4：HTTP 闭环 | 模型适配器与两个 API；配置真实 Embedding 后可实际导入和查询 | Token 导入／查询及错误行为通过，HTTP 模型协议验证通过，`make test` 通过；真实模型另做中文同义词试查 |
+| 5（后续）：来源插件 | 获准资料的连接器与具体预处理器，继续复用导入检索 | 单／多机型边界、正文保真与定位样本通过，现有导入检索回归通过 |
 
-阶段 A 的测试向量只用于存储验证，不作为可部署的语义模型。阶段 B 代码已接入可用模型服务协议，但真实模型质量与吞吐须用实际部署另行验证。
+测试分别位于 [tests/unit/](../../tests/unit/) 与 [tests/integration/](../../tests/integration/)，命令为 `make test-unit`、`make test-integration` 与 `make test`；通用规则和完成定义见[项目测试规则](../unit-testing-guidelines.md)。固定向量和本地 HTTP 模型替身只验证工程行为；真实中文检索质量、吞吐与容量须在实际部署中验证，不在本文保存会过期的测试通过数量。
 
 旧 S0～S6 数据表不直接映射新契约。保留历史迁移文件，新增迁移只允许旧业务表为空时收敛；存在资料则中止，原库不变。当前部署使用新数据库，所需旧资料整理为 DTO 后重新导入。不对旧开发库进行隐式删除或自动迁移，不建设升级验收矩阵。

@@ -60,7 +60,7 @@
 
 ## 7. 开发依据
 
-- 当前选型与范围：[首期需求与技术选型](phase1/phase1-requirements-and-selection.md)。
-- 数据、API 和扩展契约：[首期技术设计](phase1/phase1-technical-design.md)。
-- 具体模块与验收：[迭代一实现](phase1/phase1-iteration1-implementation.md)。
+- 技术取舍与后续候选：[技术选型与研究参考](technology-selection.md)。
+- 数据、API、模块和阶段验收：[首期技术设计](phase1/phase1-technical-design.md)。
+- 来源准备与后续插件：[来源接入说明](phase1/source-ingestion-plan.md)。
 - 测试与完成定义：[项目测试规则](unit-testing-guidelines.md)。

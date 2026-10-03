@@ -1,0 +1,75 @@
+services:
+  db:
+    image: postgres:17-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-itxia}
+      POSTGRES_USER: ${POSTGRES_USER:-itxia}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?请设置 POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  app:
+    restart: unless-stopped
+    build:
+      context: .
+      target: runtime
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?请设置 DJANGO_SECRET_KEY}
+      DEBUG: ${DEBUG:-false}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-127.0.0.1,localhost}
+      POSTGRES_DB: ${POSTGRES_DB:-itxia}
+      POSTGRES_USER: ${POSTGRES_USER:-itxia}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?请设置 POSTGRES_PASSWORD}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
+      EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-0}
+      EMBEDDING_REVISION: ${EMBEDDING_REVISION:-}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
+      EMBEDDING_QUERY_PREFIX: ${EMBEDDING_QUERY_PREFIX:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${APP_BIND_ADDRESS:-127.0.0.1}:${APP_PORT:-8000}:8000"
+    command: >-
+      sh -c 'python manage.py migrate --noinput &&
+      exec gunicorn --bind 0.0.0.0:8000 --workers ${WEB_WORKERS:-2}
+      --timeout ${WEB_TIMEOUT:-120}
+      --access-logfile - --error-logfile - config.wsgi:application'
+
+  embedding:
+    profiles: ["model"]
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+
+  test:
+    profiles: ["test"]
+    build:
+      context: .
+      target: test
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-test-only-secret}
+      POSTGRES_DB: ${POSTGRES_DB:-itxia}
+      POSTGRES_USER: ${POSTGRES_USER:-itxia}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?请设置 POSTGRES_PASSWORD}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  ollama_data:

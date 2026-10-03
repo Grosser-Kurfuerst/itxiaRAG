@@ -1,0 +1,11 @@
+# 本地部署配置和运行凭据，不提交到仓库。
+.env
+.env.*
+!.env.example
+.runtime/
+
+fixtures/*
+
+# Python 缓存文件
+__pycache__/
+*.py[cod]

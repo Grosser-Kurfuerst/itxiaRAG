@@ -4,6 +4,10 @@
 
 详细契约见 [首期技术设计](docs/phase1/phase1-technical-design.md)。合成请求见 [fixtures/iteration1/basic.json](fixtures/iteration1/basic.json)。
 
+## Docker 运行
+
+推荐按 [Docker 部署与验收](docs/phase1/deployment.md) 启动。Compose 提供 Web、PostgreSQL、可选的 Ollama 模型服务和独立测试镜像；文档包含配置、模型下载、账号创建、导入／检索验收及停止备份步骤。
+
 ## 本地运行
 
 需要 Python 3.12、PostgreSQL 和兼容 OpenAI `/embeddings` 协议的模型服务（本地或已获准的外部服务）。安装依赖：
@@ -13,12 +17,13 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements-dev.txt
 ```
 
-私有配置放仓库外：
+本地配置放在项目目录的被忽略文件中：
 
 ```sh
-cp .env.example /tmp/itxia.env
-# 编辑 /tmp/itxia.env 的密钥、数据库连接和 Embedding 服务参数
-set -a; . /tmp/itxia.env; set +a
+cp .env.example .env.local
+chmod 600 .env.local
+# 编辑 .env.local 的密钥、数据库连接和 Embedding 服务参数
+set -a; . ./.env.local; set +a
 .venv/bin/python manage.py migrate
 .venv/bin/python manage.py runserver 127.0.0.1:8000
 ```
@@ -28,13 +33,14 @@ set -a; . /tmp/itxia.env; set +a
 账号只通过部署侧创建：
 
 ```sh
-.venv/bin/python manage.py kb_account --username maintainer --permissions maintain_source,read_internal --token-file /tmp/maintainer.token
+mkdir -p .runtime
+.venv/bin/python manage.py kb_account --username maintainer --permissions maintain_source,read_internal --token-file .runtime/maintainer.token
 ```
 
 导入接口需要 `maintain_source`：
 
 ```sh
-curl -H "Authorization: Token $(cat /tmp/maintainer.token)" \
+curl -H "Authorization: Token $(cat .runtime/maintainer.token)" \
   -H 'Content-Type: application/json' \
   -d @fixtures/iteration1/basic.json \
   http://127.0.0.1:8000/api/v1/sources/
@@ -45,7 +51,7 @@ curl -H "Authorization: Token $(cat /tmp/maintainer.token)" \
 查询接口：
 
 ```sh
-curl -H "Authorization: Token $(cat /tmp/maintainer.token)" \
+curl -H "Authorization: Token $(cat .runtime/maintainer.token)" \
   -H 'Content-Type: application/json' \
   -d '{"query":"电池能用多久","top_k":5}' \
   http://127.0.0.1:8000/api/v1/search/
@@ -75,4 +81,5 @@ make test
 | [技术选型与研究参考](docs/technology-selection.md) | 选择理由、替代方案、开源与论文依据 |
 | [首期技术设计](docs/phase1/phase1-technical-design.md) | 模块、数据、API、错误行为及分步验收 |
 | [来源接入说明](docs/phase1/source-ingestion-plan.md) | 当前资料准备、未来语雀／微信／维修记录插件 |
+| [Docker 部署与验收](docs/phase1/deployment.md) | Compose 启动、账号、冒烟检查和自动测试 |
 | [项目测试规则](docs/unit-testing-guidelines.md) | 通用用例要求、测试命令与开发完成定义 |

@@ -13,7 +13,7 @@
 | 导入编排 | Python 同步服务：校验 → 编码 → 一次事务保存；步骤少，失败后修正重提 | Haystack／LlamaIndex 留作复杂编排候选；Worker／Celery 需要实际异步或批量需求，不作为当前依赖 |
 | 预处理扩展 | 连接器与处理器分离，Protocol + 显式注册表；统一输出 ProcessedDocument | 当前没有解析或自动分段实现。暂不部署通用解析平台，也不要求每类文档独立 Worker |
 | Embedding | 兼容 OpenAI `/embeddings` 的 HTTP 适配器；本地或获准外部服务均可，业务不绑定 SDK | Qwen3-Embedding-0.6B、BGE-M3 可作实测候选；配置示例不表示模型已部署或优于其他模型 |
-| 关键词召回 | PostgreSQL 子串与标题评分：少依赖，容易检查型号、错误码等词项匹配 | PGroonga、预分词 + FTS 可改善中文检索；当前没有分词器或 BM25，连续中文短语可能漏匹配 |
+| 关键词召回 | jieba + 纯 Python BM25：查询与子块使用相同分词规则，保留型号／错误码；先权限过滤再统计词频，分词函数可替换 | 当前每次读取并分析可见语料，适合小规模验证；PGroonga／分词 + FTS 或支持 BM25 的数据库扩展可减少在线扫描成本，但需部署与效果验证 |
 | 向量召回 | JSONB + Python 精确余弦 top-N：可作为小规模正确性基线 | pgvector 可把距离计算移至数据库并按需使用 ANN；当前方案需扫描可见向量，大规模性能未验证 |
 | 融合与返回 | RRF 按排名融合，不要求两路分数同尺度；子块召回后返回完整父段 | 直接相加分数需校准；reranker 增加模型成本，待真实问题集显示收益再通过 Ranker 接入 |
 | 验证 | pytest 单元测试 + PostgreSQL 集成测试；用受控模型验证契约与流程 | 真实模型另做相关性验证，不把模型替身的通过结果当作语义效果证明 |
@@ -55,7 +55,7 @@
 | 已观察到的问题 | 优先比较的方案 |
 | --- | --- |
 | JSONB 扫描成为查询瓶颈 | [pgvector](https://github.com/pgvector/pgvector/tree/7db2345ed99bc77bf33cbdc8b12bd1973210dc81) 的精确查询，再比较 ANN；记录过滤后召回差异 |
-| 中文短语检索明显漏召回 | [PGroonga](https://pgroonga.github.io/) 或应用分词 + PostgreSQL FTS；索引与查询分词保持一致 |
+| 中文词项漏匹配，或在线分词／BM25 扫描成为瓶颈 | 先验证领域词典，再比较 [PGroonga](https://pgroonga.github.io/)、分词 + PostgreSQL FTS 或数据库 BM25；索引与查询分析保持一致，原生 FTS 排名不等于 BM25 |
 | 需要独立扩容或多向量表示 | [Qdrant](https://github.com/qdrant/qdrant/tree/6ab21cac18ebb6f4ae29102c7f8f5cc11affd5de)；同时核算权限过滤、数据同步与运维成本 |
 | 候选相关但前几名排序差 | RRF 参数与可选 reranker 对照，确认质量改善足以承担延迟 |
 | 实际出现复杂 PDF／图片资料 | [Docling](https://github.com/docling-project/docling/tree/2d5c590c34b6378fd8a47c65b534b280aa40c93c) 等格式解析器，经预处理插件输出统一 DTO |

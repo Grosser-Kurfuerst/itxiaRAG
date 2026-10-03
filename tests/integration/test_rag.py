@@ -161,3 +161,37 @@ def test_keyword_ranks_before_limit_and_treats_wildcards_as_text(actor, embedder
     assert best[0].context_id == result.context_ids[0]
     assert len(KeywordRetriever().search('model_1', scope)) == 1
     assert len(KeywordRetriever().search('model%', scope)) == 0
+
+
+def test_bm25_chinese_query_updates_and_filters_corpus_before_scoring(actor, embedder, document_payload):
+    public = ingest(document_payload, actor, embedder)
+    scope = SearchScope(('public',), embedder.space_id)
+    retriever = KeywordRetriever()
+    initial = retriever.search('这台笔记本续航怎么样', scope)
+    assert initial[0].context_id == public.context_ids[0]
+    assert initial[0].ranks == {'keyword': 1}
+    # 不可见、不同模型空间和被类型过滤的资料不影响 BM25 的语料统计。
+    for locator, visibility, space, knowledge_type in [
+        ('internal', 'internal', embedder.space_id, 'product_spec'),
+        ('other-space', 'public', 'other-space', 'product_spec'),
+        ('other-type', 'public', embedder.space_id, 'repair_case'),
+    ]:
+        payload = deepcopy(document_payload)
+        payload['source'].update(canonical_locator=locator, visibility=visibility)
+        for child in payload['document']['contexts'][0]['children']:
+            child['knowledge_type'] = knowledge_type
+        added = ingest(payload, actor, embedder)
+        KnowledgeSource.objects.filter(pk=added.source_id).update(embedding_space=space)
+    filtered = SearchScope(('public',), embedder.space_id, knowledge_types=('product_spec',))
+    assert retriever.search('这台笔记本续航怎么样', filtered) == initial
+    assert retriever.search('这台笔记本续航怎么样', SearchScope(('public',), embedder.space_id,
+                                                              source_ids=(public.source_id,))) == initial
+    parent = document_payload['document']['contexts'][0]
+    parent.update(title='维修资料', body='风扇噪音。')
+    parent['children'] = [{'key': 'fan', 'body': parent['body']}]
+    ingest(document_payload, actor, embedder)
+    public_scope = SearchScope(('public',), embedder.space_id, source_ids=(public.source_id,))
+    assert retriever.search('续航', public_scope) == []
+    assert len(retriever.search('风扇噪音', public_scope)) == 1
+    KnowledgeSource.objects.filter(pk=public.source_id).delete()
+    assert retriever.search('风扇噪音', public_scope) == []

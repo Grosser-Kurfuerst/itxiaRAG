@@ -53,6 +53,8 @@ curl -H "Authorization: Token $(cat /tmp/maintainer.token)" \
 
 普通账号只获得公开来源；`read_internal` 才能检索内部来源。Embedding 故障返回 502，不静默降级为空结果。
 
+关键词路使用 jieba 分词与 Python BM25，向量路继续编码完整查询，最后由 RRF 融合。BM25 每次只读取当前可见子块并计算，内容更新立即生效；没有持久关键词索引或缓存，适合小规模验证。
+
 ## 验证
 
 ```sh

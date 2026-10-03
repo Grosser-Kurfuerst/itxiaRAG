@@ -4,7 +4,7 @@
 
 使用 pytest、pytest-django，文件 `test_*.py`，函数 `test_<行为>`。测试真实业务结果与主要失败分支，不追求 100% 覆盖率，不为每个内部函数复制实现逻辑写断言。
 
-- `tests/unit/`：离线验证输入与 DTO、插件契约、Embedding 适配、RRF。不要访问数据库、网络或真实模型。
+- `tests/unit/`：离线验证输入与 DTO、插件契约、Embedding 适配、中文分词、BM25 与 RRF。不要访问数据库、网络或真实模型。
 - `tests/integration/`：独立 PostgreSQL 测试库验证导入、更新、权限、失败回滚、检索与 HTTP API。模型使用明确的测试替身；HTTP 协议可用本地临时服务验证。
 - 不重复建设 contract/e2e/并发/升级矩阵。只有需求和风险确实增加时补相应测试。
 

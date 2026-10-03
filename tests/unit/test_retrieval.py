@@ -6,7 +6,6 @@ from contracts.errors import DomainError
 from contracts.types import Candidate
 from embeddings.validation import validate_vectors
 from retrieval.hybrid import HybridRetriever, RRFRanker
-from retrieval.keyword import terms
 from retrieval.vector import cosine
 
 
@@ -30,9 +29,7 @@ def test_hybrid_passes_identical_scope_to_replaceable_retrievers():
     right.search.assert_called_once_with('q', scope, 20)
 
 
-def test_keyword_and_cosine_basics():
-    assert terms('A14-2025，WIN_11？win_11') == ['A14-2025', 'WIN_11']
-    assert terms('电脑很卡') == ['电脑很卡']
+def test_cosine_basics():
     assert cosine([1, 0], [5, 0]) == 1
     assert cosine([1, 0], [0, 1]) == 0
 

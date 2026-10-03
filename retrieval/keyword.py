@@ -1,37 +1,26 @@
-import re
-
-from django.db.models import Case, IntegerField, Q, Value, When
+"""先按 SearchScope 过滤，再对可见子块分词并计算 BM25。"""
+import heapq
 
 from catalog.selectors import scoped_evidence
-from contracts.types import Candidate, SearchScope
-
-
-def terms(query, max_terms=16):
-    pieces = re.split(r"[\s,，。?？;；!！、:：()（）\[\]【】\"“”‘’]+", query.strip())
-    values, seen = [], set()
-    for item in pieces:
-        if item and any(char.isalnum() for char in item) and item.casefold() not in seen:
-            seen.add(item.casefold())
-            values.append(item)
-    return [query.strip()] if len(values) > max_terms else values
-
+from contracts.types import Candidate
+from retrieval.bm25 import bm25_scores
+from retrieval.tokenization import tokenize
 
 
 class KeywordRetriever:
     name = "keyword"
 
+    def __init__(self, tokenizer=tokenize):
+        self.tokenize = tokenizer
+
     def search(self, query, scope, limit=100):
-        words = terms(query)
+        words = self.tokenize(query)
         if not words:
             return []
-        phrase = Q(retrieval_text__icontains=query)
-        match, score = phrase, Case(When(phrase, then=Value(100)), default=Value(0), output_field=IntegerField())
-        for word in words:
-            condition = Q(retrieval_text__icontains=word)
-            match |= condition
-            score += Case(When(condition, then=Value(10)), default=Value(0), output_field=IntegerField())
-            score += Case(When(context__title__icontains=word, then=Value(20)), default=Value(0), output_field=IntegerField())
-        rows = (scoped_evidence(scope).filter(match).annotate(match_score=score)
-                .order_by("-match_score", "id").values_list("id", "context_id", "match_score")[:limit])
-        return [Candidate(evidence_id, context_id, float(value), {self.name: rank})
-                for rank, (evidence_id, context_id, value) in enumerate(rows, 1)]
+        rows = list(scoped_evidence(scope).values_list("id", "context_id", "retrieval_text"))
+        scores = bm25_scores([self.tokenize(text) for _, _, text in rows], words)
+        candidates = [Candidate(evidence_id, context_id, score)
+                      for (evidence_id, context_id, _), score in zip(rows, scores) if score > 0]
+        best = heapq.nsmallest(limit, candidates, key=lambda item: (-item.score, str(item.evidence_id)))
+        return [Candidate(item.evidence_id, item.context_id, item.score, {self.name: rank})
+                for rank, item in enumerate(best, 1)]

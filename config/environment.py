@@ -1,5 +1,6 @@
 """环境配置解析：错误消息仅包含字段名，不打印凭据。"""
 import os
+import math
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -18,3 +19,16 @@ def boolean(name, default=False):
     if value.lower() not in {"true", "false", "1", "0"}:
         raise ImproperlyConfigured(f"环境变量 {name} 必须为 true/false 或 1/0")
     return value.lower() in {"true", "1"}
+
+
+def bounded_float(name, default, minimum, maximum=None):
+    value = os.environ.get(name, "").strip()
+    if not value:
+        return default
+    try:
+        result = float(value)
+    except ValueError:
+        raise ImproperlyConfigured(f"环境变量 {name} 必须为有限数值") from None
+    if not math.isfinite(result) or result < minimum or (maximum is not None and result > maximum):
+        raise ImproperlyConfigured(f"环境变量 {name} 超出允许范围")
+    return result

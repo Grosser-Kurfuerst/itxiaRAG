@@ -71,3 +71,23 @@ def test_keyword_empty_query_does_not_read_the_database():
     with patch('retrieval.keyword.scoped_evidence') as scoped:
         assert KeywordRetriever().search('？！', object()) == []
     scoped.assert_not_called()
+
+
+def test_keyword_threshold_preserves_positive_matches_and_original_scores():
+    parent = UUID(int=10)
+    rows = [(UUID(int=i), parent, 'battery') for i in range(1, 5)]
+    with patch('retrieval.keyword.scoped_evidence') as scoped, \
+            patch('retrieval.keyword.bm25_scores', return_value=[0, .4, .8, 1.2]) as scoring:
+        scoped.return_value.values_list.return_value = rows
+        result = KeywordRetriever(str.split, min_bm25=.8).search('battery', object())
+    assert len(scoring.call_args.args[0]) == 4  # 过滤前仍统计完整 Scope 语料。
+    assert [item.evidence_id for item in result] == [UUID(int=4), UUID(int=3)]
+    assert [item.ranks for item in result] == [{'keyword': 1}, {'keyword': 2}]
+    assert [item.route_scores for item in result] == [{'keyword': 1.2}, {'keyword': .8}]
+    assert all(item.score_kind == 'bm25' for item in result)
+
+
+@pytest.mark.parametrize('threshold', [-.1, float('nan'), float('inf')])
+def test_keyword_rejects_invalid_thresholds(threshold):
+    with pytest.raises(ValueError, match='min_bm25'):
+        KeywordRetriever(min_bm25=threshold)

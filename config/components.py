@@ -5,8 +5,10 @@ from catalog.selectors import DjangoContextReader
 from catalog.storage import DjangoDocumentStore
 from embeddings.openai_compatible import OpenAICompatibleEmbedding
 from ingestion.registry import PreprocessorRegistry
-from retrieval.hybrid import HybridRetriever, RRFRanker
+from retrieval.hybrid import MultiRouteRecall
 from retrieval.keyword import KeywordRetriever
+from retrieval.pipeline import PostRecallPipeline
+from retrieval.steps import GroupParentsStep, RRFFusionStep, TopKParentsStep
 from retrieval.vector import VectorRetriever
 
 
@@ -22,9 +24,20 @@ def context_reader():
     return DjangoContextReader()
 
 
-def retriever(embedder):
-    return HybridRetriever([KeywordRetriever(), VectorRetriever(embedder)],
-                           RRFRanker(settings.RETRIEVAL_RRF_K))
+def recall_collector(embedder):
+    return MultiRouteRecall([
+        KeywordRetriever(min_bm25=settings.RETRIEVAL_MIN_BM25),
+        VectorRetriever(embedder, min_cosine=settings.RETRIEVAL_MIN_COSINE),
+    ])
+
+
+def post_recall_pipeline():
+    # 插入、移除或调序兼容步骤只修改这里；默认不启用模型重排。
+    return PostRecallPipeline([
+        RRFFusionStep(settings.RETRIEVAL_RRF_K),
+        GroupParentsStep(),
+        TopKParentsStep(),
+    ])
 
 
 def preprocessors():

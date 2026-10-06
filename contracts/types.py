@@ -1,7 +1,7 @@
 """跨模块 DTO 和变化点协议；不依赖 Django ORM 或模型厂商。"""
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Protocol
+from typing import Literal, Protocol, TypeAlias
 from uuid import UUID
 
 
@@ -92,15 +92,68 @@ class SearchScope:
 
 @dataclass(frozen=True)
 class Candidate:
-    """ranks 使用唯一召回路线名，名次从 1 起算；召回器输出必须包含自身路线。"""
+    """ranks 从 1 起算；route_scores 保留原分数，score 表示当前排序分数。"""
     evidence_id: UUID
     context_id: UUID
     score: float
     ranks: dict[str, int] = field(default_factory=dict)
+    route_scores: dict[str, float] = field(default_factory=dict)
+    score_kind: str = "raw"
 
 
 class Retriever(Protocol):
+    name: str
+
     def search(self, query: str, scope: SearchScope, limit: int) -> list[Candidate]: ...
+
+
+@dataclass(frozen=True)
+class SearchRequest:
+    query: str
+    scope: SearchScope
+    top_k: int
+
+
+@dataclass(frozen=True)
+class RouteBatch:
+    routes: dict[str, list[Candidate]]
+
+
+@dataclass(frozen=True)
+class EvidenceBatch:
+    candidates: list[Candidate]
+
+
+@dataclass(frozen=True)
+class ContextCandidate:
+    context_id: UUID
+    score: float
+    score_kind: str
+    matches: list[Candidate]
+
+
+@dataclass(frozen=True)
+class ContextBatch:
+    contexts: list[ContextCandidate]
+
+
+SearchBatch: TypeAlias = RouteBatch | EvidenceBatch | ContextBatch
+SearchStage: TypeAlias = Literal["routes", "evidence", "contexts"]
+
+
+class RecallCollector(Protocol):
+    def collect(self, query: str, scope: SearchScope, limit: int) -> RouteBatch: ...
+
+
+class SearchStep(Protocol):
+    input_stage: SearchStage
+    output_stage: SearchStage
+
+    def process(self, request: SearchRequest, batch: SearchBatch) -> SearchBatch: ...
+
+
+class SearchPipeline(Protocol):
+    def run(self, request: SearchRequest, routes: RouteBatch) -> ContextBatch: ...
 
 
 class Ranker(Protocol):
@@ -108,4 +161,4 @@ class Ranker(Protocol):
 
 
 class ContextReader(Protocol):
-    def read(self, candidates: list[Candidate], scope: SearchScope, top_k: int) -> list[dict]: ...
+    def read(self, contexts: list[ContextCandidate], scope: SearchScope) -> list[dict]: ...

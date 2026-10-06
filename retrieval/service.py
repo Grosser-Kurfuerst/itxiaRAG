@@ -1,8 +1,8 @@
 from catalog.policies import visible_scopes
-from contracts.types import ContextReader, Retriever, SearchScope
+from contracts.types import ContextReader, RecallCollector, SearchPipeline, SearchRequest, SearchScope
 
 
-def search(data, actor, *, retriever: Retriever, reader: ContextReader,
+def search(data, actor, *, collector: RecallCollector, pipeline: SearchPipeline, reader: ContextReader,
            embedding_space: str, candidate_limit=100):
     filters = data.get("filters", {})
     scope = SearchScope(
@@ -10,7 +10,9 @@ def search(data, actor, *, retriever: Retriever, reader: ContextReader,
         tuple(filters["source_ids"]) if "source_ids" in filters else None,
         tuple(filters["knowledge_types"]) if "knowledge_types" in filters else None,
     )
-    candidates = retriever.search(data["query"], scope, candidate_limit)
-    contexts = reader.read(candidates, scope, data.get("top_k", 5))
+    request = SearchRequest(data["query"], scope, data.get("top_k", 5))
+    routes = collector.collect(request.query, scope, candidate_limit)
+    parents = pipeline.run(request, routes)
+    contexts = reader.read(parents.contexts, scope)
     return {"mode": "hybrid", "result_status": "found" if contexts else "no_result",
             "contexts": contexts}

@@ -31,7 +31,8 @@ class SearchView(APIView):
     def post(self, request):
         data = validated(QuerySerializer, request.data)
         embedder = components.embedding_provider()
-        result = search(data, request.user, retriever=components.retriever(embedder),
+        result = search(data, request.user, collector=components.recall_collector(embedder),
+                        pipeline=components.post_recall_pipeline(),
                         reader=components.context_reader(), embedding_space=embedder.space_id,
                         candidate_limit=settings.RETRIEVAL_CANDIDATE_LIMIT)
         return Response(result)

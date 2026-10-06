@@ -33,6 +33,15 @@ EMBEDDING_QUERY_PREFIX="Instruct: Given a web search query, retrieve relevant pa
 
 `EMBEDDING_REVISION` 是部署者记录的模型版本标识，不会触发下载。记录 `ollama list` 的模型 ID；更新模型文件后应更新此标识。地址、模型、维度、revision 或 query prefix 改变后，需要重新导入资料。
 
+检索门槛为可选服务配置，可在同一环境文件中增加：
+
+```dotenv
+RETRIEVAL_MIN_COSINE=
+RETRIEVAL_MIN_BM25=0
+```
+
+默认不额外过滤向量，关键词保留 BM25 大于零的结果。设置最低 cosine 时范围为 `[-1, 1]`，最低 BM25 须非负；两路分别过滤。具体值应按实际问题集校准，改动门槛不需重新导入，只需重建应用容器。结果的 `matches[].route_scores` 保留原始 cosine／BM25，`score_kind` 说明当前排序分数，默认是 `rrf`。
+
 为减少重复命令，在当前终端定义：
 
 ```sh

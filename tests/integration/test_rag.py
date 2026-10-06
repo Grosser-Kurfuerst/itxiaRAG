@@ -9,15 +9,16 @@ from rest_framework.test import APIClient
 from catalog.models import ContextUnit, EvidenceUnit, KnowledgeSource
 from catalog.selectors import DjangoContextReader
 from catalog.storage import DjangoDocumentStore
+from config import components
 from contracts.errors import DomainError
 from contracts.query import QuerySerializer
 from contracts.serializers import SourceImportSerializer, import_dtos
 from contracts.types import SearchScope
 from ingestion.pipeline import import_processed
-from retrieval.hybrid import HybridRetriever, RRFRanker
 from retrieval.keyword import KeywordRetriever
 from retrieval.service import search
-from retrieval.vector import VectorRetriever
+from retrieval.pipeline import PostRecallPipeline
+from retrieval.steps import GroupParentsStep, RRFFusionStep, TopKParentsStep
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db]
 
@@ -40,8 +41,8 @@ def ingest(payload, actor, embedder, store=None):
 def query(text, actor, embedder, **fields):
     s = QuerySerializer(data={'query': text, **fields})
     s.is_valid(raise_exception=True)
-    return search(s.validated_data, actor, retriever=HybridRetriever(
-        [KeywordRetriever(), VectorRetriever(embedder)], RRFRanker()), reader=DjangoContextReader(),
+    return search(s.validated_data, actor, collector=components.recall_collector(embedder),
+        pipeline=components.post_recall_pipeline(), reader=DjangoContextReader(),
         embedding_space=embedder.space_id)
 
 
@@ -195,3 +196,60 @@ def test_bm25_chinese_query_updates_and_filters_corpus_before_scoring(actor, emb
     assert len(retriever.search('风扇噪音', public_scope)) == 1
     KnowledgeSource.objects.filter(pk=public.source_id).delete()
     assert retriever.search('风扇噪音', public_scope) == []
+
+
+def test_independent_route_thresholds_return_keyword_only_or_no_result(
+        actor, embedder, document_payload, settings):
+    ingest(document_payload, actor, embedder)
+    settings.RETRIEVAL_MIN_COSINE = .5
+    with patch.object(embedder, 'embed_query', return_value=[-1, 0]):
+        result = query('续航', actor, embedder)
+        assert result['result_status'] == 'found'
+        parent = result['contexts'][0]
+        assert parent['score_kind'] == 'rrf'
+        match = parent['matches'][0]
+        assert match['ranks'] == {'keyword': 1}
+        assert match['score_kind'] == 'rrf'
+        assert match['route_scores']['keyword'] > 0 and 'vector' not in match['route_scores']
+        settings.RETRIEVAL_MIN_BM25 = 1000
+        assert query('续航', actor, embedder)['result_status'] == 'no_result'
+
+
+def test_multiple_hits_count_top_k_by_parent_and_keep_complete_context(actor, embedder, document_payload):
+    document = document_payload['document']
+    second = deepcopy(document['contexts'][0])
+    second.update(key='laptop-b', title='笔记本 B')
+    document['contexts'].append(second)
+    imported = ingest(document_payload, actor, embedder)
+    result = query('续航', actor, embedder, top_k=2)
+    assert {row['context_id'] for row in result['contexts']} == set(map(str, imported.context_ids))
+    assert len(query('续航', actor, embedder, top_k=1)['contexts']) == 1
+    assert all(row['text'] == second['body'] and len(row['citations']) == 2
+               for row in result['contexts'])
+
+
+def test_api_uses_injected_post_recall_steps_and_exposes_original_route_scores(
+        actor, embedder, document_payload):
+    from rest_framework.authtoken.models import Token
+    from contracts.types import EvidenceBatch
+
+    class RemoveAll:
+        input_stage = output_stage = 'evidence'
+
+        def process(self, request, batch):
+            return EvidenceBatch([])
+
+    ingest(document_payload, actor, embedder)
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION='Token ' + Token.objects.create(user=actor).key)
+    with patch('config.components.embedding_provider', return_value=embedder):
+        response = client.post('/api/v1/search/', {'query': '续航'}, format='json')
+        assert response.status_code == 200
+        match = response.data['contexts'][0]['matches'][0]
+        assert match['route_scores']['vector'] == 1
+        assert match['route_scores']['keyword'] > 0 and match['score_kind'] == 'rrf'
+        custom = PostRecallPipeline([RRFFusionStep(), RemoveAll(), GroupParentsStep(), TopKParentsStep()])
+        with patch('config.components.post_recall_pipeline', return_value=custom):
+            response = client.post('/api/v1/search/', {'query': '续航'}, format='json')
+        assert response.status_code == 200
+        assert response.data == {'mode': 'hybrid', 'result_status': 'no_result', 'contexts': []}

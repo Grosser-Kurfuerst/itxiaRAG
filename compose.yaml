@@ -34,6 +34,8 @@ services:
       EMBEDDING_REVISION: ${EMBEDDING_REVISION:-}
       EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
       EMBEDDING_QUERY_PREFIX: ${EMBEDDING_QUERY_PREFIX:-}
+      RETRIEVAL_MIN_COSINE: ${RETRIEVAL_MIN_COSINE:-}
+      RETRIEVAL_MIN_BM25: ${RETRIEVAL_MIN_BM25:-0}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:

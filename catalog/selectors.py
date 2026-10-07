@@ -10,10 +10,7 @@ def scoped_contexts(scope):
 
 
 def scoped_evidence(scope):
-    rows = EvidenceUnit.objects.filter(context__in=scoped_contexts(scope))
-    if scope.knowledge_types is not None:
-        rows = rows.filter(knowledge_type__in=scope.knowledge_types)
-    return rows
+    return EvidenceUnit.objects.filter(context__in=scoped_contexts(scope))
 
 
 class DjangoContextReader:

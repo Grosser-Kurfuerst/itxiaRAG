@@ -8,7 +8,6 @@ def search(data, actor, *, collector: RecallCollector, pipeline: SearchPipeline,
     scope = SearchScope(
         tuple(visible_scopes(actor)), embedding_space,
         tuple(filters["source_ids"]) if "source_ids" in filters else None,
-        tuple(filters["knowledge_types"]) if "knowledge_types" in filters else None,
     )
     request = SearchRequest(data["query"], scope, data.get("top_k", 5))
     routes = collector.collect(request.query, scope, candidate_limit)

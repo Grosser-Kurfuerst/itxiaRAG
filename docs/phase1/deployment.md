@@ -188,6 +188,8 @@ dc up -d --build app
 dc logs --tail=100 app
 ```
 
+当前版本会自动执行 `0004_remove_evidence_knowledge_type`，只删除分类列；既有正文和向量保留，无需重新导入。旧导入 JSON 须去掉子块 `knowledge_type`，查询须去掉 `filters.knowledge_types`，否则返回 400。响应已取消全量 `citations`，通过 `matches[].key/locator` 查看命中定位。
+
 备份数据库到被 `.gitignore` 忽略的 `.runtime/`，正常停止时保留数据卷：
 
 ```sh

@@ -55,7 +55,6 @@ class EvidenceUnit(models.Model):
     ordinal = models.PositiveIntegerField()
     body = models.TextField()
     retrieval_text = models.TextField()
-    knowledge_type = models.CharField(max_length=64, default="concept")
     locator = models.JSONField(default=dict)
     metadata = models.JSONField(default=dict)
     warnings = models.JSONField(default=list)

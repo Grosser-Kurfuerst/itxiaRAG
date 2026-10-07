@@ -56,13 +56,13 @@ api → retrieval.service → MultiRouteRecall
 | `RawDocument` | `content` 原始字节；`media_type` 格式；`metadata` 采集元数据，仅供未来插件使用 |
 | `ProcessedDocument` | `title`、`document_schema`、`schema_version`、`source_date`、`metadata`、`warnings`、`contexts` |
 | `ContextDraft` | `key` 文档内稳定父段键；`title`、`body` 完整上下文；`locator` 原文定位；`metadata` 适用对象等附加信息；`warnings`；`children` |
-| `EvidenceDraft` | `key` 父段内稳定子块键；`body` 检索正文；`knowledge_type` 知识类型；`locator`、`metadata`、`warnings` |
+| `EvidenceDraft` | `key` 父段内稳定子块键；`body` 检索正文；`locator`、`metadata`、`warnings` |
 
 数组顺序就是段落顺序，数据库保存为 `ordinal`。父子 key 在各自范围内唯一；正文非空，子块正文必须能在所属父段中找到。不自动补父段、生成摘要或拆段。Markdown 正文原样保存，包括行尾双空格。
 
 每篇 1～100 个父段，每父段 1～100 个子块，整篇最多 1000 个子块；JSON 请求体上限 2 MiB。父段正文上限 100000 字符、子块 32000 字符，key 最多 100 字符。字符上限不等于模型 token 上限，调用方仍需按所用模型准备合适长度的子块。
 
-`source_type` 表示平台，`document_schema` 表示内容类型，两者独立。例如同为 `yuque`，可以是 `repair_case` 或 `concept_note`。Schema 和知识类型接受规范化名称，不为每种文章增加表；类型专有字段放 `metadata`。可见范围只存在来源上，插件不能通过 metadata 改变权限。
+`source_type` 表示平台，`document_schema` 表示预处理所需的文档结构，两者独立。例如同为 `yuque`，可以分别注册维修经验和基础知识的预处理器。结构专有字段放 `metadata`，不为每种文章增加表。可见范围只存在来源上，插件不能通过 metadata 改变权限。
 
 ### 3.2 插件接入方式
 
@@ -84,7 +84,7 @@ api → retrieval.service → MultiRouteRecall
 | --- | --- | --- |
 | `knowledge_source` | UUID、source_type、canonical_locator、source_url、visibility、title、source_date、document_schema、schema_version、metadata、warnings、content_hash、embedding_space、时间戳 | 一份来源的当前文档与出处；`(source_type, canonical_locator)` 唯一 |
 | `context_unit` | UUID、source 外键、key、ordinal、title、body、locator、metadata、warnings | 完整父上下文；`(source, key)` 唯一 |
-| `evidence_unit` | UUID、context 外键、key、ordinal、body、retrieval_text、knowledge_type、locator、metadata、warnings、embedding | 召回子块及其向量；`(context, key)` 唯一 |
+| `evidence_unit` | UUID、context 外键、key、ordinal、body、retrieval_text、locator、metadata、warnings、embedding | 召回子块及其向量；`(context, key)` 唯一 |
 
 一个子块对应一个 embedding，编码文本固定为 `父段标题 + 换行 + 子块正文`。父段不单独编码。文档级 metadata 用于保留来源信息，不投影为召回条件，也不默认完整发送给调用方；父段 metadata 随结果返回，子块 metadata 和 warnings 保存供维护或后续扩展，不默认返回。回答所需的风险警告应写入文档或父段 warnings，不能只放在子块中。子块 locator 应保持简短，只记录章节、段落号或字符偏移等定位信息，不放正文或大型附加数据。
 
@@ -111,13 +111,13 @@ RRF 的 k、每路候选数、路线门槛和后处理步骤列表属于查询�
 ### 5.1 当前已实现流程
 
 1. 接收 `query` 原样作为检索文本，校验 `top_k` 与可选过滤条件；不做查询改写或意图识别。
-2. 根据当前账号生成不可由请求扩大权限的 `SearchScope`。来源 ID、知识类型过滤只缩小召回范围；两路使用同一 Scope。
+2. 根据当前账号生成不可由请求扩大权限的 `SearchScope`。来源 ID 过滤只缩小召回范围；两路使用同一 Scope。
 3. 关键词路先按 Scope 从 PostgreSQL 读取全部可见子块，再对 `retrieval_text` 和查询使用相同分析器：jieba 中文分词、英文大小写统一、保留型号／错误码、移除少量问句停用词。Python BM25 根据词频、文档频率和长度评分，按本路线门槛过滤后取 top-N；同分按子块 UUID 排序。
 4. 向量路调用 `embed_query`，过滤同一向量空间，计算余弦并应用可选门槛。`MultiRouteRecall` 依次收集两路结果，每路最多 100 个子块，保留原始分数与从 1 起算的名次。
 5. `PostRecallPipeline` 按组合根的步骤列表处理候选。默认 RRF 按子块 ID 合并：`score = Σ 1/(60 + rank)`，同一路重复候选只计最佳名次；再按最终子块顺序聚合父段，以最佳子块的位置确定父段排序；最后取 top_k 个父段。
 6. `ContextReader` 按选定父段顺序批量读取全文、来源和命中子块定位，读取时再次应用 Scope。它不再负责融合、父段聚合或排序，也不读取未命中的子块列表。
 
-知识类型过滤限制**召回子块**；返回仍是完整父段，可能包含其他类型的邻近内容，这是上下文补全，不是类型级权限。可见范围在来源层控制。
+召回不依赖预处理器或调用方提供的主题分类；正文相关性和来源／向量空间范围决定候选。可见范围在来源层控制。
 
 关键词实现见 [KeywordRetriever](../../retrieval/keyword.py)，分词函数可通过构造参数替换，文档与查询始终复用同一分析器；仅影响关键词路，不改写向量路输入。BM25 默认 `k1=1.5`、`b=0.75`，使用正值 IDF `log(1 + (N-df+0.5)/(df+0.5))`，单篇或高频词也可召回。统计语料是本次 Scope 允许的全部子块，不能在统计前预截断，内部资料不影响普通用户的分数。父段标题已在 `retrieval_text` 中，不另加固定标题分或短语分。
 
@@ -233,7 +233,7 @@ Scope 查询、召回、RRF、分组或结果读取失败按现有错误契约�
 | `POST /api/v1/sources/` | Token + maintain_source；请求 `{source, document}`；同步返回 `{source_id, context_ids, reused}`，新建和更新均 200 |
 | `POST /api/v1/search/` | Token；请求 `{query, filters?, top_k?}`；返回 `{mode: "hybrid", result_status, contexts}` |
 
-查询示例：`{"query":"电池能用多久","filters":{"knowledge_types":["product_spec"]},"top_k":5}`。`query` 最多 2000 字符；`filters.source_ids` 接受 1～50 个 UUID，`filters.knowledge_types` 接受 1～20 个名称，省略相应字段表示不按它过滤；top_k 默认 5，范围 1～20，计父段数。校验依据见 [contracts/query.py](../../contracts/query.py)。不保留尚无实现的 scenario、confirmed_context、preprocess 参数。
+查询示例：`{"query":"电池能用多久","filters":{"source_ids":["00000000-0000-0000-0000-000000000001"]},"top_k":5}`。`query` 最多 2000 字符；`filters.source_ids` 接受 1～50 个 UUID，省略表示不按来源过滤；top_k 默认 5，范围 1～20，计父段数。校验依据见 [contracts/query.py](../../contracts/query.py)。不保留尚无实现的 scenario、confirmed_context、preprocess 或知识类型过滤参数。
 
 导入成功响应示例：
 
@@ -261,4 +261,6 @@ Scope 查询、召回、RRF、分组或结果读取失败按现有错误契约�
 
 测试分别位于 [tests/unit/](../../tests/unit/) 与 [tests/integration/](../../tests/integration/)，命令为 `make test-unit`、`make test-integration` 与 `make test`；通用规则和完成定义见[项目测试规则](../unit-testing-guidelines.md)。固定向量和本地 HTTP 模型替身只验证工程行为；真实中文检索质量、吞吐与容量须在实际部署中验证，不在本文保存会过期的测试通过数量。
 
-旧 S0～S6 数据表不直接映射新契约。保留历史迁移文件，新增迁移只允许旧业务表为空时收敛；存在资料则中止，原库不变。当前部署使用新数据库，所需旧资料整理为 DTO 后重新导入。不对旧开发库进行隐式删除或自动迁移，不建设升级验收矩阵。
+旧 S0～S6 数据表不直接映射新契约。保留历史迁移文件，`0003_minimal_rag` 只允许旧业务表为空时收敛；存在资料则中止，原库不变。当前部署使用新数据库，所需旧资料整理为 DTO 后重新导入。不对旧开发库进行隐式删除或自动迁移，不建设升级验收矩阵。
+
+当前契约已删除子块 `knowledge_type` 与查询 `filters.knowledge_types`；旧请求携带它们会返回未知字段 400。可选章节主题可写入 metadata，不参与召回过滤；`document_schema` 继续描述输入结构和选择预处理器。升级时执行 `0004_remove_evidence_knowledge_type`，只删除该列，不重建正文、父子关系或已有向量；无需为了本次字段删除重新导入资料。旧 content_hash 保留，升级后的首次重复导入可能返回 `reused=false`，随后按新 DTO 判断复用。

@@ -5,7 +5,6 @@ from contracts.serializers import StrictSerializer, TextField
 
 class FiltersSerializer(StrictSerializer):
     source_ids = serializers.ListField(child=serializers.UUIDField(), allow_empty=False, max_length=50, required=False)
-    knowledge_types = serializers.ListField(child=TextField(max_length=64), allow_empty=False, max_length=20, required=False)
 
 
 class QuerySerializer(StrictSerializer):

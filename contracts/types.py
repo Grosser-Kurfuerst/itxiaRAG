@@ -9,7 +9,6 @@ from uuid import UUID
 class EvidenceDraft:
     key: str
     body: str
-    knowledge_type: str = "concept"
     locator: dict = field(default_factory=dict)
     metadata: dict = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
@@ -87,7 +86,6 @@ class SearchScope:
     visibilities: tuple[str, ...]
     embedding_space: str
     source_ids: tuple[UUID, ...] | None = None
-    knowledge_types: tuple[str, ...] | None = None
 
 
 @dataclass(frozen=True)

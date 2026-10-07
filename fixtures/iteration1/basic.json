@@ -18,8 +18,8 @@
         "locator": {"heading": "笔记本 A"},
         "metadata": {"model": "laptop-a"},
         "children": [
-          {"key": "battery", "body": "日常办公续航约 8 小时。", "knowledge_type": "product_spec", "locator": {"paragraph": 1}},
-          {"key": "noise", "body": "高负载下风扇噪声较明显。", "knowledge_type": "product_spec", "locator": {"paragraph": 2}}
+          {"key": "battery", "body": "日常办公续航约 8 小时。", "locator": {"paragraph": 1}},
+          {"key": "noise", "body": "高负载下风扇噪声较明显。", "locator": {"paragraph": 2}}
         ]
       }
     ]

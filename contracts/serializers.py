@@ -33,7 +33,6 @@ class TextField(serializers.CharField):
 class EvidenceSerializer(StrictSerializer):
     key = TextField(max_length=100)
     body = TextField(trim_whitespace=False, max_length=32000)
-    knowledge_type = serializers.RegexField(r"^[a-z][a-z0-9_]*$", max_length=64, default="concept")
     locator = serializers.DictField(default=dict)
     metadata = serializers.DictField(default=dict)
     warnings = serializers.ListField(child=TextField(max_length=500), default=list)

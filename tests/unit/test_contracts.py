@@ -8,6 +8,7 @@ from contracts.serializers import SourceImportSerializer, import_dtos, validate_
 from contracts.types import RawDocument
 from ingestion.registry import PreprocessorRegistry
 from contracts.errors import DomainError
+from contracts.query import QuerySerializer
 
 
 def document(data):
@@ -19,11 +20,20 @@ def document(data):
 def test_dto_roundtrip_preserves_text_and_extensible_metadata(document_payload):
     raw = document_payload['document']['contexts'][0]
     raw['body'] = "第一行  \n第二行"
-    raw['children'] = [{"key": "a", "body": raw['body'], "knowledge_type": "new_type"}]
+    raw['children'] = [{"key": "a", "body": raw['body'], "metadata": {"topic": "new_type"}}]
     result = validate_document(document(document_payload))
     assert result.contexts[0].body == "第一行  \n第二行"
-    assert result.contexts[0].children[0].knowledge_type == "new_type"
+    assert result.contexts[0].children[0].metadata == {"topic": "new_type"}
     assert result.metadata['note'].startswith('合成样本')
+
+
+def test_removed_type_fields_are_rejected(document_payload):
+    document_payload['document']['contexts'][0]['children'][0]['knowledge_type'] = 'concept'
+    with pytest.raises(ValidationError, match='未知字段'):
+        document(document_payload)
+    query = QuerySerializer(data={'query': '续航', 'filters': {'knowledge_types': ['concept']}})
+    with pytest.raises(ValidationError, match='未知字段'):
+        query.is_valid(raise_exception=True)
 
 
 @pytest.mark.parametrize('fault', ['unknown', 'duplicate_parent', 'duplicate_child', 'unrelated_child', 'empty'])

@@ -53,7 +53,7 @@ def test_import_dedupe_and_update_keep_ids_without_job_or_publication(actor, emb
     child_id = EvidenceUnit.objects.get(key='battery').pk
     parent = document_payload['document']['contexts'][0]
     parent['body'] = '续航约 9 小时。'
-    parent['children'] = [{'key': 'battery', 'body': parent['body'], 'knowledge_type': 'product_spec'}]
+    parent['children'] = [{'key': 'battery', 'body': parent['body']}]
     updated = ingest(document_payload, actor, embedder)
     assert not updated.reused and updated.context_ids == first.context_ids
     assert EvidenceUnit.objects.get().pk == child_id
@@ -88,7 +88,7 @@ def test_vector_recalls_synonym_and_returns_full_parent_with_hit_locations(actor
     assert parent['matches'][0]['ranks'] == {'vector': 1}
 
 
-def test_both_routes_apply_visibility_source_and_type_filters(actor, embedder, document_payload):
+def test_both_routes_apply_visibility_source_and_embedding_space_filters(actor, embedder, document_payload):
     public = ingest(document_payload, actor, embedder)
     private = deepcopy(document_payload)
     private['source'].update(canonical_locator='private:review', visibility='internal')
@@ -97,9 +97,20 @@ def test_both_routes_apply_visibility_source_and_type_filters(actor, embedder, d
     assert {c['source']['id'] for c in query('续航', reader, embedder)['contexts']} == {str(public.source_id)}
     assert len(query('续航', actor, embedder)['contexts']) == 2
     assert query('续航', reader, embedder, filters={'source_ids': [str(internal.source_id)]})['contexts'] == []
-    assert query('续航', actor, embedder, filters={'knowledge_types': ['repair_case']})['contexts'] == []
     embedder.space_id = 'other-model'
     assert query('续航', actor, embedder)['contexts'] == []
+
+
+def test_schema_and_optional_topics_do_not_filter_recall(actor, embedder, document_payload):
+    ingest(document_payload, actor, embedder)
+    before = query('续航', actor, embedder)['contexts'][0]
+    document_payload['document']['document_schema'] = 'custom_note'
+    for child in document_payload['document']['contexts'][0]['children']:
+        child['metadata'] = {'topic': 'unrelated_topic'}
+    ingest(document_payload, actor, embedder)
+    after = query('续航', actor, embedder)['contexts'][0]
+    assert after['matches'] == before['matches']
+    assert after['text'] == before['text']
 
 
 def test_embedding_failure_precedes_storage_and_save_failure_rolls_back(actor, embedder, document_payload):
@@ -133,6 +144,10 @@ def test_real_token_api_import_search_errors_and_removed_routes(actor, embedder,
         result = client.post('/api/v1/search/', {'query': '电池'}, format='json')
         assert result.status_code == 200 and len(result.data['contexts']) == 1
         assert client.post('/api/v1/search/', {'query': '电池', 'extra': 1}, format='json').status_code == 400
+        old_query = client.post('/api/v1/search/', {
+            'query': '电池', 'filters': {'knowledge_types': ['product_spec']},
+        }, format='json')
+        assert old_query.status_code == 400
         with patch.object(embedder, 'embed_query', side_effect=DomainError('EMBEDDING_UNAVAILABLE', '模型不可用', 502)):
             failure = client.post('/api/v1/search/', {'query': '电池'}, format='json')
             assert failure.status_code == 502 and failure.data['error']['code'] == 'EMBEDDING_UNAVAILABLE'
@@ -184,20 +199,16 @@ def test_bm25_chinese_query_updates_and_filters_corpus_before_scoring(actor, emb
     initial = retriever.search('这台笔记本续航怎么样', scope)
     assert initial[0].context_id == public.context_ids[0]
     assert initial[0].ranks == {'keyword': 1}
-    # 不可见、不同模型空间和被类型过滤的资料不影响 BM25 的语料统计。
-    for locator, visibility, space, knowledge_type in [
-        ('internal', 'internal', embedder.space_id, 'product_spec'),
-        ('other-space', 'public', 'other-space', 'product_spec'),
-        ('other-type', 'public', embedder.space_id, 'repair_case'),
+    # 不可见和不同模型空间的资料不影响 BM25 的语料统计。
+    for locator, visibility, space in [
+        ('internal', 'internal', embedder.space_id),
+        ('other-space', 'public', 'other-space'),
     ]:
         payload = deepcopy(document_payload)
         payload['source'].update(canonical_locator=locator, visibility=visibility)
-        for child in payload['document']['contexts'][0]['children']:
-            child['knowledge_type'] = knowledge_type
         added = ingest(payload, actor, embedder)
         KnowledgeSource.objects.filter(pk=added.source_id).update(embedding_space=space)
-    filtered = SearchScope(('public',), embedder.space_id, knowledge_types=('product_spec',))
-    assert retriever.search('这台笔记本续航怎么样', filtered) == initial
+    assert retriever.search('这台笔记本续航怎么样', scope) == initial
     assert retriever.search('这台笔记本续航怎么样', SearchScope(('public',), embedder.space_id,
                                                               source_ids=(public.source_id,))) == initial
     parent = document_payload['document']['contexts'][0]

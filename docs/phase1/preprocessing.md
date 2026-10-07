@@ -24,4 +24,6 @@ RawDocument → ParseStep → StructureStep → ChunkStep → BuildDocumentStep 
 
 ## 实施状态
 
-已实现通用流水线、步骤协议、内存对象与公共 DTO 构建/校验；具体解析器、分段策略和原文 API 在后续功能提交中接入。当前标准化 JSON API 行为保持不变。
+已实现通用流水线、步骤协议、内存对象与公共 DTO 构建/校验，以及 HTML/Markdown/纯文本解析器；分段策略和原文 API 在后续功能提交中接入。当前标准化 JSON API 行为保持不变。
+
+`ingestion/parsers.py` 的 ParserRegistry 可直接注入 ParseStep，按媒体类型选择适配器。HTML 优先提取微信 `js_content`；其他 HTML 读取 body。支持 h1～h6、独占段落的粗体栏目、表格、列表与代码。Markdown 支持 ATX 标题、独占行的粗体标题、管道表格、列表与围栏代码，并保留正文有意义空格。图片保留说明或缺失说明占位，不下载图片或执行 OCR。原文定位为解析块序号或 Markdown 行号，正文以解析后的文本为准。

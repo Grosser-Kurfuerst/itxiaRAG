@@ -63,14 +63,27 @@ def test_import_dedupe_and_update_keep_ids_without_job_or_publication(actor, emb
     assert result['contexts'][0]['matches'][0]['ranks'] == {'keyword': 1, 'vector': 1}
 
 
-def test_vector_recalls_synonym_and_returns_full_parent_with_citations(actor, embedder, document_payload):
+def test_vector_recalls_synonym_and_returns_full_parent_with_hit_locations(actor, embedder, document_payload, settings):
+    settings.RETRIEVAL_MIN_COSINE = .5
+    document_payload['document']['warnings'] = ['来源警告']
+    draft = document_payload['document']['contexts'][0]
+    draft['warnings'] = ['父段警告']
+    draft['children'][0]['metadata'] = {'detail': '大体积子块元数据' * 1000}
+    draft['children'][0]['warnings'] = ['子块附加提示']
     ingest(document_payload, actor, embedder)
     scope = SearchScope(('public',), embedder.space_id)
     assert KeywordRetriever().search('电池能用多久', scope) == []
     result = query('电池能用多久', actor, embedder, top_k=1)
     parent = result['contexts'][0]
     assert result['mode'] == 'hybrid' and parent['text'] == document_payload['document']['contexts'][0]['body']
-    assert len(parent['citations']) == 2
+    assert 'citations' not in parent
+    assert len(parent['matches']) == 1
+    battery_match = next(match for match in parent['matches'] if match['key'] == 'battery')
+    assert battery_match['locator'] == {'paragraph': 1}
+    assert parent['warnings'] == ['来源警告', '父段警告']
+    assert set(battery_match) == {
+        'evidence_id', 'key', 'locator', 'score', 'score_kind', 'route_scores', 'ranks',
+    }
     assert parent['matches'][0]['evidence_id'] == str(EvidenceUnit.objects.get(key='battery').pk)
     assert parent['matches'][0]['ranks'] == {'vector': 1}
 
@@ -224,7 +237,7 @@ def test_multiple_hits_count_top_k_by_parent_and_keep_complete_context(actor, em
     result = query('续航', actor, embedder, top_k=2)
     assert {row['context_id'] for row in result['contexts']} == set(map(str, imported.context_ids))
     assert len(query('续航', actor, embedder, top_k=1)['contexts']) == 1
-    assert all(row['text'] == second['body'] and len(row['citations']) == 2
+    assert all(row['text'] == second['body'] and 'citations' not in row
                for row in result['contexts'])
 
 

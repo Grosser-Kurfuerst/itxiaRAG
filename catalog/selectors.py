@@ -20,7 +20,18 @@ class DjangoContextReader:
     def read(self, contexts, scope):
         parents = {parent.pk: parent for parent in scoped_contexts(scope).filter(
                    pk__in=[item.context_id for item in contexts])
-                   .select_related("source").prefetch_related("children")}
+                   .select_related("source")}
+        evidence_ids = {
+            item.evidence_id
+            for context in contexts
+            for item in context.matches
+        }
+        evidence = {
+            row.pk: row
+            for row in EvidenceUnit.objects.filter(
+                context_id__in=parents, pk__in=evidence_ids,
+            ).only("id", "context_id", "key", "locator")
+        }
         results = []
         for context in contexts:
             parent = parents.get(context.context_id)
@@ -38,10 +49,9 @@ class DjangoContextReader:
                 "score_kind": context.score_kind,
                 "matches": [{"evidence_id": str(item.evidence_id), "score": item.score,
                              "score_kind": item.score_kind, "route_scores": item.route_scores,
-                             "ranks": item.ranks} for item in context.matches],
-                "citations": [{"evidence_id": str(child.pk), "key": child.key,
-                               "knowledge_type": child.knowledge_type, "locator": child.locator,
-                               "metadata": child.metadata, "warnings": child.warnings}
-                              for child in parent.children.all()],
+                             "ranks": item.ranks, "key": evidence[item.evidence_id].key,
+                             "locator": evidence[item.evidence_id].locator}
+                            for item in context.matches if item.evidence_id in evidence
+                            and evidence[item.evidence_id].context_id == parent.pk],
             })
         return results

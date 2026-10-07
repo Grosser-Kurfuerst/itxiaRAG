@@ -26,7 +26,7 @@ api → retrieval.service → MultiRouteRecall
                            └─ VectorRetriever → EmbeddingProvider + PostgreSQL
                         → PostRecallPipeline（有序步骤列表）
                            └─ 默认：RRF → 父段聚合 → top_k 父段
-                        → ContextReader → 完整父段、来源、命中与引用
+                        → ContextReader → 完整父段、来源与命中定位
 
 未来：SourceConnector → RawDocument → DocumentPreprocessor
                                   → ProcessedDocument → 现有导入入口
@@ -86,7 +86,7 @@ api → retrieval.service → MultiRouteRecall
 | `context_unit` | UUID、source 外键、key、ordinal、title、body、locator、metadata、warnings | 完整父上下文；`(source, key)` 唯一 |
 | `evidence_unit` | UUID、context 外键、key、ordinal、body、retrieval_text、knowledge_type、locator、metadata、warnings、embedding | 召回子块及其向量；`(context, key)` 唯一 |
 
-一个子块对应一个 embedding，编码文本固定为 `父段标题 + 换行 + 子块正文`。父段不单独编码。文档级 metadata 用于保留来源信息，不投影为召回条件，也不默认完整发送给调用方；父段与子块 metadata 随结果返回。
+一个子块对应一个 embedding，编码文本固定为 `父段标题 + 换行 + 子块正文`。父段不单独编码。文档级 metadata 用于保留来源信息，不投影为召回条件，也不默认完整发送给调用方；父段 metadata 随结果返回，子块 metadata 和 warnings 保存供维护或后续扩展，不默认返回。回答所需的风险警告应写入文档或父段 warnings，不能只放在子块中。子块 locator 应保持简短，只记录章节、段落号或字符偏移等定位信息，不放正文或大型附加数据。
 
 保存采用 `DocumentStore.save(...)` 协议，默认 `DjangoDocumentStore`。现阶段向量保存在 PostgreSQL JSONB 数组；`VectorRetriever` 在数据库完成范围过滤后逐批读取向量，用余弦计算精确 top-N，不预截断候选。复杂度约 `O(N × D)`，适合小规模验证；无 ANN 索引，不承诺大规模性能。需要规模化时替换为 pgvector 字段和 Retriever，DTO、API、RRF 不变。
 
@@ -115,7 +115,7 @@ RRF 的 k、每路候选数、路线门槛和后处理步骤列表属于查询�
 3. 关键词路先按 Scope 从 PostgreSQL 读取全部可见子块，再对 `retrieval_text` 和查询使用相同分析器：jieba 中文分词、英文大小写统一、保留型号／错误码、移除少量问句停用词。Python BM25 根据词频、文档频率和长度评分，按本路线门槛过滤后取 top-N；同分按子块 UUID 排序。
 4. 向量路调用 `embed_query`，过滤同一向量空间，计算余弦并应用可选门槛。`MultiRouteRecall` 依次收集两路结果，每路最多 100 个子块，保留原始分数与从 1 起算的名次。
 5. `PostRecallPipeline` 按组合根的步骤列表处理候选。默认 RRF 按子块 ID 合并：`score = Σ 1/(60 + rank)`，同一路重复候选只计最佳名次；再按最终子块顺序聚合父段，以最佳子块的位置确定父段排序；最后取 top_k 个父段。
-6. `ContextReader` 按选定父段顺序批量读取全文、来源、定位和引用，读取时再次应用 Scope。它不再负责融合、父段聚合或排序。
+6. `ContextReader` 按选定父段顺序批量读取全文、来源和命中子块定位，读取时再次应用 Scope。它不再负责融合、父段聚合或排序，也不读取未命中的子块列表。
 
 知识类型过滤限制**召回子块**；返回仍是完整父段，可能包含其他类型的邻近内容，这是上下文补全，不是类型级权限。可见范围在来源层控制。
 
@@ -241,9 +241,9 @@ Scope 查询、召回、RRF、分组或结果读取失败按现有错误契约�
 {"source_id":"00000000-0000-0000-0000-000000000001","context_ids":["00000000-0000-0000-0000-000000000002"],"reused":false}
 ```
 
-查询返回 `result_status=found/no_result`。`contexts[]` 每项包含 `context_id/key/title/text/locator/metadata/warnings/source/score/matches/citations`：`source` 提供来源 ID、标题、URL、平台、日期及 Schema；`score` 是最佳命中子块的 RRF 分数；`matches` 是命中子块 ID、分数和各路名次；`citations` 是父段内全部子块的 ID、key、知识类型、定位、metadata 和警告。结果组装依据见 [DjangoContextReader](../../catalog/selectors.py)。
+查询返回 `result_status=found/no_result`。`contexts[]` 每项包含 `context_id/key/title/text/locator/metadata/warnings/source/score/matches`：`source` 提供来源 ID、标题、URL、平台、日期及 Schema；`score` 是最佳命中子块的 RRF 分数；`matches` 只包含实际命中子块的 ID、key、分数、各路名次和定位。默认不返回父段下所有子块，也不返回子块的完整 metadata、warnings。结果组装依据见 [DjangoContextReader](../../catalog/selectors.py)。
 
-请求和既有响应字段保持兼容，`contexts[]` 包含 `score_kind`，`matches[]` 包含 `score_kind/route_scores`。默认 `score` 仍为 RRF 分数；以后启用重排时表示最终排序分数，由 `score_kind` 说明含义。`ranks` 始终保留召回路线原始名次，`citations` 仍表示父段所有子块，不能用引用是否存在来判断其是否参与召回。
+`contexts[]` 包含 `score_kind`，`matches[]` 包含 `score_kind/route_scores/ranks/key/locator`。默认 `score` 仍为 RRF 分数；以后启用重排时表示最终排序分数，由 `score_kind` 说明含义。`ranks` 始终保留召回路线原始名次；`matches` 中出现的子块就是实际参与最终结果的命中证据。
 
 输入未知字段或结构错误使用 DRF 400；认证失败 401，动作权限不足 403，范围外写入 404。领域或模型错误使用 `{error: {code, message}}`；配置缺失 503，模型失败／非法向量 502，意外服务异常 500。不返回 SQL、凭据或外部错误正文，不增加统一错误 Schema／OpenAPI 管理。
 

@@ -137,7 +137,7 @@ curl -sS --fail-with-body -w '\nHTTP %{http_code}\n' \
 - HTTP `200`，`mode=hybrid`，`result_status=found`。
 - `contexts` 包含“笔记本 A”，`text` 同时包含续航和风扇噪声两句话，即返回完整父段。
 - `contexts[].matches[].ranks` 中有 `keyword` 和 `vector` 两路名次；排名位于每个命中子块内。
-- `citations` 包含两个子块的 ID 和定位信息。
+- `matches` 只包含实际命中子块的 ID、key 和定位信息；不会返回父段下未命中的子块列表。
 
 再用“电池能用多久”查询，检查同义问法是否仍能找到续航资料；具体名次由真实模型决定。几条样本只验证接入和返回行为，不能代表完整语义质量。
 

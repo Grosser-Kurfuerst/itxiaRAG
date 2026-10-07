@@ -13,9 +13,14 @@ from ingestion.preprocessing import ContentBlock, SemanticContext, SemanticEvide
 
 _REVIEW_SECTIONS = {
     "配置", "配置参数", "规格", "优缺点", "优点", "缺点", "升级建议", "购买建议",
-    "散热分析", "散热测试", "散热", "屏幕", "接口", "噪音", "续航", "总结", "结论", "猪王的良心结语",
+    "散热分析", "散热测试", "散热", "测试条件", "测试结果", "测试环境", "测试方法",
+    "屏幕", "接口", "噪音", "续航", "总结", "结论", "猪王的良心结语",
 }
-_PROTECTED_SECTIONS = {"散热分析", "散热测试", "散热", "购买建议", "推荐理由", "不推荐理由"}
+_PROTECTED_SECTIONS = {
+    "散热分析", "散热测试", "散热", "测试条件", "测试结果", "测试环境", "测试方法",
+    "购买建议", "推荐理由", "不推荐理由",
+}
+_GLOBAL_GUIDE_SECTIONS = {"价格警告", "全局建议", "本期改动", "产品分类", "FAQ", "常见问题", "测评计划"}
 
 
 def _label(text: str) -> str:
@@ -35,11 +40,16 @@ def _join(blocks: list[ContentBlock]) -> str:
 def _children(blocks: list[ContentBlock]) -> list[SemanticEvidence]:
     groups: list[list[ContentBlock]] = []
     group: list[ContentBlock] = []
+    protected_level: int | None = None
     for block in blocks:
         # 保留“条件 + 结果”以及连续表格行/代码内容在所属小节里。
-        if block.kind == "heading" and group:
-            groups.append(group)
-            group = []
+        if block.kind == "heading":
+            inside_protected = protected_level is not None and (block.level or 99) > protected_level
+            if not inside_protected:
+                if group:
+                    groups.append(group)
+                    group = []
+                protected_level = (block.level or 2) if _label(block.text) in _PROTECTED_SECTIONS else None
         group.append(block)
     if group:
         groups.append(group)
@@ -153,7 +163,11 @@ class ReviewStrategy:
 class PurchaseGuideStrategy:
     """预算作为推荐卡的背景，机型推荐卡单独为父段，全局建议保留独立父段。"""
 
-    _budget = re.compile(r"(?:\d[\d,，\s～~—\-]*\s*元|预算|价位|价格区间)")
+    _budget = re.compile(
+        r"(?:(?:预算|价位|价格区间)\s*[:：]?\s*)?[≤≥<>]?\s*\d[\d,，]*"
+        r"(?:\s*[～~—\-至]\s*\d[\d,，]*)?\s*元"
+        r"(?:以下|以上|以内|左右|档|价位)?(?:（[^）]*）)?"
+    )
 
     def build(self, blocks: list[ContentBlock], raw: RawDocument) -> list[SemanticContext]:
         _, content = _without_document_heading(blocks)
@@ -176,7 +190,7 @@ class PurchaseGuideStrategy:
                 group.append(block)
                 continue
             label, level = _label(block.text), block.level or 2
-            if self._budget.search(label):
+            if level <= 2 and self._budget.fullmatch(label):
                 flush()
                 budget, card_level = block.text, level + 1
                 title, group, group_budget = block.text, [block], block.text
@@ -190,9 +204,7 @@ class PurchaseGuideStrategy:
             if is_boundary:
                 # 比预算更浅的标题离开当前预算；同级粗体机型也可成为卡片。
                 flush()
-                if card_level is not None and level <= card_level - 1 and label in {
-                    "FAQ", "常见问题", "产品分类", "全局建议", "价格警告", "测评计划", "本期改动",
-                }:
+                if card_level is not None and level <= card_level - 1 and label in _GLOBAL_GUIDE_SECTIONS:
                     budget, card_level = None, None
                 group_budget = budget
                 title, group = block.text, [block]
@@ -202,7 +214,7 @@ class PurchaseGuideStrategy:
         contexts = _make_contexts(sections, content_type="purchase_guide")
         global_guidance = [p.body for p in contexts if _label(p.title) in {"价格警告", "全局建议", "本期改动"}]
         for context in contexts:
-            if context.metadata.get("budget") and context.title != context.metadata["budget"]:
+            if _label(context.title) not in _GLOBAL_GUIDE_SECTIONS and not self._budget.fullmatch(_label(context.title)):
                 context.metadata["entity_title"] = context.title
                 if global_guidance:
                     context.metadata["global_guidance"] = global_guidance

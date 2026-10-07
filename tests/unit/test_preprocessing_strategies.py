@@ -92,3 +92,32 @@ def test_chunker_counts_parent_title_and_rejects_overlong_atomic_result():
     with pytest.raises(DomainError, match="完整测试条件"):
         BudgetChunker(max_input_units=8).chunk([context])
 
+
+def test_priced_model_title_remains_a_card_with_original_budget_and_global_guidance():
+    blocks, raw = parse("# 指南\n\n## 价格警告\n\n价格随时间变化。\n\n## 5000～6000元\n\n"
+                        "### Laptop A（5499元）\n\n16GB 内存，适合轻办公。\n\n### Laptop B（5999元）\n\n32GB。")
+    parents = PurchaseGuideStrategy().build(blocks, raw)
+    cards = [p for p in parents if "entity_title" in p.metadata]
+    assert [p.title for p in cards] == ["Laptop A（5499元）", "Laptop B（5999元）"]
+    assert all(p.metadata["budget"] == "5000～6000元" for p in cards)
+    assert all(p.metadata["global_guidance"] == ["价格警告\n\n价格随时间变化。"] for p in cards)
+    assert all(p.warnings for p in cards)
+    flat_blocks, flat_raw = parse("# 指南\n\n## 价格警告\n\n价格会变。\n\n## Laptop A（5499元）\n\n轻办公。")
+    flat_card = PurchaseGuideStrategy().build(flat_blocks, flat_raw)[-1]
+    assert "budget" not in flat_card.metadata
+    assert flat_card.metadata["global_guidance"] and flat_card.warnings
+
+
+def test_nested_thermal_headings_keep_conditions_and_results_in_one_atomic_evidence():
+    from ingestion.chunking import BudgetChunker
+
+    blocks, raw = parse("# Laptop A\n\n## 散热分析\n\n### 测试条件\n\n室温25℃，双烤30分钟。\n\n"
+                        "### 测试结果\n\nCPU 80℃。\n\n## 续航\n\n9 小时。")
+    parent, = ReviewStrategy().build(blocks, raw)
+    assert len(parent.children) == 2
+    thermal = parent.children[0]
+    assert thermal.atomic and "室温25℃" in thermal.body and "CPU 80℃" in thermal.body
+    with pytest.raises(DomainError) as error:
+        BudgetChunker(max_input_units=40).chunk([parent])
+    assert error.value.code == "SEMANTIC_UNIT_TOO_LARGE"
+

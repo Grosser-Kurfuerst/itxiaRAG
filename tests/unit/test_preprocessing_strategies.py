@@ -80,3 +80,12 @@ def test_all_strategies_keep_every_parsed_content_block_and_produce_valid_dto():
         for block in blocks[1:]:
             assert any(block.text in parent.body for parent in parents)
 
+
+def test_chunker_counts_parent_title_and_rejects_overlong_atomic_result():
+    from ingestion.chunking import BudgetChunker
+
+    blocks, raw = parse("# 很长的父段标题\n\n## 散热分析\n\n室温25℃测试条件和 CPU 80℃结果")
+    context = ReviewStrategy().build(blocks, raw)[0]
+    with pytest.raises(DomainError, match="完整测试条件"):
+        BudgetChunker(max_input_units=8).chunk([context])
+

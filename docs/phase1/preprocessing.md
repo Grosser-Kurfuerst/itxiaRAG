@@ -24,7 +24,7 @@ RawDocument → ParseStep → StructureStep → ChunkStep → BuildDocumentStep 
 
 ## 实施状态
 
-已实现通用流水线、步骤协议、内存对象与公共 DTO 构建/校验、HTML/Markdown/纯文本解析器，以及三类结构策略；模型预算控制和原文 API 在后续功能提交中接入。当前标准化 JSON API 行为保持不变。
+已实现通用流水线、步骤协议、内存对象与公共 DTO 构建/校验、HTML/Markdown/纯文本解析器、三类结构策略和输入预算控制；原文 API 在后续功能提交中接入。当前标准化 JSON API 行为保持不变。
 
 `ingestion/parsers.py` 的 ParserRegistry 可直接注入 ParseStep，按媒体类型选择适配器。HTML 优先提取微信 `js_content`；其他 HTML 读取 body。支持 h1～h6、独占段落的粗体栏目、表格、列表与代码。Markdown 支持 ATX 标题、独占行的粗体标题、管道表格、列表与围栏代码，并保留正文有意义空格。图片保留说明或缺失说明占位，不下载图片或执行 OCR。原文定位为解析块序号或 Markdown 行号，正文以解析后的文本为准。
 
@@ -41,3 +41,11 @@ RawDocument → ParseStep → StructureStep → ChunkStep → BuildDocumentStep 
 多机型评测示例：`entity_headings=["Laptop A", "Laptop B"]`，这些标题必须出现在解析后的内容块中，缺失时明确报错。默认单机评测可传 `entity_title/entity_key` 指定机型标题及稳定身份。购买指南保留推荐卡所属 budget 元数据，并保留原文中的全局价格警告。首个一级标题用于文档标题，不额外生成只有标题的父段。
 
 key 基于标题和同名标题的出现次数，正文更新不改变 key；重复同名章节前插入同名标题可能改变后续次数，来源应尽量提供可区分的标题。Evidence 按小节分组，散热条件/结果、购买建议、表格、代码标为不可拆分语义单元，后续长度控制应保留它们或明确拒绝超限，不能静默截断。测试使用合成资料，不提交真实文章或维修记录。
+
+## 输入预算
+
+`BudgetChunker` 检查完整编码文本 `父段标题 + 换行 + Evidence.body`。默认 `Utf8ByteCounter` 与 2400 字节预算，不把字符/字节当精确 token，也不自动加载或下载模型。适配目标模型时，在组合根注入 `TokenizerCounter(tokenizer.encode)` 和模型允许的 max_input_units；encode 应包含特殊 token，预算应留出模型要求的余量。字节预算需要按实际服务校准，不能对任意 tokenizer 承诺模型 token 上限。
+
+普通长 Evidence 优先按段落、句子边界拆分，单句过长再按 Unicode 字符边界拆分；父段正文保持完整，拆出的多个 Evidence 平级保存。子块 locator 的 parent_char_start/end 是父段正文中的字符偏移，end 为开区间，便于精确引用。小于预算的子块不变更正文/key。
+
+不可拆分小节超限返回 SEMANTIC_UNIT_TOO_LARGE，不静默截断测试条件、表头或代码。可以调整部署预算或自定义更细且完整的结构策略。拆分同时遵守 32000 字符、每父段 100 子块、整篇 1000 子块的公共约束；ValidateStep 可注入 chunker.validate，在 DTO 构建后再次验证最终模型输入。

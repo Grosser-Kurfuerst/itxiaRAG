@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Literal, Protocol
+from typing import Callable, Literal, Protocol
 
 from contracts.serializers import validate_document
 from contracts.types import ContextDraft, EvidenceDraft, ProcessedDocument, RawDocument
@@ -204,10 +204,15 @@ class ValidateStep:
     input_stage = "document"
     output_stage = "validated"
 
+    def __init__(self, input_validator: Callable[[ProcessedDocument], None] | None = None):
+        self.input_validator = input_validator
+
     def process(self, context: PreprocessContext) -> PreprocessContext:
         if context.document is None:
             raise TypeError("document 阶段缺少 ProcessedDocument")
         context.document = validate_document(context.document)
+        if self.input_validator is not None:
+            self.input_validator(context.document)
         return _set_stage(context, self.output_stage)
 
 

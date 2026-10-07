@@ -36,6 +36,7 @@ class SemanticEvidence:
     locator: dict = field(default_factory=dict)
     metadata: dict = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
+    atomic: bool = False
 
 
 @dataclass(frozen=True)

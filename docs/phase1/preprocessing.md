@@ -24,6 +24,20 @@ RawDocument → ParseStep → StructureStep → ChunkStep → BuildDocumentStep 
 
 ## 实施状态
 
-已实现通用流水线、步骤协议、内存对象与公共 DTO 构建/校验，以及 HTML/Markdown/纯文本解析器；分段策略和原文 API 在后续功能提交中接入。当前标准化 JSON API 行为保持不变。
+已实现通用流水线、步骤协议、内存对象与公共 DTO 构建/校验、HTML/Markdown/纯文本解析器，以及三类结构策略；模型预算控制和原文 API 在后续功能提交中接入。当前标准化 JSON API 行为保持不变。
 
 `ingestion/parsers.py` 的 ParserRegistry 可直接注入 ParseStep，按媒体类型选择适配器。HTML 优先提取微信 `js_content`；其他 HTML 读取 body。支持 h1～h6、独占段落的粗体栏目、表格、列表与代码。Markdown 支持 ATX 标题、独占行的粗体标题、管道表格、列表与围栏代码，并保留正文有意义空格。图片保留说明或缺失说明占位，不下载图片或执行 OCR。原文定位为解析块序号或 Markdown 行号，正文以解析后的文本为准。
+
+## 内容类型策略
+
+`ingestion/strategies.py` 提供以下策略，均可注入 StructureStep，平台与类型互相独立。
+
+| 策略 | 父段 | 子块 |
+| --- | --- | --- |
+| ReviewStrategy | 默认一台笔记本一个父段；多机型由 `raw.metadata.entity_headings` 显式指定标题边界 | 配置、优缺点、散热、购买建议等小节 |
+| PurchaseGuideStrategy | 全局建议、预算说明、单个推荐卡和 FAQ 分开 | 推荐卡中的配置、理由、限制等小节 |
+| ExperienceCaseStrategy | 默认二级标题作为章节/案例；构造参数 section_level 可调整 | 案例内现象、检查、处理、结果等小节 |
+
+多机型评测示例：`entity_headings=["Laptop A", "Laptop B"]`，这些标题必须出现在解析后的内容块中，缺失时明确报错。默认单机评测可传 `entity_title/entity_key` 指定机型标题及稳定身份。购买指南保留推荐卡所属 budget 元数据，并保留原文中的全局价格警告。首个一级标题用于文档标题，不额外生成只有标题的父段。
+
+key 基于标题和同名标题的出现次数，正文更新不改变 key；重复同名章节前插入同名标题可能改变后续次数，来源应尽量提供可区分的标题。Evidence 按小节分组，散热条件/结果、购买建议、表格、代码标为不可拆分语义单元，后续长度控制应保留它们或明确拒绝超限，不能静默截断。测试使用合成资料，不提交真实文章或维修记录。

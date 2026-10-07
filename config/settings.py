@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from config.environment import boolean, bounded_float, required
+from config.environment import boolean, bounded_float, positive_integer, required
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = required("DJANGO_SECRET_KEY")
@@ -46,3 +46,4 @@ RETRIEVAL_CANDIDATE_LIMIT = 100
 RETRIEVAL_RRF_K = 60
 RETRIEVAL_MIN_COSINE = bounded_float("RETRIEVAL_MIN_COSINE", None, -1, 1)
 RETRIEVAL_MIN_BM25 = bounded_float("RETRIEVAL_MIN_BM25", 0.0, 0)
+PREPROCESS_MAX_INPUT_BYTES = positive_integer("PREPROCESS_MAX_INPUT_BYTES", 2400)

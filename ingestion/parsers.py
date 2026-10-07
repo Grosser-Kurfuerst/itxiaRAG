@@ -178,11 +178,14 @@ class HtmlParser:
                 if node.tag.startswith("h") and node.tag[1:].isdigit():
                     emit("heading", text, int(node.tag[1:]))
                 else:
-                    strong_text = "".join(
-                        _normal_text(child.text()) for child in node.children
-                        if isinstance(child, _Node) and child.tag in {"strong", "b"}
-                    )
-                    heading = bool(strong_text and strong_text == text and len(text) <= 100)
+                    def emphasized(child):
+                        if child.tag in {"strong", "b"}:
+                            return child.text()
+                        return "".join(emphasized(part) for part in child.children if isinstance(part, _Node))
+
+                    strong_text = _normal_text(emphasized(node))
+                    bracket_heading = re.fullmatch(r"【[^【】\n]{1,60}】", text)
+                    heading = bool(len(text) <= 100 and (strong_text == text or bracket_heading))
                     emit("heading" if heading else "list" if node.tag == "li" else "paragraph", text, 2 if heading else None)
                 return
             if nested_blocks or node.tag in self._containers:
@@ -190,7 +193,9 @@ class HtmlParser:
                 for child in node.children:
                     if isinstance(child, str):
                         inline.append(child)
-                    elif child.tag in self._blocks or child.tag in self._containers:
+                    elif child.tag in self._blocks or child.tag in self._containers or child.find(
+                        lambda n: n.tag in self._blocks
+                    ) is not None:
                         emit("paragraph", _normal_text("".join(inline)))
                         inline = []
                         walk(child)

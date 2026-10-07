@@ -109,7 +109,7 @@ class PreprocessPipeline:
                     f"声明为 {step.output_stage}"
                 )
             context = result
-        if context.document is None:
+        if not isinstance(context.document, ProcessedDocument):
             raise TypeError("validated 阶段必须提供 ProcessedDocument")
         return context.document
 
@@ -131,6 +131,8 @@ class ParseStep:
 
     def process(self, context: PreprocessContext) -> PreprocessContext:
         context.blocks = self.parser.parse(context.raw)
+        if any("[图片：未提供文字说明]" in block.text for block in context.blocks):
+            context.warnings.append("原文含未提供文字说明的图片，关键参数需人工补录。")
         return _set_stage(context, self.output_stage)
 
 
@@ -179,8 +181,13 @@ class BuildDocumentStep:
             document_schema=self.document_schema,
             schema_version=self.schema_version,
             source_date=source_date,
-            metadata=dict(metadata.get("document_metadata", {})),
-            warnings=list(context.warnings),
+            metadata={
+                **{key: value for key, value in metadata.items() if key not in {
+                    "title", "source_date", "entity_title", "entity_key", "entity_headings", "document_metadata", "warnings",
+                }},
+                **metadata.get("document_metadata", {}),
+            },
+            warnings=[*metadata.get("warnings", []), *context.warnings],
             contexts=[ContextDraft(
                 key=unit.key, title=unit.title, body=unit.body,
                 children=[EvidenceDraft(

@@ -46,7 +46,7 @@ class SourceSpec:
 
 @dataclass(frozen=True)
 class RawDocument:
-    """未来连接器的输出；不接受客户端指定文件路径或可执行插件路径。"""
+    """连接器或原文 API 的输出；内容是字节，不接受客户端指定本机文件路径。"""
     content: bytes
     media_type: str
     metadata: dict = field(default_factory=dict)
@@ -58,6 +58,10 @@ class SourceConnector(Protocol):
 
 class DocumentPreprocessor(Protocol):
     def process(self, raw: RawDocument) -> ProcessedDocument: ...
+
+
+class PreprocessorResolver(Protocol):
+    def process(self, raw: RawDocument, schema: str, version: int) -> ProcessedDocument: ...
 
 
 @dataclass(frozen=True)

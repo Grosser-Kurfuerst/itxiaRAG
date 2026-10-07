@@ -67,13 +67,19 @@ class BudgetChunker:
                 # 无语义的空白段不独立建 Evidence，避免丢失空白后产生错误覆盖。
                 raise DomainError("INPUT_BUDGET_TOO_SMALL", "输入预算不足以容纳有效正文")
             spans.append((start, best))
+            if len(spans) > 100:
+                raise DomainError("PREPROCESS_LIMIT_EXCEEDED", "拆分后单个父段超过 100 个子块")
             start = best
         return spans
 
     def chunk(self, units: list[SemanticContext]) -> list[SemanticContext]:
+        if len(units) > 100:
+            raise DomainError("PREPROCESS_LIMIT_EXCEEDED", "整篇超过 100 个父段")
         result = []
         total = 0
         for unit in units:
+            if len(unit.body) > 100000:
+                raise DomainError("PREPROCESS_LIMIT_EXCEEDED", "父段正文超过 100000 字符")
             children = []
             search_start = 0
             for child in unit.children:

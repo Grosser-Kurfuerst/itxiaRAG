@@ -46,6 +46,9 @@ def test_guide_separates_model_cards_from_budget_and_keeps_faq():
     assert model_a.metadata["budget"] == model_b.metadata["budget"] == "5000～6000元"
     assert "32GB" not in model_a.body
     assert "不适合游戏" in model_a.children[-1].body
+    assert len(model_a.children) == 2
+    assert model_a.metadata["global_guidance"] == ["价格警告\n\n仅供本期参考。"]
+    assert model_a.warnings
     assert parents[-1].title == "FAQ"
     assert "budget" not in parents[-1].metadata
 

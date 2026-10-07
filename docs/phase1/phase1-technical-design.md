@@ -4,11 +4,11 @@
 
 本文统一维护当前模块、数据契约、流程与阶段验收。业务范围见[总体需求](../requirements.md)，选择理由和研究出处见[技术选型](../technology-selection.md)，安装与调用见 [README](../../README.md)。
 
-**实现状态：**独立路线门槛、原始分数保留和召回后处理流水线已实现。默认流程为 `MultiRouteRecall → PostRecallPipeline → ContextReader`；模型重排与持久化关键词索引只保留扩展方向，不作为运行依赖。
+**实现状态：**独立路线门槛、原始分数保留、召回后处理流水线以及可编排原文预处理已实现。默认检索流程为 `MultiRouteRecall → PostRecallPipeline → ContextReader`；预处理流程与来源策略见[文档预处理](preprocessing.md)。模型重排与持久化关键词索引只保留扩展方向，不作为运行依赖。
 
 ## 1. 系统边界
 
-当前输入是标准化 JSON，不是公众号 URL、HTML 或 Markdown 原文件。维护者或外部程序负责获取获准资料、脱敏、整理正文和指定父子关系。系统不调用解析器，不自动划分父子段落，也不使用 LLM 识别文档类型或改写查询。
+当前输入可以是标准化 JSON，也可以通过原文 API 提交 HTML、Markdown 或纯文本。维护者或外部程序负责获取获准资料、脱敏并选择文档类型；原文入口执行格式解析、类型分段与输入预算控制。系统不抓取公众号 URL、不执行 OCR，也不使用 LLM 识别文档类型或改写查询。
 
 保留 Token 认证、`maintain_source` 维护权限、`read_internal` 内部资料权限；文档范围仅为 `visibility=public/internal`。公开指对已认证普通调用方可见，不开放匿名接口。Embedding 可连接本地或获准的外部服务。
 
@@ -28,19 +28,20 @@ api → retrieval.service → MultiRouteRecall
                            └─ 默认：RRF → 父段聚合 → top_k 父段
                         → ContextReader → 完整父段、来源与命中定位
 
-未来：SourceConnector → RawDocument → DocumentPreprocessor
-                                  → ProcessedDocument → 现有导入入口
+原文 API → RawDocument → PreprocessorRegistry → PreprocessPipeline
+                       → ProcessedDocument → import_processed
+未来连接器：SourceConnector.fetch(locator) → RawDocument → 同一原文处理链
 ```
 
 | 模块 | 责任 | 不负责 |
 | --- | --- | --- |
 | [contracts/](../../contracts/) | DTO、Protocol、导入和查询 Serializer | ORM、模型调用和解析实现 |
-| [ingestion/](../../ingestion/) | 校验 → 编码 → 保存；预处理插件注册表 | 获取推文、解析或划分段落 |
+| [ingestion/](../../ingestion/) | 可编排解析/分段/预算控制；公共校验 → 编码 → 保存 | 获取推文、OCR |
 | [embeddings/](../../embeddings/) | HTTP 编码适配器、批次顺序与向量校验 | 数据库和召回排序 |
 | [catalog/](../../catalog/) | 三张业务表、事务保存、可见范围、父段读取 | 模型供应商协议、审核发布 |
 | [retrieval/](../../retrieval/) | 关键词／向量召回、召回后处理流水线、结果组装 | 导入与文章清洗 |
 | [config/components.py](../../config/components.py) | 组合根，选择和注入具体适配器 | 业务规则 |
-| [api/](../../api/) | 两个 HTTP 入口、认证、输入校验和响应 | 另写一套导入或检索逻辑 |
+| [api/](../../api/) | 标准导入、原文导入和查询；认证、输入校验和响应 | 另写一套导入或检索逻辑 |
 
 采用轻量的端口与适配器、策略模式和依赖注入，不给所有 ORM 操作套通用 Repository。召回路线和召回后处理分别通过协议注入；后处理步骤以有序列表编排，允许增加步骤或调整兼容步骤的顺序。只隔离确实会变化的文档保存、Embedding、召回、排序、上下文读取与预处理。
 
@@ -53,14 +54,14 @@ api → retrieval.service → MultiRouteRecall
 | DTO | 字段与含义 |
 | --- | --- |
 | `SourceSpec` | `source_type` 来源渠道；`canonical_locator` 渠道内稳定键；`visibility` 可见范围；`source_url` 原文地址 |
-| `RawDocument` | `content` 原始字节；`media_type` 格式；`metadata` 采集元数据，仅供未来插件使用 |
+| `RawDocument` | `content` UTF-8 原始字节；`media_type` 格式；`metadata` 采集元数据与类型边界提示 |
 | `ProcessedDocument` | `title`、`document_schema`、`schema_version`、`source_date`、`metadata`、`warnings`、`contexts` |
 | `ContextDraft` | `key` 文档内稳定父段键；`title`、`body` 完整上下文；`locator` 原文定位；`metadata` 适用对象等附加信息；`warnings`；`children` |
 | `EvidenceDraft` | `key` 父段内稳定子块键；`body` 检索正文；`locator`、`metadata`、`warnings` |
 
-数组顺序就是段落顺序，数据库保存为 `ordinal`。父子 key 在各自范围内唯一；正文非空，子块正文必须能在所属父段中找到。不自动补父段、生成摘要或拆段。Markdown 正文原样保存，包括行尾双空格。
+数组顺序就是段落顺序，数据库保存为 `ordinal`。父子 key 在各自范围内唯一；正文非空，子块正文必须能在所属父段中找到。标准化文档入口不自动补父段、生成摘要或拆段，正文原样保存，包括 Markdown 行尾双空格；原文入口先生成统一内容块并按所选策略划分父子段落。
 
-每篇 1～100 个父段，每父段 1～100 个子块，整篇最多 1000 个子块；JSON 请求体上限 2 MiB。父段正文上限 100000 字符、子块 32000 字符，key 最多 100 字符。字符上限不等于模型 token 上限，调用方仍需按所用模型准备合适长度的子块。
+每篇 1～100 个父段，每父段 1～100 个子块，整篇最多 1000 个子块；JSON 请求体上限 2 MiB。父段正文上限 100000 字符、子块 32000 字符，key 最多 100 字符。字符上限不等于模型 token 上限；原文入口另执行完整编码文本预算控制，标准化入口调用方仍需按模型准备合适长度的子块。
 
 `source_type` 表示平台，`document_schema` 表示预处理所需的文档结构，两者独立。例如同为 `yuque`，可以分别注册维修经验和基础知识的预处理器。结构专有字段放 `metadata`，不为每种文章增加表。可见范围只存在来源上，插件不能通过 metadata 改变权限。
 
@@ -69,10 +70,10 @@ api → retrieval.service → MultiRouteRecall
 - 连接器遵循 `SourceConnector.fetch(locator) → RawDocument`，同一语雀连接器可服务不同内容类型。
 - 预处理器遵循 `DocumentPreprocessor.process(raw) → ProcessedDocument`，自主选择规则、格式解析或未来的模型方法。
 - `PreprocessorRegistry.register(schema, version, processor)` 显式注册策略，`process(raw, schema, version)` 调用并校验产物。空注册表拒绝处理，重复注册报错。
-- 未来在 `config/components.py` 注册实现，由来源导入入口选择 Schema。插件输出仍须通过公共 Serializer 校验；不能让请求提供 Python 路径或任意加载代码。
-- **本轮只有协议、注册机制和合约测试，没有具体预处理器，也没有原文导入 HTTP 入口。**当前 API 直接接收 `ProcessedDocument`。接入未来插件后，处理结果继续交给 `import_processed`，不改写存储与检索。
+- 在 `config/components.py` 显式注册 `product_review@1`、`purchase_guide@1`、`experience_case@1`。原文入口选择 Schema，插件输出仍须通过公共 Serializer 校验；请求不能通过 Python 路径选择或加载代码。
+- 原文 API 与 Python import_raw 复用 `import_processed`，不改写存储与检索。处理器由 ParseStep、StructureStep、ChunkStep、BuildDocumentStep、ValidateStep 有序组合，兼容步骤可增删/调序；格式解析、内容分段与预算计数器分别可替换。
 
-第一种笔记本评测插件未来按“一台笔记本一个父段，多台分开”生成 DTO；这不是所有文档的固定划分模式。
+笔记本评测默认“一台笔记本一个父段”，多台通过显式 entity_headings 分开；购机指南按推荐卡组织，经验文档按章节/案例组织。这不是所有文档的固定划分模式。完整策略、输入格式、预算限制与示例见[文档预处理](preprocessing.md)。
 
 语雀、微信与维修记录的资料准备和后续读取方式见[来源接入说明](source-ingestion-plan.md)。
 
@@ -231,9 +232,10 @@ Scope 查询、召回、RRF、分组或结果读取失败按现有错误契约�
 | 入口 | 约定 |
 | --- | --- |
 | `POST /api/v1/sources/` | Token + maintain_source；请求 `{source, document}`；同步返回 `{source_id, context_ids, reused}`，新建和更新均 200 |
+| `POST /api/v1/sources/raw/` | Token + maintain_source；请求 `{source, preprocess: {schema, version?}, raw: {content, media_type, metadata?}}`；预处理后复用标准导入，响应相同 |
 | `POST /api/v1/search/` | Token；请求 `{query, filters?, top_k?}`；返回 `{mode: "hybrid", result_status, contexts}` |
 
-查询示例：`{"query":"电池能用多久","filters":{"source_ids":["00000000-0000-0000-0000-000000000001"]},"top_k":5}`。`query` 最多 2000 字符；`filters.source_ids` 接受 1～50 个 UUID，省略表示不按来源过滤；top_k 默认 5，范围 1～20，计父段数。校验依据见 [contracts/query.py](../../contracts/query.py)。不保留尚无实现的 scenario、confirmed_context、preprocess 或知识类型过滤参数。
+查询示例：`{"query":"电池能用多久","filters":{"source_ids":["00000000-0000-0000-0000-000000000001"]},"top_k":5}`。`query` 最多 2000 字符；`filters.source_ids` 接受 1～50 个 UUID，省略表示不按来源过滤；top_k 默认 5，范围 1～20，计父段数。校验依据见 [contracts/query.py](../../contracts/query.py)。查询不接受 scenario、confirmed_context、preprocess 或知识类型过滤参数；preprocess 仅属于原文导入请求。
 
 导入成功响应示例：
 
@@ -249,7 +251,7 @@ Scope 查询、召回、RRF、分组或结果读取失败按现有错误契约�
 
 ## 7. 分步实现与验收
 
-以下步骤按依赖顺序构建；前三步可分别通过离线测试或隔离数据库运行验收，第四步提供完整 HTTP 服务。当前代码已包含前四步，具体来源插件留待后续实现。
+以下步骤按依赖顺序构建；前三步可分别通过离线测试或隔离数据库运行验收，第四步提供完整 HTTP 服务。当前包含前四步及原文预处理；平台连接器留待后续实现。
 
 | 步骤 | 可独立运行的能力 | 验收 |
 | --- | --- | --- |
@@ -257,7 +259,7 @@ Scope 查询、召回、RRF、分组或结果读取失败按现有错误契约�
 | 2：标准化存储 | PostgreSQL 三表与事务保存；通过受控测试向量独立运行 | 新建、重复导入、稳定 ID 更新、删除缺席段落、权限与回滚通过 |
 | 3：混合召回 | 关键词、向量、RRF 与父段聚合；用模型替身运行检索服务 | 向量路与关键词路独立生效、过滤范围一致、RRF 次序及完整父段与引用正确 |
 | 4：HTTP 闭环 | 模型适配器与两个 API；配置真实 Embedding 后可实际导入和查询 | Token 导入／查询及错误行为通过，HTTP 模型协议验证通过，`make test` 通过；真实模型另做中文同义词试查 |
-| 5（后续）：来源插件 | 获准资料的连接器与具体预处理器，继续复用导入检索 | 单／多机型边界、正文保真与定位样本通过，现有导入检索回归通过 |
+| 5：原文预处理（已实现） | 原文 API、可编排解析/结构/切分/构建/校验与三类策略，复用导入检索 | 步骤增删/调序、单／多机型边界、推荐卡与经验案例、正文覆盖/定位、预算、权限及导入检索回归通过；平台读取与真实模型校准另行验证 |
 
 测试分别位于 [tests/unit/](../../tests/unit/) 与 [tests/integration/](../../tests/integration/)，命令为 `make test-unit`、`make test-integration` 与 `make test`；通用规则和完成定义见[项目测试规则](../unit-testing-guidelines.md)。固定向量和本地 HTTP 模型替身只验证工程行为；真实中文检索质量、吞吐与容量须在实际部署中验证，不在本文保存会过期的测试通过数量。
 

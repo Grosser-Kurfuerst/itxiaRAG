@@ -1,4 +1,4 @@
-"""显式注册的策略表。只提供插件接线，不内置解析、分段或自动类型识别。"""
+"""显式注册的处理器表；通过统一 DTO 校验，不自动识别文章类型。"""
 from contracts.errors import DomainError
 from contracts.serializers import validate_document
 from contracts.types import DocumentPreprocessor, RawDocument, ProcessedDocument

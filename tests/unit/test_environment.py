@@ -1,7 +1,7 @@
 import pytest
 from django.core.exceptions import ImproperlyConfigured
 
-from config.environment import boolean, bounded_float, required
+from config.environment import boolean, bounded_float, positive_integer, required
 
 pytestmark = pytest.mark.unit
 
@@ -44,3 +44,11 @@ def test_bm25_config_defaults_to_zero_and_rejects_negative_values(monkeypatch):
     monkeypatch.setenv('RETRIEVAL_MIN_BM25', '-1')
     with pytest.raises(ImproperlyConfigured):
         bounded_float('RETRIEVAL_MIN_BM25', 0.0, 0)
+
+
+@pytest.mark.parametrize("value", ["0", "-1", "1.5", "private-invalid"])
+def test_preprocess_budget_rejects_invalid_configuration_without_echoing_value(monkeypatch, value):
+    monkeypatch.setenv("PREPROCESS_MAX_INPUT_BYTES", value)
+    with pytest.raises(ImproperlyConfigured) as error:
+        positive_integer("PREPROCESS_MAX_INPUT_BYTES", 2400)
+    assert str(error.value) == "环境变量 PREPROCESS_MAX_INPUT_BYTES 必须为正整数"

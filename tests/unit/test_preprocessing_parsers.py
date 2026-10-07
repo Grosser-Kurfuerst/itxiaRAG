@@ -61,3 +61,15 @@ def test_bom_charset_and_explicit_parser_registration():
         registry.parse(raw("正文", "application/pdf"))
     with pytest.raises(DomainError, match="UTF-8"):
         registry.parse(RawDocument(b"\xff", "text/plain"))
+
+
+def test_wechat_nested_style_spans_keep_column_boundaries_and_text_order():
+    blocks = HtmlParser().parse(raw(
+        '<div id="js_content"><section><span><p><span style="color:red">'
+        '<strong>【优缺点】</strong></span></p><p>优点：安静</p>'
+        '<p><span>【购买建议】</span></p><p>不建议购买。</p></span></section></div>'
+    ))
+    assert [(b.kind, b.text) for b in blocks] == [
+        ("heading", "【优缺点】"), ("paragraph", "优点：安静"),
+        ("heading", "【购买建议】"), ("paragraph", "不建议购买。"),
+    ]

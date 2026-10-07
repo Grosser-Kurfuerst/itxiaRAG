@@ -32,3 +32,14 @@ def bounded_float(name, default, minimum, maximum=None):
     if not math.isfinite(result) or result < minimum or (maximum is not None and result > maximum):
         raise ImproperlyConfigured(f"环境变量 {name} 超出允许范围")
     return result
+
+
+def positive_integer(name, default):
+    value = os.environ.get(name, "").strip()
+    try:
+        result = int(value) if value else default
+    except ValueError:
+        raise ImproperlyConfigured(f"环境变量 {name} 必须为正整数") from None
+    if result < 1:
+        raise ImproperlyConfigured(f"环境变量 {name} 必须为正整数")
+    return result

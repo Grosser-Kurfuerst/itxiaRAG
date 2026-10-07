@@ -1,6 +1,6 @@
 # itxiaAgent 知识库
 
-当前仓库实现的是一个可运行的最小混合检索知识库：调用方提交已经整理好的标准化文档，系统保存父段和子块，使用关键词与向量两路召回，经 RRF 排序后返回完整父上下文。文章抓取、解析、父子分段和最终回答由后续模块负责，当前没有 Agent 或审核发布流程。
+当前仓库实现的是一个可运行的最小混合检索知识库：调用方提交标准化文档，或提交 HTML/Markdown/文本经可编排预处理后导入，系统保存父段和子块，使用关键词与向量两路召回，经 RRF 排序后返回完整父上下文。文章抓取和最终回答由后续模块负责，当前没有 Agent 或审核发布流程。
 
 详细契约见 [首期技术设计](docs/phase1/phase1-technical-design.md)。合成请求见 [fixtures/iteration1/basic.json](fixtures/iteration1/basic.json)。
 
@@ -48,6 +48,8 @@ curl -H "Authorization: Token $(cat .runtime/maintainer.token)" \
 
 返回 `source_id`、`context_ids` 和 `reused`。更新同一来源时保留同 key 段落的 ID；相同内容返回 `reused=true`。Embedding 完成后才开启数据库事务，任意写入失败会回滚。
 
+原文可以提交到 `POST /api/v1/sources/raw/`，选择 `product_review`、`purchase_guide` 或 `experience_case`；支持微信 HTML 和语雀 Markdown 等文本格式。通用步骤支持增删/调序，格式解析与内容分段分别可替换；请求示例、预算与扩展方式见[文档预处理](docs/phase1/preprocessing.md)。API 不抓取 URL 或执行 OCR，调用方提供原文。
+
 查询接口：
 
 ```sh
@@ -80,6 +82,7 @@ make test
 | [总体需求](docs/requirements.md) | 业务场景、当前范围、P1 扩展与 P2 自进化 |
 | [技术选型与研究参考](docs/technology-selection.md) | 选择理由、替代方案、开源与论文依据 |
 | [首期技术设计](docs/phase1/phase1-technical-design.md) | 模块、数据、API、错误行为及分步验收 |
-| [来源接入说明](docs/phase1/source-ingestion-plan.md) | 当前资料准备、未来语雀／微信／维修记录插件 |
+| [来源接入说明](docs/phase1/source-ingestion-plan.md) | 资料准备、原文提交与后续连接器 |
+| [文档预处理](docs/phase1/preprocessing.md) | 步骤编排、类型策略、长度控制与原文 API |
 | [Docker 部署与验收](docs/phase1/deployment.md) | Compose 启动、账号、冒烟检查和自动测试 |
 | [项目测试规则](docs/unit-testing-guidelines.md) | 通用用例要求、测试命令与开发完成定义 |

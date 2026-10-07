@@ -7,8 +7,8 @@ from rest_framework.views import APIView
 from catalog.policies import require_permission
 from config import components
 from contracts.query import QuerySerializer
-from contracts.serializers import SourceImportSerializer, import_dtos
-from ingestion.pipeline import import_processed
+from contracts.serializers import RawSourceImportSerializer, SourceImportSerializer, import_dtos, import_raw_dtos
+from ingestion.pipeline import import_processed, preprocess_raw
 from retrieval.service import search
 
 
@@ -22,6 +22,16 @@ class SourceImportView(APIView):
     def post(self, request):
         require_permission(request.user, "maintain_source")
         source, document = import_dtos(validated(SourceImportSerializer, request.data))
+        result = import_processed(source, document, request.user,
+                                  embedder=components.embedding_provider(), store=components.document_store())
+        return Response(asdict(result))
+
+
+class RawSourceImportView(APIView):
+    def post(self, request):
+        require_permission(request.user, "maintain_source")
+        source, raw, schema, version = import_raw_dtos(validated(RawSourceImportSerializer, request.data))
+        document = preprocess_raw(source, raw, schema, version, request.user, registry=components.preprocessors())
         result = import_processed(source, document, request.user,
                                   embedder=components.embedding_provider(), store=components.document_store())
         return Response(asdict(result))

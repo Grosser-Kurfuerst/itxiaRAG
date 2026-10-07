@@ -5,6 +5,10 @@ from catalog.selectors import DjangoContextReader
 from catalog.storage import DjangoDocumentStore
 from embeddings.openai_compatible import OpenAICompatibleEmbedding
 from ingestion.registry import PreprocessorRegistry
+from ingestion.chunking import BudgetChunker
+from ingestion.parsers import ParserRegistry
+from ingestion.preprocessing import BuildDocumentStep, ChunkStep, ParseStep, PreprocessPipeline, StructureStep, ValidateStep
+from ingestion.strategies import ExperienceCaseStrategy, PurchaseGuideStrategy, ReviewStrategy
 from retrieval.hybrid import MultiRouteRecall
 from retrieval.keyword import KeywordRetriever
 from retrieval.pipeline import PostRecallPipeline
@@ -40,6 +44,23 @@ def post_recall_pipeline():
     ])
 
 
-def preprocessors():
-    # 后续在这里显式 register(schema, version, processor)，无需动态加载用户提供的代码。
-    return PreprocessorRegistry()
+def preprocessors(*, counter=None, max_input_units=None):
+    # Schema 是受信任应用代码的显式映射，不接受请求提供 Python 路径。
+    parsers = ParserRegistry()
+
+    def pipeline(schema, strategy):
+        chunker = BudgetChunker(
+            max_input_units=settings.PREPROCESS_MAX_INPUT_BYTES if max_input_units is None else max_input_units,
+            counter=counter,
+        )
+        return PreprocessPipeline([
+            ParseStep(parsers), StructureStep(strategy), ChunkStep(chunker),
+            BuildDocumentStep(document_schema=schema),
+            ValidateStep(input_validator=chunker.validate),
+        ])
+
+    registry = PreprocessorRegistry()
+    registry.register("product_review", 1, pipeline("product_review", ReviewStrategy()))
+    registry.register("purchase_guide", 1, pipeline("purchase_guide", PurchaseGuideStrategy()))
+    registry.register("experience_case", 1, pipeline("experience_case", ExperienceCaseStrategy()))
+    return registry

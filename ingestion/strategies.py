@@ -59,7 +59,8 @@ def _children(blocks: list[ContentBlock]) -> list[SemanticEvidence]:
 
 def _context(title: str, blocks: list[ContentBlock], key: str, *, metadata=None) -> SemanticContext:
     body = _join(blocks)
-    children = _children(blocks)
+    content = blocks[1:] if blocks and blocks[0].kind == "heading" and blocks[0].text == title else blocks
+    children = _children(content)
     if not children:
         # 标题独立存在时仍构成可引用的原文，不生成空 children。
         body = title
@@ -130,6 +131,10 @@ class ReviewStrategy:
     def build(self, blocks: list[ContentBlock], raw: RawDocument) -> list[SemanticContext]:
         doc_title, content = _without_document_heading(blocks)
         entities = raw.metadata.get("entity_headings", [])
+        if not isinstance(entities, list) or any(not isinstance(item, str) for item in entities):
+            raise DomainError("INVALID_ENTITY_BOUNDARY", "entity_headings 必须是标题字符串列表")
+        if len(entities) != len(set(entities)):
+            raise DomainError("INVALID_ENTITY_BOUNDARY", "entity_headings 不能包含重复标题")
         if entities:
             found = {b.text for b in content if b.kind == "heading" and b.text in entities}
             if set(entities) != found:
@@ -195,10 +200,13 @@ class PurchaseGuideStrategy:
                 group.append(block)
         flush()
         contexts = _make_contexts(sections, content_type="purchase_guide")
+        global_guidance = [p.body for p in contexts if _label(p.title) in {"价格警告", "全局建议", "本期改动"}]
         for context in contexts:
             if context.metadata.get("budget") and context.title != context.metadata["budget"]:
-                # 标题参与 embedding，推荐卡正文仍只由原文内容组成。
                 context.metadata["entity_title"] = context.title
+                if global_guidance:
+                    context.metadata["global_guidance"] = global_guidance
+                context.warnings.append("价格与推荐仅代表来源日期，请结合预算和该文全局建议。")
         return contexts
 
 

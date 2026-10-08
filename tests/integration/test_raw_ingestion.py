@@ -120,6 +120,25 @@ def test_raw_budget_splits_review_chunks_and_rejects_overlong_atomic_guide_secti
     assert KnowledgeSource.objects.count() == 1
 
 
+def test_raw_table_split_stores_header_in_retrieval_text_but_not_in_body(embedder, settings):
+    client = client_for("maintain_source")
+    settings.PREPROCESS_MAX_INPUT_BYTES = 160
+    table = "| 项目 | 值 |\n| --- | --- |\n" + "".join(f"| 项目{i} | 数值{i}GB |\n" for i in range(12))
+    data = request_payload(content="# Laptop A\n\n## 配置\n\n" + table)
+    with patch("config.components.embedding_provider", return_value=embedder), \
+            patch.object(embedder, "embed_documents", wraps=embedder.embed_documents) as embed:
+        response = client.post("/api/v1/sources/raw/", data, format="json")
+        assert response.status_code == 200, response.data
+    parent = ContextUnit.objects.get()
+    children = list(EvidenceUnit.objects.order_by("ordinal"))
+    assert len(children) > 1 and children[0].body.startswith("配置\n\n| 项目 | 值 |")
+    for child in children[1:]:
+        assert child.body.startswith("| 项目") and "| --- |" not in child.body
+        assert child.retrieval_text == f"Laptop A\n| 项目 | 值 |\n| --- | --- |\n{child.body}"
+        assert parent.body[child.locator["parent_char_start"]:child.locator["parent_char_end"]] == child.body
+    assert embed.call_args.args[0] == [child.retrieval_text for child in children]
+
+
 def test_raw_api_checks_authentication_permissions_and_visibility_before_processing():
     assert APIClient().post("/api/v1/sources/raw/", {}, format="json").status_code == 401
     reader = client_for()

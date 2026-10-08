@@ -86,9 +86,11 @@ HTML 支持 h1～h6、短的独占粗体栏目与 `【栏目名】`、段落、�
 
 ## 4. Evidence 输入预算
 
-[BudgetChunker](../../ingestion/chunking.py) 在 Embedding 之前检查完整编码文本 `父段标题 + 换行 + Evidence.body`。默认 `Utf8ByteCounter` 与 2400 字节预算，不把字符/字节当精确 token，也不自动加载或下载模型。适配目标模型时，在组合根注入 `TokenizerCounter(tokenizer.encode)` 和模型允许的 max_input_units；encode 应包含特殊 token，预算应留出模型要求的余量。字节预算需要按实际服务校准，不能对任意 tokenizer 承诺模型 token 上限。
+[BudgetChunker](../../ingestion/chunking.py) 在 Embedding 之前检查完整编码文本 `父段标题 + 换行 + Evidence.body`；带 retrieval_prefix 的子块为 `父段标题 + 换行 + 前缀 + 换行 + Evidence.body`。默认 `Utf8ByteCounter` 与 2400 字节预算，不把字符/字节当精确 token，也不自动加载或下载模型。适配目标模型时，在组合根注入 `TokenizerCounter(tokenizer.encode)` 和模型允许的 max_input_units；encode 应包含特殊 token，预算应留出模型要求的余量。字节预算需要按实际服务校准，不能对任意 tokenizer 承诺模型 token 上限。
 
-普通长 Evidence 优先按段落、句子边界拆分，窗口内没有这类边界时退回换行（尽量保持表格行、列表项完整），仍过长再按 Unicode 字符边界拆分；父段正文保持完整，拆出的多个 Evidence 平级保存。子块 locator 的 parent_char_start/end 是父段正文中的字符偏移，end 为开区间，便于精确引用。小于预算的子块不变更正文/key。
+普通长 Evidence 按剩余长度均分为所需的最少块数：每次以均分长度为目标，在预算可容纳的范围内选最接近目标的断点，优先段落、句子边界，其次换行，都没有时按 Unicode 字符边界切分；早于目标长度一半的断点不采用，避免只含“配置”标题或末句的极短子块。父段正文保持完整，拆出的多个 Evidence 平级保存。
+
+连续的 `| … |` 行视为管道表格，第一行（及紧随的 `| --- |` 分隔行）是表头，表格只在行之间断开，单元格中的句号不作为断点。从数据行开始的子块把表头写入 `retrieval_prefix`，只进入编码文本和关键词检索文本，body 与定位仍是原始数据行；表头加一整行数据仍超预算时不附表头。子块 locator 的 parent_char_start/end 是父段正文中的字符偏移，end 为开区间，便于精确引用。小于预算的子块不变更正文/key。
 
 购买指南、经验文档中的不可拆分小节超限返回 SEMANTIC_UNIT_TOO_LARGE，不静默截断测试条件、表头或代码。可以调整部署预算或自定义更细且完整的结构策略。拆分同时遵守 32000 字符、每父段 100 子块、整篇 1000 子块的公共约束；ValidateStep 可注入 chunker.validate，在 DTO 构建后再次验证最终模型输入。
 

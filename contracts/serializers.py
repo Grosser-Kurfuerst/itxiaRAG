@@ -36,6 +36,7 @@ class EvidenceSerializer(StrictSerializer):
     locator = serializers.DictField(default=dict)
     metadata = serializers.DictField(default=dict)
     warnings = serializers.ListField(child=TextField(max_length=500), default=list)
+    retrieval_prefix = TextField(trim_whitespace=False, allow_blank=True, default="", max_length=2000)
 
 
 class ContextSerializer(StrictSerializer):

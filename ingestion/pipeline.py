@@ -2,7 +2,9 @@
 from catalog.policies import require_permission, visible_scopes
 from contracts.errors import DomainError
 from contracts.serializers import SourceSerializer, validate_document
-from contracts.types import DocumentStore, EmbeddingProvider, PreprocessorResolver, ProcessedDocument, RawDocument, SourceSpec
+from contracts.types import (
+    DocumentStore, EmbeddingProvider, PreprocessorResolver, ProcessedDocument, RawDocument, SourceSpec, evidence_input,
+)
 from dataclasses import asdict
 from embeddings.validation import validate_vectors
 
@@ -21,7 +23,8 @@ def import_processed(source: SourceSpec, document: ProcessedDocument, actor, *,
                      embedder: EmbeddingProvider, store: DocumentStore):
     source = _validate_source(source, actor)
     document = validate_document(document)
-    texts = [f"{parent.title}\n{child.body}" for parent in document.contexts for child in parent.children]
+    texts = [evidence_input(parent.title, child.body, child.retrieval_prefix)
+             for parent in document.contexts for child in parent.children]
     vectors = validate_vectors(embedder.embed_documents(texts), len(texts))
     return store.save(source, document, vectors, embedder.space_id, actor)
 

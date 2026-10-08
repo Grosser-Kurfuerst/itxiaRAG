@@ -1,6 +1,6 @@
 # Docker 部署与运行验收
 
-从仓库根目录执行本文命令。Compose 提供 Django + Gunicorn、PostgreSQL，以及可选的 Ollama Embedding 服务。文章抓取、解析、自动分段和回答生成仍不在当前实现中；导入使用已整理好的标准 JSON。
+从仓库根目录执行本文命令。Compose 提供 Django + Gunicorn、PostgreSQL，以及可选的 Ollama Embedding 服务。当前支持标准化 JSON 导入，以及 HTML／Markdown／文本经预处理后导入；文章抓取、OCR 和回答生成尚未实现。预处理策略与请求契约见[文档预处理](preprocessing.md)，测试规则见[项目测试规则](../unit-testing-guidelines.md)。
 
 ## 1. 准备配置
 
@@ -33,14 +33,17 @@ EMBEDDING_QUERY_PREFIX="Instruct: Given a web search query, retrieve relevant pa
 
 `EMBEDDING_REVISION` 是部署者记录的模型版本标识，不会触发下载。记录 `ollama list` 的模型 ID；更新模型文件后应更新此标识。地址、模型、维度、revision 或 query prefix 改变后，需要重新导入资料。
 
-检索门槛为可选服务配置，可在同一环境文件中增加：
+检索门槛与原文输入预算为可选服务配置，可在同一环境文件中增加：
 
 ```dotenv
 RETRIEVAL_MIN_COSINE=
 RETRIEVAL_MIN_BM25=0
+PREPROCESS_MAX_INPUT_BYTES=2400
 ```
 
 默认不额外过滤向量，关键词保留 BM25 大于零的结果。设置最低 cosine 时范围为 `[-1, 1]`，最低 BM25 须非负；两路分别过滤。具体值应按实际问题集校准，改动门槛不需重新导入，只需重建应用容器。结果的 `matches[].route_scores` 保留原始 cosine／BM25，`score_kind` 说明当前排序分数，默认是 `rrf`。
+
+PREPROCESS_MAX_INPUT_BYTES 控制原文入口完整 Embedding 文本的 UTF-8 字节预算，修改后重建应用容器。它不是精确 token 上限，也不会改变已导入子块；需要应用新切分预算时重新提交原文。目标 tokenizer 的注入方式见[输入预算与扩展](preprocessing.md#4-evidence-输入预算)。
 
 为减少重复命令，在当前终端定义：
 
@@ -110,7 +113,7 @@ curl -sS -w '\nHTTP %{http_code}\n' \
 
 预期 `401`。首页和 `/health/live/`、`/health/ready/` 返回 `404` 属于当前正常行为，不能用于验收服务故障。
 
-### 3.3 导入合成样本
+### 3.3 导入标准化合成样本
 
 ```sh
 curl -sS --fail-with-body -w '\nHTTP %{http_code}\n' \
@@ -137,13 +140,38 @@ curl -sS --fail-with-body -w '\nHTTP %{http_code}\n' \
 - HTTP `200`，`mode=hybrid`，`result_status=found`。
 - `contexts` 包含“笔记本 A”，`text` 同时包含续航和风扇噪声两句话，即返回完整父段。
 - `contexts[].matches[].ranks` 中有 `keyword` 和 `vector` 两路名次；排名位于每个命中子块内。
-- `matches` 只包含实际命中子块的 ID、key 和定位信息；不会返回父段下未命中的子块列表。
+- `matches` 只列出实际命中子块，包含 ID、key、定位、分数和各路名次；不会返回父段下未命中的子块列表。
 
 再用“电池能用多久”查询，检查同义问法是否仍能找到续航资料；具体名次由真实模型决定。几条样本只验证接入和返回行为，不能代表完整语义质量。
 
-### 3.5 验证维护权限
+### 3.5 验收原文预处理导入
 
-把 3.3 的 Token 换成 `$READER_TOKEN_FILE`，预期 `403`；普通账号可以检索公开来源，不能导入。公开／内部隔离和更新回归由下面的集成测试进一步验证。
+提交下面的合成微信 HTML，验证格式解析、父子分段和公共导入链。标准化入口的示例无需修改：
+
+```sh
+curl -sS --fail-with-body -w '\nHTTP %{http_code}\n' \
+  -H "Authorization: Token $(cat "$TOKEN_FILE")" \
+  -H 'Content-Type: application/json' \
+  --data-binary @- http://127.0.0.1:8000/api/v1/sources/raw/ <<'JSON'
+{
+  "source": {"source_type": "wechat", "canonical_locator": "synthetic:raw-smoke", "visibility": "public"},
+  "preprocess": {"schema": "product_review", "version": 1},
+  "raw": {
+    "content": "<div id=\"js_content\"><h2>Laptop Raw</h2><p><strong>续航</strong></p><p>续航约 9 小时。</p><p><strong>噪声</strong></p><p>风扇较安静。</p></div>",
+    "media_type": "text/html",
+    "metadata": {"title": "合成原文评测", "entity_title": "Laptop Raw", "source_date": "2026-09-28", "author": "合成作者"}
+  }
+}
+JSON
+```
+
+首次应返回 `200`、`reused=false` 和一项 context_ids；重复提交同一请求应为 `reused=true`，ID 不变。再执行 3.4 的查询，确认 contexts 包含 Laptop Raw，父段 text 同时保留续航和噪声；matches 的 locator 中 parent_char_start/end 应定位到 text 中的命中子块，end 为开区间。
+
+购机指南、经验文档、长子块拆分、atomic 超限与失败行为通过[预处理专项测试](../unit-testing-guidelines.md#预处理专项验证)验证。真实文章的视觉排版和图片关键参数仍需人工核对。
+
+### 3.6 验证维护权限
+
+把 3.3 或 3.5 的 Token 换成 `$READER_TOKEN_FILE`，预期 `403`；普通账号可以检索公开来源，不能导入。公开／内部隔离和更新回归由下面的集成测试进一步验证。
 
 ## 4. 在 Docker 中运行自动测试
 
@@ -161,7 +189,13 @@ dct run --rm test python -m pytest tests/unit -q
 dct run --rm test python -m pytest tests/integration -q
 ```
 
-集成测试覆盖真实 PostgreSQL 保存、去重与更新、权限过滤、完整父段与引用、BM25 + 向量 + RRF、模型错误及 HTTP 模型协议。测试通过后清理专用测试资源：
+集成测试覆盖真实 PostgreSQL 保存、去重与更新、权限过滤、完整父段与命中定位、BM25 + 向量 + RRF、原文预处理导入、模型错误及 HTTP 模型协议。单独验证原文 API 时运行：
+
+```sh
+dct run --rm test python -m pytest tests/integration/test_raw_ingestion.py -q
+```
+
+测试通过后清理专用测试资源：
 
 ```sh
 dct down -v
@@ -169,7 +203,7 @@ dct down -v
 
 完成应用检查、上述导入／查询验收以及全量自动测试，才算系统运行验收通过。吞吐、容量和大量真实问题的检索质量需要另做样本验证。
 
-2026-10-03 已在独立 Docker 项目验证：全量 40 项测试通过；真实 `qwen3-embedding:0.6b` 的导入、去重、两路召回、同义查询、父段／引用和权限隔离检查通过。停止并重建容器后，Token、资料和模型文件保留且检索通过。此记录只覆盖合成样本。
+历史验证范围：2026-10-03 曾在独立 Docker 项目用真实 `qwen3-embedding:0.6b` 验证合成样本的导入、去重、两路召回、同义查询、父段／命中定位、权限隔离和重启后的持久化。此记录不证明当前版本全量测试通过，也不代表真实文章质量；当前验收按上文命令重新执行，不沿用旧通过数量。
 
 ## 5. 常见问题与日常操作
 
@@ -178,7 +212,8 @@ dct down -v
 | `app` 重启或无法启动 | `dc logs --tail=100 app db`；检查配置和迁移 |
 | 导入／查询 `503` | 检查 Embedding 地址、模型名、维度、revision 是否齐全 |
 | 导入／查询 `502` | 检查模型已下载、网络地址可达、返回维度匹配；本地模型看 `dc logs embedding` |
-| 查询 `no_result` | 确认已导入、资料公开或账号有内部权限，且模型配置未变；模型配置改变后重新导入 |
+| 原文导入 `400` | 检查 schema、media_type、元数据与机型边界；SEMANTIC_UNIT_TOO_LARGE 表示不可拆小节超预算，见预处理文档 |
+| 查询 `no_result` | 确认已导入、资料可见、模型配置未变及路线门槛；模型配置改变后重新导入 |
 | `401`／`403` | 分别检查 Token 和账号权限 |
 
 更新代码后重建并查看日志：

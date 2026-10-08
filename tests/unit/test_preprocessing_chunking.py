@@ -58,6 +58,15 @@ def test_impossible_title_and_chunk_count_limit_fail_before_embedding():
         BudgetChunker(max_input_units=True)
 
 
+def test_text_without_sentence_boundaries_splits_at_line_breaks():
+    body = "| 项目 | 值 |\n| --- | --- |\n| 内存 | 16GB |\n| 硬盘 | 512GB |\n| 屏幕 | 165Hz |"
+    parent, = BudgetChunker(max_input_units=40).chunk([unit(body, title="A")])
+    assert len(parent.children) > 1
+    assert "".join(child.body for child in parent.children) == body
+    for child in parent.children:
+        assert all(line.startswith("|") and line.endswith("|") for line in child.body.splitlines())
+
+
 def test_whitespace_and_utf8_split_do_not_lose_or_damage_text():
     body = "第一行  \n第二行🙂继续，没有句号" * 20
     parent, = BudgetChunker(max_input_units=60).chunk([unit(body, title="A")])

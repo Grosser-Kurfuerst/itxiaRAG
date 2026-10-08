@@ -96,7 +96,8 @@ class _Node:
             return "\n"
         if self.tag == "img":
             alt = (self.attrs.get("alt") or "").strip()
-            return f"[图片：{alt}]" if alt else "[图片：未提供文字说明]"
+            # 微信编辑器默认 alt 为“图片”，不构成文字说明。
+            return f"[图片：{alt}]" if alt and alt != "图片" else "[图片：未提供文字说明]"
         return "".join(child if isinstance(child, str) else child.text() for child in self.children)
 
     def find(self, predicate):

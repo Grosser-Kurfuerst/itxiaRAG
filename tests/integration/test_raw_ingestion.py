@@ -28,7 +28,7 @@ def request_payload(schema="product_review", content=None, media_type="text/mark
         "raw": {
             "content": content or "# Laptop A\n\n## 配置\n\n16GB\n\n## 续航\n\n续航约 9 小时。",
             "media_type": media_type,
-            "metadata": {"title": "合成样本", "source_date": "2026-09-28", "author": "合成作者"},
+            "metadata": {"title": "合成样本", "entity_title": "Laptop A", "source_date": "2026-09-28", "author": "合成作者"},
         },
     }
 
@@ -86,6 +86,7 @@ def test_raw_preprocessing_and_validation_errors_happen_before_model_setup_or_sa
             ({"media_type": "application/pdf"}, "UNSUPPORTED_MEDIA_TYPE"),
             ({"content": "<script>ignored</script>", "media_type": "text/html"}, None),
             ({"metadata": {"source_date": "invalid"}}, None),
+            ({"metadata": {"title": "只有文章标题"}}, "ENTITY_TITLE_REQUIRED"),
         ]:
             data = request_payload()
             data["raw"].update(change)
@@ -100,17 +101,18 @@ def test_raw_preprocessing_and_validation_errors_happen_before_model_setup_or_sa
     assert not KnowledgeSource.objects.exists()
 
 
-def test_raw_budget_splits_plain_evidence_and_rejects_overlong_atomic_section(embedder, settings):
+def test_raw_budget_splits_review_chunks_and_rejects_overlong_atomic_guide_section(embedder, settings):
     client = client_for("maintain_source")
     settings.PREPROCESS_MAX_INPUT_BYTES = 100
-    data = request_payload(content="# A\n\n## 优缺点\n\n" + "优点是续航好。" * 40)
+    # 评测子块只服务召回，长散热小节按预算拆分而不是拒绝。
+    data = request_payload(content="# A\n\n## 散热分析\n\n" + "室温25℃，测试结果80℃。" * 40)
     with patch("config.components.embedding_provider", return_value=embedder):
         response = client.post("/api/v1/sources/raw/", data, format="json")
         assert response.status_code == 200, response.data
     assert EvidenceUnit.objects.count() > 1
     assert all(len(text.encode()) <= 100 for text in EvidenceUnit.objects.values_list("retrieval_text", flat=True))
+    data = request_payload("purchase_guide", "# 指南\n\n## Laptop A\n\n### 购买建议\n\n" + "适合轻办公，不适合大型游戏。" * 40)
     data["source"]["canonical_locator"] = "synthetic:atomic"
-    data["raw"]["content"] = "# A\n\n## 散热分析\n\n" + "室温25℃，测试结果80℃。" * 40
     with patch("config.components.embedding_provider") as provider:
         response = client.post("/api/v1/sources/raw/", data, format="json")
         assert response.status_code == 400 and response.data["error"]["code"] == "SEMANTIC_UNIT_TOO_LARGE"

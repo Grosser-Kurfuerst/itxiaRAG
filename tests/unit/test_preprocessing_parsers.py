@@ -33,11 +33,13 @@ def test_wechat_html_selects_body_and_recognizes_strong_columns():
         '<h1>页头标题</h1><div id="js_content"><section>'
         '<p><strong>【优缺点】</strong></p><p>优点：<b>安静</b><br>缺点：贵</p>'
         '<script>secret()</script><img data-src="https://example.invalid/p.png">'
+        '<p><img alt="图片"></p><p><img alt="散热模组"></p>'
         '</section></div><p>广告页尾</p>'
     ))
     assert [(b.kind, b.text) for b in blocks] == [
         ("heading", "【优缺点】"), ("paragraph", "优点：安静\n缺点：贵"),
-        ("paragraph", "[图片：未提供文字说明]"),
+        ("paragraph", "[图片：未提供文字说明]"), ("paragraph", "[图片：未提供文字说明]"),
+        ("paragraph", "[图片：散热模组]"),
     ]
     assert all("页尾" not in b.text and "secret" not in b.text for b in blocks)
 

@@ -48,6 +48,7 @@ class BudgetChunker:
         spans = []
         start = 0
         boundaries = [m.end() for m in re.finditer(r"\n\s*\n|[。！？!?](?:\s*)", body)]
+        line_breaks = [m.end() for m in re.finditer(r"\n", body)]
         while start < len(body):
             # 二分找一个满足预算的前缀；最后仍逐条验证，不依赖 token 严格单调。
             low, high, best = start + 1, min(len(body), start + 32000), start
@@ -61,6 +62,9 @@ class BudgetChunker:
                 raise DomainError("INPUT_BUDGET_TOO_SMALL", "父段标题或单字符超过输入预算，请调整预算或标题")
             if best < len(body):
                 preferred = [end for end in boundaries if start < end <= best and body[start:end].strip()]
+                if not preferred:
+                    # 没有段落/句子边界时退回换行，表格行和列表项尽量保持完整。
+                    preferred = [end for end in line_breaks if start < end <= best and body[start:end].strip()]
                 if preferred:
                     best = preferred[-1]
             if not body[start:best].strip():

@@ -1,6 +1,7 @@
 import pytest
 
 from contracts.errors import DomainError
+from contracts.types import evidence_input
 from ingestion.chunking import BudgetChunker, TokenizerCounter, Utf8ByteCounter
 from ingestion.preprocessing import SemanticContext, SemanticEvidence
 
@@ -65,6 +66,49 @@ def test_text_without_sentence_boundaries_splits_at_line_breaks():
     assert "".join(child.body for child in parent.children) == body
     for child in parent.children:
         assert all(line.startswith("|") and line.endswith("|") for line in child.body.splitlines())
+
+
+def assert_valid_split(parent, budget):
+    for child in parent.children:
+        assert len(evidence_input(parent.title, child.body, child.retrieval_prefix).encode()) <= budget
+        assert parent.body[child.locator["parent_char_start"]:child.locator["parent_char_end"]] == child.body
+    assert "".join(child.body for child in parent.children) == parent.body
+
+
+TABLE = "| 项目 | 值 |\n| --- | --- |\n" + "".join(f"| 项目{i} | 数值{i}GB。 |\n" for i in range(12))
+
+
+def test_split_rejects_breakpoints_too_close_to_start_and_balances_tail():
+    # 只有开头一个段落边界时，不生成只含“配置”的子块。
+    parent, = BudgetChunker(max_input_units=200).chunk([unit("配置\n\n" + TABLE)])
+    assert_valid_split(parent, 200)
+    assert parent.children[0].body.startswith("配置\n\n| 项目 | 值 |\n| --- | --- |\n| 项目0")
+    # 刚超预算的长段按剩余长度均分，不留下只有末句的极短尾块。
+    body = "这台电脑适合轻办公和学习使用。" * 9 + "适合学生。"
+    parent, = BudgetChunker(max_input_units=330).chunk([unit(body)])
+    assert_valid_split(parent, 330)
+    lengths = [len(child.body) for child in parent.children]
+    assert len(lengths) == 2 and min(lengths) >= max(lengths) / 2
+
+
+def test_table_split_keeps_rows_whole_and_adds_header_only_to_model_input():
+    parent, = BudgetChunker(max_input_units=160).chunk([unit(TABLE)])
+    assert_valid_split(parent, 160)
+    first, *rest = parent.children
+    assert rest and first.retrieval_prefix == "" and first.body.startswith("| 项目 | 值 |")
+    for child in rest:
+        # 单元格中的句号不作为断点；后续子块正文从数据行开始，表头只进入编码文本。
+        assert child.retrieval_prefix == "| 项目 | 值 |\n| --- | --- |"
+        assert child.body.startswith("| 项目") and "| --- |" not in child.body
+    for child in parent.children:
+        assert all(line.startswith("|") and line.endswith("|") for line in child.body.splitlines())
+
+
+def test_table_header_is_dropped_when_it_cannot_fit_with_any_row():
+    body = "| 很长很长的列名甲 | 很长很长的列名乙 |\n| a | 1 |\n| b | 2 |\n| c | 3 |"
+    parent, = BudgetChunker(max_input_units=60).chunk([unit(body, title="A")])
+    assert_valid_split(parent, 60)
+    assert all(child.retrieval_prefix == "" for child in parent.children)
 
 
 def test_whitespace_and_utf8_split_do_not_lose_or_damage_text():

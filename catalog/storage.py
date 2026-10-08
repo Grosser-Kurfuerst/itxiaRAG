@@ -8,7 +8,7 @@ from django.db import transaction
 from catalog.models import ContextUnit, EvidenceUnit, KnowledgeSource
 from catalog.policies import require_permission, visible_scopes
 from contracts.errors import DomainError
-from contracts.types import ImportResult
+from contracts.types import ImportResult, evidence_input
 from embeddings.validation import validate_vectors
 
 
@@ -50,8 +50,10 @@ class DjangoDocumentStore:
             for child_ordinal, child in enumerate(parent.children, 1):
                 child_fields = asdict(child)
                 child_keys.append(child_fields.pop("key"))
+                prefix = child_fields.pop("retrieval_prefix")
                 EvidenceUnit.objects.update_or_create(context=context, key=child.key, defaults={
-                    **child_fields, "ordinal": child_ordinal, "retrieval_text": f"{parent.title}\n{child.body}",
+                    **child_fields, "ordinal": child_ordinal,
+                    "retrieval_text": evidence_input(parent.title, child.body, prefix),
                     "embedding": next(vector_iter)})
             context.children.exclude(key__in=child_keys).delete()
         source.contexts.exclude(pk__in=context_ids).delete()

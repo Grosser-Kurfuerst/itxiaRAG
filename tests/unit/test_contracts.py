@@ -24,7 +24,19 @@ def test_dto_roundtrip_preserves_text_and_extensible_metadata(document_payload):
     result = validate_document(document(document_payload))
     assert result.contexts[0].body == "第一行  \n第二行"
     assert result.contexts[0].children[0].metadata == {"topic": "new_type"}
+    assert result.contexts[0].children[0].retrieval_prefix == ""
     assert result.metadata['note'].startswith('合成样本')
+
+
+def test_retrieval_prefix_is_optional_and_only_changes_model_input(document_payload):
+    from contracts.types import evidence_input
+
+    raw = document_payload['document']['contexts'][0]
+    raw['children'] = [{"key": "a", "body": raw['body'], "retrieval_prefix": "| 项目 | 值 |"}]
+    child = validate_document(document(document_payload)).contexts[0].children[0]
+    assert child.retrieval_prefix == "| 项目 | 值 |" and child.body == raw['body']
+    assert evidence_input("Laptop", "| 内存 | 16GB |", child.retrieval_prefix) == "Laptop\n| 项目 | 值 |\n| 内存 | 16GB |"
+    assert evidence_input("Laptop", "正文") == "Laptop\n正文"
 
 
 def test_removed_type_fields_are_rejected(document_payload):

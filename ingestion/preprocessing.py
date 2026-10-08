@@ -37,6 +37,7 @@ class SemanticEvidence:
     metadata: dict = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
     atomic: bool = False
+    retrieval_prefix: str = ""
 
 
 @dataclass(frozen=True)
@@ -193,6 +194,7 @@ class BuildDocumentStep:
                 children=[EvidenceDraft(
                     key=child.key, body=child.body, locator=dict(child.locator),
                     metadata=dict(child.metadata), warnings=list(child.warnings),
+                    retrieval_prefix=child.retrieval_prefix,
                 ) for child in unit.children],
                 locator=dict(unit.locator), metadata=dict(unit.metadata), warnings=list(unit.warnings),
             ) for unit in context.units],

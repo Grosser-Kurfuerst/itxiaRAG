@@ -57,7 +57,7 @@ api → retrieval.service → MultiRouteRecall
 | `RawDocument` | `content` UTF-8 原始字节；`media_type` 格式；`metadata` 采集元数据与类型边界提示 |
 | `ProcessedDocument` | `title`、`document_schema`、`schema_version`、`source_date`、`metadata`、`warnings`、`contexts` |
 | `ContextDraft` | `key` 文档内稳定父段键；`title`、`body` 完整上下文；`locator` 原文定位；`metadata` 适用对象等附加信息；`warnings`；`children` |
-| `EvidenceDraft` | `key` 父段内稳定子块键；`body` 检索正文；`locator`、`metadata`、`warnings` |
+| `EvidenceDraft` | `key` 父段内稳定子块键；`body` 检索正文；`locator`、`metadata`、`warnings`；可选 `retrieval_prefix` 只拼入编码文本，例如拆分表格时的表头 |
 
 数组顺序就是段落顺序，数据库保存为 `ordinal`。父子 key 在各自范围内唯一；正文非空，子块正文必须能在所属父段中找到。标准化文档入口不自动补父段、生成摘要或拆段，正文原样保存，包括 Markdown 行尾双空格；原文入口先生成统一内容块并按所选策略划分父子段落。
 
@@ -86,7 +86,7 @@ api → retrieval.service → MultiRouteRecall
 | `context_unit` | UUID、source 外键、key、ordinal、title、body、locator、metadata、warnings | 完整父上下文；`(source, key)` 唯一 |
 | `evidence_unit` | UUID、context 外键、key、ordinal、body、retrieval_text、locator、metadata、warnings、embedding | 召回子块及其向量；`(context, key)` 唯一 |
 
-一个子块对应一个 embedding，编码文本固定为 `父段标题 + 换行 + 子块正文`。父段不单独编码。文档级 metadata 用于保留来源信息，不投影为召回条件，也不默认完整发送给调用方；父段 metadata 随结果返回，子块 metadata 和 warnings 保存供维护或后续扩展，不默认返回。回答所需的风险警告应写入文档或父段 warnings，不能只放在子块中。子块 locator 应保持简短，只记录章节、段落号或字符偏移等定位信息，不放正文或大型附加数据。
+一个子块对应一个 embedding，编码文本固定为 `父段标题 + 换行 + 子块正文`，子块带 `retrieval_prefix` 时为 `父段标题 + 换行 + 前缀 + 换行 + 子块正文`，同一文本也保存为关键词路的 `retrieval_text`。父段不单独编码。文档级 metadata 用于保留来源信息，不投影为召回条件，也不默认完整发送给调用方；父段 metadata 随结果返回，子块 metadata 和 warnings 保存供维护或后续扩展，不默认返回。回答所需的风险警告应写入文档或父段 warnings，不能只放在子块中。子块 locator 应保持简短，只记录章节、段落号或字符偏移等定位信息，不放正文或大型附加数据。
 
 保存采用 `DocumentStore.save(...)` 协议，默认 `DjangoDocumentStore`。现阶段向量保存在 PostgreSQL JSONB 数组；`VectorRetriever` 在数据库完成范围过滤后逐批读取向量，用余弦计算精确 top-N，不预截断候选。复杂度约 `O(N × D)`，适合小规模验证；无 ANN 索引，不承诺大规模性能。需要规模化时替换为 pgvector 字段和 Retriever，DTO、API、RRF 不变。
 

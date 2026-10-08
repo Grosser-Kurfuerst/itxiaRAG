@@ -7,11 +7,18 @@ from uuid import UUID
 
 @dataclass(frozen=True)
 class EvidenceDraft:
+    """retrieval_prefix 只拼入检索/编码文本（如拆分表格的表头），不属于 body 和定位。"""
     key: str
     body: str
     locator: dict = field(default_factory=dict)
     metadata: dict = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
+    retrieval_prefix: str = ""
+
+
+def evidence_input(parent_title: str, body: str, prefix: str = "") -> str:
+    """子块的 Embedding 与关键词检索文本；导入、保存和预算检查共用同一格式。"""
+    return f"{parent_title}\n{prefix}\n{body}" if prefix else f"{parent_title}\n{body}"
 
 
 @dataclass(frozen=True)

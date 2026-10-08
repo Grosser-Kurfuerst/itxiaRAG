@@ -8,17 +8,17 @@
 
 | 模块 | 选择与理由 | 替代方案与暂不采用的原因 |
 | --- | --- | --- |
-| HTTP 与认证 | Django + DRF：复用 ORM、迁移、Token 和输入校验，提供导入、查询两个接口 | FastAPI 也适用，但切换需重新组合认证与数据层；当前不需要 Admin 或独立前端 |
+| HTTP 与认证 | Django + DRF：复用 ORM、迁移、Token 和输入校验，提供标准导入、原文导入和查询三个入口 | FastAPI 也适用，但切换需重新组合认证与数据层；当前不需要 Admin 或独立前端 |
 | 存储 | PostgreSQL 三张业务表，JSONB 保存附加元数据与向量；同库约束与事务便于保证父子完整 | 文档数据库没有当前必需的独特收益；独立向量库增加服务和数据同步 |
 | 导入编排 | Python 同步服务：校验 → 编码 → 一次事务保存；步骤少，失败后修正重提 | Haystack／LlamaIndex 留作复杂编排候选；Worker／Celery 需要实际异步或批量需求，不作为当前依赖 |
-| 预处理扩展 | 连接器与处理器分离，Protocol + 显式注册表；统一输出 ProcessedDocument | 当前没有解析或自动分段实现。暂不部署通用解析平台，也不要求每类文档独立 Worker |
+| 预处理 | Protocol + 显式注册表 + 顺序 Pipeline；HTML／Markdown 格式适配、内容结构策略与输入预算控制分别注入，统一输出 ProcessedDocument | 已实现三类结构策略；连接器、OCR 与复杂版式解析留待实际需求，不部署通用解析平台或每类型独立 Worker |
 | Embedding | 兼容 OpenAI `/embeddings` 的 HTTP 适配器；本地或获准外部服务均可，业务不绑定 SDK | Qwen3-Embedding-0.6B、BGE-M3 可作实测候选；配置示例不表示模型已部署或优于其他模型 |
 | 关键词召回 | jieba + 纯 Python BM25：查询与子块使用相同分词规则，保留型号／错误码；先权限过滤再统计词频，分词函数可替换 | 后续在线扫描成为瓶颈时，替换为持久化倒排索引或支持 BM25 的数据库实现；保持 `KeywordRetriever.search(query, scope, limit)` 边界，并验证索引更新与权限范围。原生 PostgreSQL FTS 排名不等于 BM25 |
 | 向量召回 | JSONB + Python 精确余弦 top-N：可作为小规模正确性基线 | pgvector 可把距离计算移至数据库并按需使用 ANN；当前方案需扫描可见向量，大规模性能未验证 |
 | 融合与返回 | RRF 按排名融合，不要求两路分数同尺度；子块召回后返回完整父段 | 直接相加分数需校准；融合、分组及未来过滤／重排通过统一步骤协议编排，重排不作为当前必需功能 |
 | 验证 | pytest 单元测试 + PostgreSQL 集成测试；用受控模型验证契约与流程 | 真实模型另做相关性验证，不把模型替身的通过结果当作语义效果证明 |
 
-这些取舍服务于当前“标准化导入 → 混合检索 → 父上下文返回”的范围。接口和模块边界见技术设计，不在此重复维护字段或阶段计划。
+这些取舍服务于当前“标准化文档或原文预处理导入 → 混合检索 → 父上下文返回”的范围。接口和模块边界见技术设计，适配器、结构策略及预算计数器的组合方式见[文档预处理](phase1/preprocessing.md)，不在此重复维护字段或阶段计划。
 
 ### 1.1 检索改造实现状态
 
@@ -27,13 +27,13 @@
 - 采用自定义顺序 Pipeline + 统一步骤协议 + 组合根有序列表，支持增删步骤和调整兼容步骤顺序；默认仅 RRF、父段聚合和 top_k。不引入通用 DAG 框架，避免小流程的额外维护成本。
 - 只保留可选 reranker 接入位置，未来优先在 RRF 后、父段选择前处理子块；现有候选不含正文，模型接入需按 Scope 加载文本。重排只能处理已有候选，失败保留进入步骤前的排序。
 
-以上检索改造已实现；内部契约、文件改动和分步验收统一见[首期技术设计第 5.2～5.5 节](phase1/phase1-technical-design.md#52-路线门槛与分数)。
+路线门槛、原始分数和默认后处理流水线已实现，模型重排仍为扩展方向；内部契约、实现文件和验收统一见[首期技术设计第 5.2～5.5 节](phase1/phase1-technical-design.md#52-路线门槛与分数)。
 
 ## 2. 开源方案中仍值得借鉴的做法
 
 | 方案与既有证据 | 可借鉴之处 | 当前取舍 |
 | --- | --- | --- |
-| [RAGFlow](https://github.com/infiniflow/ragflow/tree/313ca90f6abd7682fe8523e16fd67b3653a3fa84) | 模板化分块、复杂格式解析、混合召回和引用 | 需要现成解析与 UI 时可试用；当前只接标准 JSON，不引入完整平台栈 |
+| [RAGFlow](https://github.com/infiniflow/ragflow/tree/313ca90f6abd7682fe8523e16fd67b3653a3fa84) | 模板化分块、复杂格式解析、混合召回和引用 | 需要复杂解析与 UI 时可试用；当前已有轻量文本预处理，不引入完整平台栈 |
 | [Dify](https://github.com/langgenius/dify/tree/725611b2e9a425519e9fcb4dcc579bafea936d27)、[FastGPT](https://github.com/labring/FastGPT/tree/b3ec46218d08a7b3e4c72e0eea7a9baebca2f736) | 将召回、融合、重排和应用编排分层 | 可作为对话应用或检索对照；当前知识库独立于 Agent 与生成模型 |
 | [MaxKB](https://github.com/1Panel-dev/MaxKB/tree/bfbbffb859bf7bbebf5f83b6f4adb1de8dbfaba1) | Django、PostgreSQL + pgvector 的一体化方案 | 维护人力不足时值得用同一批样本试用；采用前核对自定义父段与接口需求 |
 | [Onyx](https://github.com/onyx-dot-app/onyx/tree/65912e1bf4bcc56ac5d04fb776fc262c58f4b55d) | 多来源连接器和权限同步 | 当前少量来源不需要完整企业接入体系，保留连接器与内容处理分离的思路 |
@@ -52,7 +52,7 @@
 | [H-RAG](https://arxiv.org/abs/2605.00631) | 比较子块命中后聚合父段、再做父级重排的收益 | 其任务、模型与语料不同，不能据此确定笔记本评测父段的最佳长度 |
 | [Parser, Chunking, and Embedding Interactions](https://arxiv.org/abs/2609.31660) | 解析、分块、标题前缀与模型要联合做定向消融 | 研究基于少量英语法规文档，不代表中文维修资料效果 |
 | [Utilizing Metadata for Better RAG](https://arxiv.org/abs/2601.11863) | 比较少量标题／型号前缀与不加前缀的效果 | 财报领域结果不支持复制全部 metadata；当前仅编码父段标题与子块正文 |
-| [Structure-Aware Chunking for Tabular Data](https://arxiv.org/abs/2605.00318)、[FT-RAG](https://arxiv.org/abs/2605.01495) | 后续处理配置表时保留表头、单位、行列关联与周围条件 | 表格化记录实验不等于扫描图片 OCR；当前没有自动表格处理 |
+| [Structure-Aware Chunking for Tabular Data](https://arxiv.org/abs/2605.00318)、[FT-RAG](https://arxiv.org/abs/2605.01495) | 后续处理配置表时保留表头、单位、行列关联与周围条件 | 表格化记录实验不等于扫描图片 OCR；当前仅保留文本表格和所在小节，不实现论文中的复杂表格处理算法 |
 | [Late Chunking](https://arxiv.org/abs/2409.04701) | 长文编码后再按 token 表示池化，作为长文召回候选 | 需要兼容模型和池化方式，不能给任意 Embedding HTTP 服务加开关实现 |
 | [PAGE-RAG](https://arxiv.org/abs/2608.29753) | 多跳问题中试验对已召回候选建立临时关系结构 | 不能找回从未召回的事实；额外计算成本与维修适用性需验证 |
 | [ORDER](https://arxiv.org/abs/2609.17012) | 后续比较固定混合检索与按问题类型选择策略 | 训练规模与领域有限；当前只在总体需求保留场景策略，不实现自动路由 |
@@ -70,6 +70,6 @@
 | 实际出现复杂 PDF／图片资料 | [Docling](https://github.com/docling-project/docling/tree/2d5c590c34b6378fd8a47c65b534b280aa40c93c) 等格式解析器，经预处理插件输出统一 DTO |
 | 同步导入耗时影响实际使用 | 在现有导入服务外增加任务执行；任务调度与文档类型策略分离 |
 
-用同一批获准样本比较关键词、向量和 RRF；覆盖型号／错误码、同义表达、多机型、表格、内部资料和无相关资料的问题。记录前 k 个父段的有效命中、上下文完整性、延迟、子块数量和模型配置。当前向量路没有相关度阈值，非空库返回近邻不代表问题有答案。
+用同一批获准样本比较关键词、向量和 RRF；覆盖型号／错误码、同义表达、多机型、表格、内部资料和无相关资料的问题。记录前 k 个父段的有效命中、上下文完整性、延迟、子块数量和模型配置。当前向量门槛默认关闭，可按样本配置最低 cosine；非空库返回近邻不代表问题有答案。
 
 一次改变一个因素，保留独立验收样本。尚未用真实 IT 侠语料验证的中文质量、吞吐与容量应明确标注，不沿用历史方案中未确认的百分比或 P95 门槛。

@@ -2,9 +2,9 @@
 
 ## 项目结构
 
-这是一个 Django + PostgreSQL 的最小混合检索知识库。`api/` 提供导入和查询入口；`contracts/` 定义 DTO、协议和 Serializer；`ingestion/` 编排标准化文档导入并保留预处理插件注册点；`catalog/` 保存来源、父段和子块；`embeddings/` 适配模型服务；`retrieval/` 实现关键词、向量和 RRF；`config/` 是组合根。测试在 `tests/unit/` 与 `tests/integration/`，样本在 `fixtures/iteration1/`，设计文档在 `docs/phase1/`。
+这是一个 Django + PostgreSQL 的最小混合检索知识库。`api/` 提供标准导入、原文导入和查询入口；`contracts/` 定义 DTO、协议和 Serializer；`ingestion/` 编排原文预处理与标准化文档导入；`catalog/` 保存来源、父段和子块；`embeddings/` 适配模型服务；`retrieval/` 实现关键词、向量和 RRF；`config/` 是组合根。测试在 `tests/unit/` 与 `tests/integration/`，样本在 `fixtures/iteration1/`，设计文档在 `docs/phase1/`。
 
-当前不实现文章抓取、解析、父子分段、审核发布、任务队列、回答生成和知识图谱。API 接收已标准化的 `ProcessedDocument`。
+API 接收已标准化的 `ProcessedDocument`，也支持将 HTML、Markdown 或纯文本经可编排预处理后导入。已实现评测、购机指南和经验文档的父子分段策略；当前不实现文章抓取、OCR、审核发布、任务队列、回答生成和知识图谱。文档入口见 [README](README.md#文档导航)，预处理契约与扩展方式见 [文档预处理](docs/phase1/preprocessing.md)。
 
 ## 开发与验证
 

@@ -212,7 +212,7 @@ dct down -v
 | `app` 重启或无法启动 | `dc logs --tail=100 app db`；检查配置和迁移 |
 | 导入／查询 `503` | 检查 Embedding 地址、模型名、维度、revision 是否齐全 |
 | 导入／查询 `502` | 检查模型已下载、网络地址可达、返回维度匹配；本地模型看 `dc logs embedding` |
-| 原文导入 `400` | 检查 schema、media_type、元数据与机型边界；SEMANTIC_UNIT_TOO_LARGE 表示不可拆小节超预算，见预处理文档 |
+| 原文导入 `400` | 检查 schema、media_type、元数据与机型边界；ENTITY_TITLE_REQUIRED 表示单机评测缺少机型名，SEMANTIC_UNIT_TOO_LARGE 表示购机指南或经验文档的不可拆小节超预算，见预处理文档 |
 | 查询 `no_result` | 确认已导入、资料可见、模型配置未变及路线门槛；模型配置改变后重新导入 |
 | `401`／`403` | 分别检查 Token 和账号权限 |
 

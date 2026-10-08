@@ -1,17 +1,17 @@
 # 文档预处理
 
-## 流水线与扩展点
+本文集中维护原文预处理的调用链、格式适配器、结构策略、输入预算和扩展方式。公共 DTO、存储和查询契约见[首期技术设计](phase1-technical-design.md)，资料获取与准备见[来源接入说明](source-ingestion-plan.md)，验证命令见[项目测试规则](../unit-testing-guidelines.md)。
 
-`ingestion/preprocessing.py` 实现 `DocumentPreprocessor` 协议的顺序流水线，最终输出公共 `ProcessedDocument`，复用导入校验与保存流程。
+## 1. 调用链与职责
+
+[PreprocessPipeline](../../ingestion/preprocessing.py) 实现 `DocumentPreprocessor` 协议。原文 API 校验请求和来源权限后，通过 [PreprocessorRegistry](../../ingestion/registry.py) 按 schema/version 选择流水线，最终输出公共 `ProcessedDocument`，复用 [import_processed](../../ingestion/pipeline.py) 的校验、Embedding 和事务保存流程。
 
 ```text
 RawDocument → ParseStep → StructureStep → ChunkStep → BuildDocumentStep → ValidateStep
 阶段：raw      blocks       units          chunked         document          validated
 ```
 
-流程由有序步骤列表配置。新增能力实现 `PreprocessStep.process(context)` 并声明 `input_stage/output_stage`；兼容阶段的步骤可以增删、调序。例如两个 `blocks → blocks` 的清洗步骤可自由调整先后顺序，结构划分必须在解析之后，校验必须在构建之后。不允许 HTTP 请求加载 Python 路径或自行指定代码。
-
-构造时检查阶段连接和最终 `validated` 阶段；运行时检查步骤返回类型、实际输出阶段及最终文档，错误直接传播，不生成半成品文档。步骤由应用代码显式注册，不构成不可信代码沙箱。
+每次处理新建 `PreprocessContext`，依次保存原文、内容块、语义父子段和最终文档。构造时检查阶段连接和最终 `validated` 阶段；运行时检查步骤返回类型、实际输出阶段及最终文档，错误直接传播，不生成半成品文档。
 
 | 通用部分 | 可替换部分 |
 | --- | --- |
@@ -20,17 +20,42 @@ RawDocument → ParseStep → StructureStep → ChunkStep → BuildDocumentStep 
 | ChunkStep 的调用接口 | 注入 Chunker，按当前模型预算控制长度 |
 | 公共 DTO 构建与校验 | 组合根选择 schema、version 及具体步骤列表 |
 
-内部对象不落表，且不改变现有 ContextDraft/EvidenceDraft 契约。通过 Protocol 和组合实现 Pipeline、Strategy、Adapter 模式，避免深层继承。
+内部对象不落表，且不改变现有 ContextDraft/EvidenceDraft 契约。通过 Protocol 和组合实现 Pipeline、Strategy、Adapter 模式；具体组件在[组合根](../../config/components.py) 装配，避免深层继承。
 
-## 实施状态
+## 2. 格式适配器
 
-已实现通用流水线、步骤协议、内存对象与公共 DTO 构建/校验、HTML/Markdown/纯文本解析器、三类结构策略和输入预算控制，并接入原文导入 API。现有标准化 JSON API 行为保持不变。
+格式解析器遵循 `Parser.parse(raw: RawDocument) → list[ContentBlock]`。`ContentBlock` 的 kind/text 表示块类型和文本，level 表示标题级别，ordinal 表示顺序，locator 与 metadata 保留定位和附加信息。后续策略只处理内容块，不依赖 HTML 标签或 Markdown 语法。
 
-`ingestion/parsers.py` 的 ParserRegistry 可直接注入 ParseStep，按媒体类型选择适配器。HTML 优先提取微信 `js_content`；其他 HTML 读取 body。支持 h1～h6、独占段落的粗体栏目、表格、列表与代码。Markdown 支持 ATX 标题、独占行的粗体标题、管道表格、列表与围栏代码，并保留正文有意义空格。图片保留说明或缺失说明占位，不下载图片或执行 OCR。原文定位为解析块序号或 Markdown 行号，正文以解析后的文本为准。
+[ParserRegistry](../../ingestion/parsers.py) 作为 ParseStep 的 Parser，去除 media_type 的 charset 参数、统一大小写后选择解析器；不支持的格式返回 `UNSUPPORTED_MEDIA_TYPE`。原文按 UTF-8 解码，兼容 BOM，并统一换行符。
 
-## 内容类型策略
+| 请求信息 | 作用 |
+| --- | --- |
+| source.source_type | 来源平台，与 canonical_locator 共同标识来源，不决定解析器或分段规则 |
+| raw.media_type | 选择格式解析器 |
+| preprocess.schema/version | 选择内容结构对应的预处理流水线 |
 
-`ingestion/strategies.py` 提供以下策略，均可注入 StructureStep，平台与类型互相独立。
+| media_type | 当前实现 | 转换规则与定位 |
+| --- | --- | --- |
+| text/html | HtmlParser | 标准库 HTMLParser 构建轻量节点树；优先微信 js_content，其次 body，再其次解析根；定位为内容块序号 |
+| text/markdown | MarkdownParser | 逐行识别块并在空行／类型变化时输出；定位为起止行号 |
+| text/plain | 复用 MarkdownParser | 仍会识别 Markdown 标题、列表等标记，没有独立的纯文本解析器 |
+
+HTML 支持 h1～h6、短的独占粗体栏目与 `【栏目名】`、段落、列表、表格行和 pre 代码；保留 br 换行，忽略脚本与样式。图片保留 alt 说明或缺失说明占位，不下载图片或执行 OCR。Markdown 支持 ATX 标题、独占行的粗体标题、管道表格、列表与围栏代码，保留正文行尾双空格、代码围栏和缩进。
+
+例如微信原文：
+
+```html
+<div id="js_content">
+  <p><strong>【优缺点】</strong></p>
+  <p>优点：安静<br>缺点：贵</p>
+</div>
+```
+
+解析后是二级 heading `【优缺点】` 和 paragraph `优点：安静\n缺点：贵`。此时还没有决定父段或最终 Evidence。正文以解析后的文本为准，HTML 定位不代表原 HTML 的字符偏移。
+
+## 3. 内容结构策略
+
+[结构策略](../../ingestion/strategies.py) 遵循 `StructureStrategy.build(blocks, raw) → list[SemanticContext]`，注入 StructureStep 后生成语义父段及其 SemanticEvidence。目前采用标题层级、栏目名称与显式边界规则，不调用模型判断语义。
 
 | 策略 | 父段 | 子块 |
 | --- | --- | --- |
@@ -44,17 +69,42 @@ RawDocument → ParseStep → StructureStep → ChunkStep → BuildDocumentStep 
 
 预算标题必须是二级或更浅标题，并完整符合预算区间格式；机型卡标题中的价格不会覆盖所属预算。即使未出现预算标题，推荐卡仍继承全局限制与时效提醒。散热/购买建议等受保护小节连同其下级标题整体形成一个 Evidence，测试条件与结果不会因为三级标题而分离。
 
-key 基于标题和同名标题的出现次数，正文更新不改变 key；重复同名章节前插入同名标题可能改变后续次数，来源应尽量提供可区分的标题。Evidence 按小节分组，散热条件/结果、购买建议、表格、代码标为不可拆分语义单元，后续长度控制应保留它们或明确拒绝超限，不能静默截断。测试使用合成资料，不提交真实文章或维修记录。
+初始语义 key 基于标题和同名标题的出现次数；边界和标题不变时，普通正文修改不改变这些 key。重复同名章节前插入同名标题可能改变后续次数；预算切分产生的子块还带 part 序号，切分数量变化可能改变最终子块 key。来源应尽量提供可区分的标题，并固定处理策略与预算。
 
-## 输入预算
+Evidence 按小节分组，散热条件/结果、购买建议等受保护小节，以及含表格或代码的整个小节，标为 `atomic` 不可拆单元。受保护栏目还包含其下级标题，后续长度控制保留完整内容或明确拒绝超限。
 
-`BudgetChunker` 检查完整编码文本 `父段标题 + 换行 + Evidence.body`。默认 `Utf8ByteCounter` 与 2400 字节预算，不把字符/字节当精确 token，也不自动加载或下载模型。适配目标模型时，在组合根注入 `TokenizerCounter(tokenizer.encode)` 和模型允许的 max_input_units；encode 应包含特殊 token，预算应留出模型要求的余量。字节预算需要按实际服务校准，不能对任意 tokenizer 承诺模型 token 上限。
+## 4. Evidence 输入预算
+
+[BudgetChunker](../../ingestion/chunking.py) 在 Embedding 之前检查完整编码文本 `父段标题 + 换行 + Evidence.body`。默认 `Utf8ByteCounter` 与 2400 字节预算，不把字符/字节当精确 token，也不自动加载或下载模型。适配目标模型时，在组合根注入 `TokenizerCounter(tokenizer.encode)` 和模型允许的 max_input_units；encode 应包含特殊 token，预算应留出模型要求的余量。字节预算需要按实际服务校准，不能对任意 tokenizer 承诺模型 token 上限。
 
 普通长 Evidence 优先按段落、句子边界拆分，单句过长再按 Unicode 字符边界拆分；父段正文保持完整，拆出的多个 Evidence 平级保存。子块 locator 的 parent_char_start/end 是父段正文中的字符偏移，end 为开区间，便于精确引用。小于预算的子块不变更正文/key。
 
 不可拆分小节超限返回 SEMANTIC_UNIT_TOO_LARGE，不静默截断测试条件、表头或代码。可以调整部署预算或自定义更细且完整的结构策略。拆分同时遵守 32000 字符、每父段 100 子块、整篇 1000 子块的公共约束；ValidateStep 可注入 chunker.validate，在 DTO 构建后再次验证最终模型输入。
 
-## 原文导入 API
+每个最终 Evidence 对应一个向量。Embedding 适配器中的批处理只是一次请求发送多条输入，不会继续拆分单条输入。标准化 JSON 入口跳过该预算切分流程，调用方仍负责准备满足模型预算的 Evidence。
+
+## 5. 扩展与步骤编排
+
+| 要扩展的能力 | 实现与接入位置 |
+| --- | --- |
+| 新输入格式 | 实现 Parser.parse，在 ParserRegistry.register(media_type, parser) 注册，并将该注册表注入 ParseStep |
+| 替换已有格式 | 构造 ParserRegistry(parsers=完整映射)；该映射替代默认映射，不自动合并，重复 register 会报错 |
+| 新文章类型 | 实现 StructureStrategy.build，组装流水线并在 PreprocessorRegistry 注册新的 schema/version；BuildDocumentStep 输出的 schema/version 须匹配注册项 |
+| 新长度策略 | 实现 Chunker.chunk 并注入 ChunkStep；默认 BudgetChunker 也可仅替换 InputCounter.count |
+| 新处理步骤 | 实现 PreprocessStep.process(context)，声明 input_stage/output_stage，在组合根的有序步骤列表中插入 |
+
+步骤可以增删或调整顺序，但须遵守阶段依赖。例如新增两个 `blocks → blocks` 步骤后，可以采用：
+
+```text
+ParseStep → CleanBlocksStep → AnnotateBlocksStep → StructureStep → 后续步骤
+ParseStep → AnnotateBlocksStep → CleanBlocksStep → StructureStep → 后续步骤
+```
+
+CleanBlocksStep 和 AnnotateBlocksStep 是扩展示意名称，当前没有内置这两个步骤。它们可互换的前提是自身业务语义也允许调序；解析应先于结构划分，长度控制应使用已形成的父子段，校验应在文档构建之后。现有阶段为 raw/blocks/units/chunked/document/validated，新增步骤通常复用已有阶段。
+
+结构策略与解析器主要使用 Protocol 和组合，具体类实现对应方法即可，不要求继承协议类。ExperienceCaseStrategy 继承通用 HeadingSectionsStrategy 复用章节划分。步骤属于受信任应用代码，不接受 HTTP 请求指定顺序、加载 Python 路径或执行自定义代码。
+
+## 6. 原文导入 API
 
 `POST /api/v1/sources/raw/` 需要 Token 和 maintain_source，写入 internal 还需要 read_internal。请求仅提交文本和元数据，不传 URL 抓取命令或本机路径：
 
@@ -76,10 +126,10 @@ metadata 的 title/source_date/entity_title/entity_key/entity_headings/document_
 
 权限与来源范围校验在解析之前执行，原文和公共 DTO 校验在创建模型适配器之前完成；解析失败不调用 Embedding 或保存。成功响应与标准导入一致 `{source_id, context_ids, reused}`。Python 调用方可用 import_raw；HTTP 先调用 preprocess_raw，再调用 import_processed，以便模型未配置时仍准确报告预处理输入错误。
 
-PREPROCESS_MAX_INPUT_BYTES 默认为 2400，可在环境或 Compose 中调整。使用目标 tokenizer 时，在组合根构造 `preprocessors(counter=TokenizerCounter(encode), max_input_units=模型预算)`。此时 max_input_units 的单位为该 tokenizer 的 token 数，与字节环境变量区分。
+PREPROCESS_MAX_INPUT_BYTES 默认为 2400，可在环境或 Compose 中调整。使用目标 tokenizer 时，在组合根构造 `preprocessors(counter=TokenizerCounter(encode), max_input_units=模型预算)`。此时 max_input_units 的单位为该 tokenizer 的 token 数，与字节环境变量区分；仅修改环境变量不会自动启用 tokenizer。
 
-## 验收与限制
+## 7. 验收与限制
 
-单测覆盖步骤增删/调序、阶段错误、HTML/Markdown 保真、单/多机型边界、推荐卡预算与全局限制、经验案例、稳定 key、全文覆盖和长度控制；集成测试覆盖真实 Token API、三类文档导入/检索、更新复用、权限与失败保留已有文档。
+单测覆盖步骤增删/调序、阶段错误、HTML/Markdown 保真、单/多机型边界、推荐卡预算与全局限制、经验案例、稳定 key、全文覆盖和长度控制；集成测试覆盖真实 Token API、三类文档导入/检索、更新复用、权限与失败保留已有文档。专项与全量命令见[项目测试规则](../unit-testing-guidelines.md)，真实服务操作见[部署与运行验收](deployment.md)。
 
 当前不抓取平台、不下载图片、不执行 OCR、不自动识别文档类型，不调用 LLM 划分父子边界。HTML 的视觉格式与微信历史模板仍需用获准真实样本验证；图片缺失说明会生成文档警告。真实 tokenizer/模型输入上限与检索效果需要部署侧校准。标准化 JSON API 的调用方仍负责其 Evidence 长度，新增预处理只对原文入口生效。

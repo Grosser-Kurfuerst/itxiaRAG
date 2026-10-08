@@ -1,6 +1,6 @@
 # 首期技术设计：最小混合检索知识库
 
-目标是：**接收已整理的文档，保存父子内容，执行关键词与向量混合召回，经可编排的召回后处理流水线后返回完整父上下文**。默认流水线使用 RRF；知识库不生成最终答案。
+目标是：**接收标准化文档或经预处理的原文，保存父子内容，执行关键词与向量混合召回，经可编排的召回后处理流水线后返回完整父上下文**。默认流水线使用 RRF；知识库不生成最终答案。
 
 本文统一维护当前模块、数据契约、流程与阶段验收。业务范围见[总体需求](../requirements.md)，选择理由和研究出处见[技术选型](../technology-selection.md)，安装与调用见 [README](../../README.md)。
 
@@ -65,15 +65,14 @@ api → retrieval.service → MultiRouteRecall
 
 `source_type` 表示平台，`document_schema` 表示预处理所需的文档结构，两者独立。例如同为 `yuque`，可以分别注册维修经验和基础知识的预处理器。结构专有字段放 `metadata`，不为每种文章增加表。可见范围只存在来源上，插件不能通过 metadata 改变权限。
 
-### 3.2 插件接入方式
+### 3.2 预处理接入边界
 
-- 连接器遵循 `SourceConnector.fetch(locator) → RawDocument`，同一语雀连接器可服务不同内容类型。
-- 预处理器遵循 `DocumentPreprocessor.process(raw) → ProcessedDocument`，自主选择规则、格式解析或未来的模型方法。
-- `PreprocessorRegistry.register(schema, version, processor)` 显式注册策略，`process(raw, schema, version)` 调用并校验产物。空注册表拒绝处理，重复注册报错。
-- 在 `config/components.py` 显式注册 `product_review@1`、`purchase_guide@1`、`experience_case@1`。原文入口选择 Schema，插件输出仍须通过公共 Serializer 校验；请求不能通过 Python 路径选择或加载代码。
-- 原文 API 与 Python import_raw 复用 `import_processed`，不改写存储与检索。处理器由 ParseStep、StructureStep、ChunkStep、BuildDocumentStep、ValidateStep 有序组合，兼容步骤可增删/调序；格式解析、内容分段与预算计数器分别可替换。
+- 已实现的预处理器遵循 `DocumentPreprocessor.process(raw) → ProcessedDocument`；[PreprocessorRegistry](../../ingestion/registry.py) 按 schema/version 显式注册和选择处理器，并校验产物。空注册表拒绝处理，重复注册报错。
+- 原文 API 与 Python import_raw 均复用 `import_processed`。处理器输出必须通过公共 Serializer，不能通过 metadata 改变来源权限，也不直接操作 ORM 或模型供应商协议。
+- [组合根](../../config/components.py) 注册 `product_review@1`、`purchase_guide@1`、`experience_case@1` 的顺序流水线；步骤、解析器、结构策略与预算计数器由受信任应用代码注入，请求不能指定 Python 路径或加载代码。
+- `SourceConnector.fetch(locator) → RawDocument` 目前是后续平台接入协议，没有具体连接器实现。
 
-笔记本评测默认“一台笔记本一个父段”，多台通过显式 entity_headings 分开；购机指南按推荐卡组织，经验文档按章节/案例组织。这不是所有文档的固定划分模式。完整策略、输入格式、预算限制与示例见[文档预处理](preprocessing.md)。
+格式适配、父子边界、不可拆单元、模型输入预算、步骤增删／调序及原文请求示例统一维护在[文档预处理](preprocessing.md)，本节只定义公共接入边界。
 
 语雀、微信与维修记录的资料准备和后续读取方式见[来源接入说明](source-ingestion-plan.md)。
 
@@ -170,7 +169,7 @@ RRF 合并路线原始分数与名次，仅将当前 `score` 改为 RRF 分数�
 
 候选收集遵循 `RecallCollector.collect(query, scope, limit) → RouteBatch`，默认实现为 `MultiRouteRecall`；流水线遵循 `SearchPipeline.run(request, routes) → ContextBatch`，默认实现为 `PostRecallPipeline`。`ContextReader.read(contexts: list[ContextCandidate], scope) → list[dict]` 只读取选定父段，保持流水线给出的顺序。查询服务依赖这些协议与输入／输出，不依赖具体步骤类。
 
-| 步骤 | 输入 → 输出 | 本次改造责任 |
+| 步骤 | 输入 → 输出 | 责任 |
 | --- | --- | --- |
 | `RRFFusionStep` | routes → evidence | 包装现有 RRF，按子块 ID 去重和融合，保留原始路线分数 |
 | `GroupParentsStep` | evidence → contexts | 按 `context_id` 聚合；以排序中最佳子块确定父段位置与分数，不累加同父段所有子块 |
@@ -205,9 +204,9 @@ RRF 合并路线原始分数与名次，仅将当前 `score` 改为 RRF 分数�
 
 Scope 查询、召回、RRF、分组或结果读取失败按现有错误契约返回，不泛化为静默跳过。未来可选模型重排失败时，由重排适配器返回进入该步骤前的候选顺序和分数，并记录一次简短日志；Pipeline 不捕获所有异常。Embedding 故障仍明确返回 502，不因增加流程扩展性改为单路降级。
 
-### 5.5 实现清单与分步验收
+### 5.5 实现清单与验收
 
-下表改造已实现，不新增业务表或迁移，不改导入／预处理流程，也不默认增加重排模型。
+下表列出当前检索实现文件；默认不启用模型重排。
 
 | 文件 | 实现责任 |
 | --- | --- |
@@ -215,17 +214,17 @@ Scope 查询、召回、RRF、分组或结果读取失败按现有错误契约�
 | [retrieval/vector.py](../../retrieval/vector.py)、[retrieval/keyword.py](../../retrieval/keyword.py) | 增加可选构造参数 `min_cosine=None`、`min_bm25=0.0`；独立应用门槛并输出原始分数 |
 | [retrieval/hybrid.py](../../retrieval/hybrid.py) | `MultiRouteRecall.collect(query, scope, limit)` 返回 RouteBatch；RRF 算法供独立步骤复用 |
 | [retrieval/pipeline.py](../../retrieval/pipeline.py)、[retrieval/steps.py](../../retrieval/steps.py) | 前者执行有序步骤列表及阶段兼容检查；后者提供 RRF、父段分组、top_k 三个默认步骤，不内置所有未来策略 |
-| [catalog/selectors.py](../../catalog/selectors.py) | 先补充结果中的原始分数与分数类型；再将父段分组移交 GroupParentsStep，ContextReader 接收选定父段及 matches，只负责按 Scope 批量装配正文／引用，不重复排序或聚合 |
+| [catalog/selectors.py](../../catalog/selectors.py) | ContextReader 接收选定父段及 matches，按 Scope 批量装配正文／命中定位并保留原始分数，不重复排序或聚合 |
 | [retrieval/service.py](../../retrieval/service.py)、[api/views.py](../../api/views.py) | 查询服务生成 Scope 后调用候选收集、后处理和结果读取；API 只接线，不编排具体步骤 |
 | [config/components.py](../../config/components.py)、[config/settings.py](../../config/settings.py)、[compose.yaml](../../compose.yaml) | 注入路线门槛与默认步骤列表；数值配置校验及 Docker 环境透传，非法值明确报配置错误，步骤顺序不由 HTTP 请求指定 |
 | [tests/unit/test_retrieval.py](../../tests/unit/test_retrieval.py)、[tests/unit/test_keyword.py](../../tests/unit/test_keyword.py)、[tests/unit/test_pipeline.py](../../tests/unit/test_pipeline.py)、[tests/integration/test_rag.py](../../tests/integration/test_rag.py) | 覆盖门槛、原始分数、步骤增删与顺序、默认行为回归和 Scope 隔离 |
 
-| 实施阶段 | 阶段结束后的可运行能力 | 验收标准 |
+| 验证对象 | 当前能力 | 验收标准 |
 | --- | --- | --- |
-| A：路线门槛与分数 | 继续用现有固定检索链；可配置独立门槛，RRF 保留并返回原始分数 | 默认排序保持不变；门槛临界值、未设置、非法配置通过；向量被排除的关键词命中仍保留；两路为空返回 no_result；原始分数穿过 RRF 与 API 正确保留 |
-| B：默认后处理流水线 | API 完整运行，默认使用三个步骤；可在组合根插入或移除测试步骤、调整兼容步骤顺序 | 默认父段顺序／正文／引用与原流程一致；添加步骤实际改变结果，调换两个兼容测试步骤能验证执行顺序；阶段不兼容配置被拒绝；无候选、不同模型空间、内部来源过滤和 top_k 父段计数回归通过 |
+| 路线门槛与分数 | 可配置独立门槛，RRF 保留并返回原始分数 | 门槛临界值、未设置、非法配置通过；向量被排除的关键词命中仍保留；两路为空返回 no_result；原始分数穿过 RRF 与 API 正确保留 |
+| 默认后处理流水线 | 默认使用三个步骤；可在组合根插入或移除步骤、调整兼容步骤顺序 | 默认父段顺序／正文／命中定位正确；添加步骤实际改变结果，调换两个兼容测试步骤能验证执行顺序；阶段不兼容配置被拒绝；无候选、不同模型空间、内部来源过滤和 top_k 父段计数回归通过 |
 
-当前 A、B 两阶段已实现，验收按表中行为执行。步骤扩展测试使用内存模型／步骤替身，不连接真实重排服务，也不声称已校准真实相关性门槛。真实门槛和后续重排质量用型号／错误码、同义表达、多机型与无关问题另行评估。
+验收按表中行为执行。步骤扩展测试使用内存模型／步骤替身，不连接真实重排服务，也不声称已校准真实相关性门槛。真实门槛和后续重排质量用型号／错误码、同义表达、多机型与无关问题另行评估。
 
 ## 6. API 与错误
 
@@ -249,17 +248,17 @@ Scope 查询、召回、RRF、分组或结果读取失败按现有错误契约�
 
 输入未知字段或结构错误使用 DRF 400；认证失败 401，动作权限不足 403，范围外写入 404。领域或模型错误使用 `{error: {code, message}}`；配置缺失 503，模型失败／非法向量 502，意外服务异常 500。不返回 SQL、凭据或外部错误正文，不增加统一错误 Schema／OpenAPI 管理。
 
-## 7. 分步实现与验收
+## 7. 验收与迁移
 
-以下步骤按依赖顺序构建；前三步可分别通过离线测试或隔离数据库运行验收，第四步提供完整 HTTP 服务。当前包含前四步及原文预处理；平台连接器留待后续实现。
+当前功能按以下层次验收；单元测试不连接数据库，集成测试使用隔离 PostgreSQL 和模型替身，真实模型另外验证。平台连接器留待后续实现。
 
-| 步骤 | 可独立运行的能力 | 验收 |
+| 验证层次 | 当前能力 | 验收 |
 | --- | --- | --- |
-| 1：契约与插件边界 | DTO、Serializer、空注册表；无需数据库或模型 | 离线用例验证合法输入保真、非法结构拒绝、注册与替换行为 |
-| 2：标准化存储 | PostgreSQL 三表与事务保存；通过受控测试向量独立运行 | 新建、重复导入、稳定 ID 更新、删除缺席段落、权限与回滚通过 |
-| 3：混合召回 | 关键词、向量、RRF 与父段聚合；用模型替身运行检索服务 | 向量路与关键词路独立生效、过滤范围一致、RRF 次序及完整父段与引用正确 |
-| 4：HTTP 闭环 | 模型适配器与两个 API；配置真实 Embedding 后可实际导入和查询 | Token 导入／查询及错误行为通过，HTTP 模型协议验证通过，`make test` 通过；真实模型另做中文同义词试查 |
-| 5：原文预处理（已实现） | 原文 API、可编排解析/结构/切分/构建/校验与三类策略，复用导入检索 | 步骤增删/调序、单／多机型边界、推荐卡与经验案例、正文覆盖/定位、预算、权限及导入检索回归通过；平台读取与真实模型校准另行验证 |
+| 契约与插件边界 | DTO、Serializer、显式注册表 | 离线用例验证合法输入保真、非法结构拒绝、注册与替换行为 |
+| 标准化存储 | PostgreSQL 三表与事务保存 | 新建、重复导入、稳定 ID 更新、删除缺席段落、权限与回滚通过 |
+| 混合召回 | 关键词、向量、RRF 与父段聚合 | 向量路与关键词路独立生效、过滤范围一致、RRF 次序及完整父段与命中定位正确 |
+| HTTP 闭环 | 模型适配器与标准导入、原文导入、查询三个入口 | Token 导入／查询及错误行为通过，HTTP 模型协议验证通过，`make test` 通过；真实模型另做中文同义词试查 |
+| 原文预处理 | 可编排解析／结构／切分／构建／校验与三类策略 | 步骤增删／调序、单／多机型边界、推荐卡与经验案例、正文覆盖／定位、预算、权限及导入检索回归通过；平台读取与真实模型校准另行验证 |
 
 测试分别位于 [tests/unit/](../../tests/unit/) 与 [tests/integration/](../../tests/integration/)，命令为 `make test-unit`、`make test-integration` 与 `make test`；通用规则和完成定义见[项目测试规则](../unit-testing-guidelines.md)。固定向量和本地 HTTP 模型替身只验证工程行为；真实中文检索质量、吞吐与容量须在实际部署中验证，不在本文保存会过期的测试通过数量。
 

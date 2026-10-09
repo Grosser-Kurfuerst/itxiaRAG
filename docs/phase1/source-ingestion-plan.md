@@ -1,13 +1,13 @@
 # 来源接入：资料准备与后续连接器
 
-当前系统接收标准化 JSON，也可以经原文 API 对 HTML/Markdown/文本进行可编排预处理，并提供语雀 OpenAPI／快照导入命令与公众号本地采集目录导入命令。没有通用 URL 抓取、二进制文件上传、OCR 或导入 Worker。本文维护资料准备与后续连接器方向；预处理接口和策略见[文档预处理](preprocessing.md)，DTO 与验收见[首期技术设计](phase1-technical-design.md)，运行命令见 [README](../../README.md)。
+当前系统接收标准化 JSON，也可以经原文 API 对 HTML/Markdown/文本进行可编排预处理，并提供语雀 OpenAPI／快照导入命令、公众号文章下载命令与本地采集目录导入命令。没有通用 URL 抓取、二进制文件上传、OCR 或导入 Worker。本文维护资料准备与后续连接器方向；预处理接口和策略见[文档预处理](preprocessing.md)，DTO 与验收见[首期技术设计](phase1-technical-design.md)，运行命令见 [README](../../README.md)。
 
 ## 1. 当前如何准备资料
 
 | 来源 | 获取与准备方式 | 后续连接器方向 |
 | --- | --- | --- |
 | 社团语雀 | 已实现 `import_yuque`：用获准 Token 读取官方 OpenAPI，或用 `--snapshot` 离线导入教程；可保存已分类文档快照 | Token 能力、知识库权限、真实目录与正文方言待 Token 到位后补测；知识与工具流水线待阶段 5、6 |
-| 笔吧评测室推文 | 单篇可经原文 API 提交 HTML/Markdown 或标准 JSON；批量时人工保存获准网页与旁注到被忽略的 `.runtime/` 下，按清单逐篇登记类别与机型，用 `import_wechat` 离线导入 | 官方公众号 API 需要对应账号权限，不能假定能全量读取第三方公众号，因此没有在线同步；采集目录格式见[来源连接器改造方案](source-connector-design.md#7-平台差异) |
+| 笔吧评测室推文 | 单篇可经原文 API 提交 HTML/Markdown 或标准 JSON；批量时在清单登记标题、日期、类别与机型，用 `fetch_wechat` 经搜狗下载（或人工保存）到被忽略的 `.runtime/` 下，再用 `import_wechat` 离线导入 | 官方公众号 API 需要对应账号权限，不能假定能全量读取第三方公众号，因此没有在线同步；采集目录格式见[来源连接器改造方案](source-connector-design.md#7-平台差异) |
 | 社团维修记录 | 成员先脱敏，区分现象、检查、措施、结果和未确认项，再整理成标准 JSON | 读取登记系统或文本；与其他来源共用导入和检索服务 |
 
 原站可以阅读不自动代表允许复制、公开或发送给外部模型。维护者确认使用范围，并在 SourceSpec 中设置 `visibility`；正文和日志不带个人信息或凭据。

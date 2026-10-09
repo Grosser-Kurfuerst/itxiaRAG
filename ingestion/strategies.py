@@ -148,6 +148,20 @@ def _is_section_label(block: ContentBlock) -> bool:
     return block.kind == "heading" and len(text) <= 30 and not re.search(r"[，。；,;]", text)
 
 
+# 后一栏目紧跟前一栏目时不另起块，例如“优点！”之后的“缺点！”。
+_FOLLOWING_SECTIONS = {"缺点": "优点", "劣势": "优势"}
+
+
+def _section_name(block: ContentBlock) -> str:
+    return _label(block.text).rstrip("！!")
+
+
+def _is_lead_in(block: ContentBlock) -> bool:
+    # “它的配置如下：”这类短引导句开启一块，并与其后的列表相连。
+    text = block.text.strip()
+    return block.kind != "heading" and len(text) <= 20 and text.endswith(("：", ":"))
+
+
 def _keeps_with(previous: ContentBlock, block: ContentBlock) -> bool:
     # 引导句（：）和未完的并列句（；）与下一段相连，例如噪音数据与测试环境。
     if _is_section_label(previous) or previous.text.rstrip().endswith(("：", ":", "；", ";")):
@@ -179,17 +193,23 @@ class ReviewStrategy:
         groups: list[list[ContentBlock]] = []
         group: list[ContentBlock] = []
         section_level: int | None = None
+        section = ""
         for block in blocks:
             # 更深的子标题（如“散热分析”下的“测试结果”）按普通段落处理，只在超出目标长度时断开。
             starts_section = _is_section_label(block) and (section_level is None or (block.level or 2) <= section_level)
+            if starts_section and _FOLLOWING_SECTIONS.get(_section_name(block)) == section:
+                starts_section = False
+            # 测试类栏目内的引导句不断块，保持条件与结果相连。
+            lead_in = _is_lead_in(block) and section not in _PROTECTED_SECTIONS
             if group and not _keeps_with(group[-1], block) and (
-                starts_section or size(group + [block]) > self.target_chars
+                starts_section or lead_in or size(group + [block]) > self.target_chars
             ):
                 groups.append(group)
                 group = []
             if starts_section:
                 # 正文中的一级标题照常断开，但不让后续二级栏目变成“子标题”。
                 section_level = max(block.level or 2, 2)
+                section = _section_name(block)
             group.append(block)
         if group:
             groups.append(group)

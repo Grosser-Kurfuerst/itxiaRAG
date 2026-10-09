@@ -1,0 +1,18 @@
+# 笔吧评测室文章清单：fetch_wechat 按 connector.articles 下载，import_wechat 按 docs 分类导入。
+# 只登记标题、日期与分类；正文下载到被忽略的 .runtime/，不提交。
+# 每期同名的选购指南搜狗通常搜不到最新一期，需人工保存网页放入采集目录，只登记 docs。
+version = 2
+source_type = "wechat"
+
+[connector.accounts]
+bibar = "笔吧评测室"
+
+[connector.articles]
+"bibar/2026-09-28-laiku-gt16" = { title = "未来已来！聊一款新上市的主流游戏本", date = "2026-09-28" }
+
+[collections.bibar]
+visibility = "internal"
+
+[docs."bibar/2026-09-28-laiku-gt16"]
+category = "product_review"
+metadata = { entity_title = "联想 来酷GT 16 酷睿版" }

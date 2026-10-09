@@ -2,7 +2,9 @@ from django.core.management.base import CommandError
 
 from config import components
 from sources.commands import SourceImportCommand
+from sources.manifest import ManifestError
 from sources.wechat.connector import CATEGORIES, WechatCaptureConnector
+from sources.wechat.fetching import listed_articles
 
 
 class Command(SourceImportCommand):
@@ -15,8 +17,12 @@ class Command(SourceImportCommand):
         parser.add_argument("--capture", required=True)
 
     def prepare(self, manifest, options):
+        # connector 表只供 fetch_wechat 下载；导入时同样校验，避免拼错的配置被静默忽略。
         if manifest.connector:
-            raise CommandError("公众号清单不使用 connector 参数")
+            try:
+                listed_articles(manifest)
+            except ManifestError as exc:
+                raise CommandError(str(exc)) from None
 
     def collect(self, state, manifest, options, collections):
         connector = WechatCaptureConnector(options["capture"], collections)

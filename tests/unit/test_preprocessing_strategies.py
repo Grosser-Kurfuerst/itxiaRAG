@@ -77,6 +77,24 @@ def test_review_short_chunks_merge_only_within_limit_and_semicolon_lines_stay_to
         "散热分析\n\n室温 25℃。"
 
 
+def test_review_lead_in_lines_start_chunks_and_cons_stay_with_pros():
+    blocks, raw = parse(
+        "开场介绍这台电脑的定位与价格，篇幅较长。\n\n它的配置如下：\n\n处理器 Core 5 205H\n\n内存 16GB\n\n"
+        "它的优缺点如下：\n\n**优点！**\n\n1，性能释放高\n\n**缺点！**\n\n1，机身厚重\n\n"
+        "【散热分析】\n\n测试条件如下：\n\n室温 25℃，CPU 80℃。",
+        entity_title="GT 16",
+    )
+    parent, = ReviewStrategy(target_chars=400, min_chars=0).build(blocks, raw)
+    bodies = [child.body for child in parent.children]
+    assert bodies[0] == "开场介绍这台电脑的定位与价格，篇幅较长。"
+    assert bodies[1].startswith("它的配置如下：") and "内存 16GB" in bodies[1]
+    # “缺点！”紧跟“优点！”时不另起块。
+    assert bodies[2].startswith("它的优缺点如下：") and "1，机身厚重" in bodies[2]
+    # 测试类栏目内的引导句不断块。
+    assert bodies[3].startswith("【散热分析】") and "CPU 80℃" in bodies[3]
+    assert len(bodies) == 4
+
+
 def test_review_nested_headings_stay_with_section_and_long_chunks_are_split_not_rejected():
     from ingestion.chunking import BudgetChunker
 

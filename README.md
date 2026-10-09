@@ -12,7 +12,7 @@
 | [技术选型与研究参考](docs/technology-selection.md) | 当前选择理由、替代方案、开源与论文依据 |
 | [首期技术设计](docs/phase1/phase1-technical-design.md) | 模块、公共 DTO、存储、检索、API 响应与错误、迁移 |
 | [来源接入说明](docs/phase1/source-ingestion-plan.md) | 资料获取与准备、提交方式选择、更新与后续平台连接器 |
-| [语雀文档导入方案](docs/phase1/yuque-ingestion/overview.md) | 语雀解析、教程流水线与快照导入已实现；OpenAPI 读取与其他类别待后续阶段 |
+| [语雀文档导入方案](docs/phase1/yuque-ingestion/overview.md) | 语雀解析、教程流水线、快照导入与 OpenAPI 读取已实现；Token 实测与真实教程验收待补，其他类别待后续阶段 |
 | [文档预处理](docs/phase1/preprocessing.md) | 原文请求、格式适配器、父子段策略、长度预算与步骤扩展 |
 | [Docker 部署与验收](docs/phase1/deployment.md) | Compose 配置、启动、账号、标准／原文导入冒烟检查和日常操作 |
 | [项目测试规则](docs/unit-testing-guidelines.md) | 测试环境、预处理专项、回归命令与完成定义 |
@@ -84,21 +84,31 @@ curl -H "Authorization: Token $(cat .runtime/maintainer.token)" \
 
 关键词路使用 jieba 分词与 Python BM25，向量路继续编码完整查询；两路通过可编排流水线经 RRF 融合、父段聚合后返回。BM25 每次只读取当前可见子块并计算，内容更新立即生效；没有持久关键词索引或缓存，适合小规模验证。可通过 `RETRIEVAL_MIN_COSINE` 和 `RETRIEVAL_MIN_BM25` 配置独立路线门槛。
 
-## 语雀快照导入
+## 语雀导入
 
-阶段 1～3 已实现，本阶段通过本机快照批量处理教程；官方 OpenAPI 读取与保存快照待阶段 4。清单见 [itxia.toml](sources/yuque/manifests/itxia.toml)，快照格式见[技术方案 7.1](docs/phase1/yuque-ingestion/technical-design.md#71-平台读取)，快照与原文放在被忽略的 `.runtime/` 下。
+阶段 1～3 与阶段 4 的代码已实现，可从官方 OpenAPI 或本机快照批量处理教程。需 Token 的接口实测与真实教程验收待 Token 到位后补测，阶段 5、6 未实现。清单见 [itxia.toml](sources/yuque/manifests/itxia.toml)，快照格式见[技术方案 7.1](docs/phase1/yuque-ingestion/technical-design.md#71-平台读取)，快照与原文放在被忽略的 `.runtime/` 下。
+
+OpenAPI 模式从环境变量 `YUQUE_TOKEN` 读取获授权的语雀 Token，空值会启动失败；`YUQUE_API_BASE` 默认 `https://www.yuque.com/api/v2`，空值也使用默认地址。实际 Token 只填入被忽略的本地环境文件并加载，不作为命令参数，也不写入报告或快照。离线模式无需这两项配置。
 
 ```sh
+# OpenAPI 试运行并保存快照：需先加载含 YUQUE_TOKEN 的本地配置
+.venv/bin/python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml \
+  --save-snapshot .runtime/yuque-openapi-snapshot --dry-run
+
 # 离线试运行：无需账号、Embedding 或数据库连接，只预处理、不保存
 .venv/bin/python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml \
   --snapshot .runtime/yuque-snapshot --dry-run
 
-# 正式导入：可重复 --only；去掉 --only 时处理清单中所有知识库
+# OpenAPI 正式导入：可重复 --only；去掉 --only 时处理清单中所有知识库
 .venv/bin/python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml \
-  --snapshot .runtime/yuque-snapshot --username maintainer --only help/install_win10
+  --username maintainer --only help/install_win10
 ```
 
+`--snapshot` 与 `--save-snapshot` 互斥。保存快照时先读取清单内所有知识库的已分类文档正文（含未接入的知识、工具、排障和案例），再从快照执行导入；`--only` 只限制导入范围，不缩小保存范围。目录与完整分页列表也会保存，跳过和未登记的文档不保存正文。该范围覆盖清单中的第一批 74 篇，实际完整性仍需用真实目录和读取报告核对。保存时任一单篇读取失败均记为 `failed`，即使该类别未接入或不在 `--only` 中；失败正文不保留旧文件，快照可能不完整，应重跑补齐。
+
 仍需加载本地 Django 配置。正式导入需要 `maintain_source`，内部来源另需 `read_internal`；`textbook` 默认为 internal。试运行若提供 `--username` 也会检查账号权限。报告区分 `preprocessed`（试运行成功）、`imported`、`reused`、`skipped`、`unregistered`、`failed`，列出父段／子块数与警告，不打印正文。知识与工具暂未接入，清单错误或正式导入缺少 Embedding 配置会启动即失败；单篇失败继续处理，批次结束以非零状态退出。重复运行按现有主链更新或返回 `reused`。
+
+OpenAPI 的 401／403 会终止整批并提示检查 Token 与知识库权限；详情读取的 429、其他 HTTP／网络错误、超时和格式错误记为单篇失败。目录或文档列表读取失败时整批终止，尚不处理任何正文。容器内配置和操作见[部署与验收](docs/phase1/deployment.md#37-语雀-openapi-与快照导入)。
 
 ## 验证
 

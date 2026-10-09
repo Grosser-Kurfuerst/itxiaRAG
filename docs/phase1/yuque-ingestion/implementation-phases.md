@@ -1,6 +1,6 @@
 # 分阶段实现方案
 
-本文把[技术方案](technical-design.md)拆成 6 个可以独立合并的阶段。每个阶段完成后，系统都能正常启动和运行，已有功能不受影响，新增功能可以通过现有入口实际使用和验收。**阶段 1～3 已实现：语雀 Markdown 解析与教程流水线已接入原文 API，清单与快照导入命令已接入；阶段 4～6 未开始。**
+本文把[技术方案](technical-design.md)拆成 6 个可以独立合并的阶段。每个阶段完成后，系统都能正常启动和运行，已有功能不受影响，新增功能可以通过现有入口实际使用和验收。**阶段 1～3 已实现；阶段 4 代码已实现，需 Token 的接口实测与真实教程验收待补；阶段 5、6 未开始。**
 
 ## 1. 总体安排
 
@@ -20,7 +20,7 @@
 - **阶段 1～4 是教程闭环**：阶段 4 完成时，28 篇教程已从语雀导入开发环境，可以检索。这是扩充类型前的检查点：方言规则、章节策略、清单、导入命令和读取接口都经过了真实数据检验。
 - **阶段 5、6 只扩充类型**：每个阶段只新增一套参数、少量增强步骤、一次 schema 注册和映射表中的一行，不改导入链路。两者互不依赖，顺序可以互换。
 - **未接入的类型不会被误导入**：类别映射表只包含已注册的 schema。阶段 3、4 中，清单里的知识和工具条目在报告中显示为“未接入”，阶段 5、6 加入映射后自动变为可导入。
-- **Token 延迟时**：阶段 1～3 可以照常完成。阶段 4 的 OpenAPI 客户端需要等 Token；教程的真实样本验收可以先用本机公开文档整理成的快照完成，阶段 5、6 也可以先基于该快照推进，Token 到位后再补 OpenAPI 实测。
+- **Token 延迟时**：阶段 1～3 可以照常完成。阶段 4 的 OpenAPI 读取与快照保存代码可用本地 HTTP 服务验证，需真实 Token 的接口实测与教程验收待 Token 到位后补测；本次只实现到阶段 4 的代码，不推进阶段 5、6。
 
 ### 1.2 OpenAPI 在本方案中的作用
 
@@ -245,21 +245,23 @@ for c in doc.contexts:
 
 ## 5. 阶段 4：语雀读取与教程验收
 
+当前状态：代码已实现，需 Token 的接口实测、实测方言差异修正、真实目录 slug 核对、真实快照保存与教程验收待 Token 到位后补测。下文中的真实数据完成标准仍需后续执行。
+
 ### 5.1 实现内容
 
 | 文件 | 内容 |
 | --- | --- |
-| `sources/yuque/client.py` | YuqueOpenApiClient：读取目录、文档列表和单篇正文，`X-Auth-Token` 请求头，固定请求间隔；401／403 终止整批，429 和网络错误记为当前篇失败 |
-| `sources/management/commands/import_yuque.py` | 无 `--snapshot` 时使用 OpenAPI；新增 `--save-snapshot` |
-| [config/settings.py](../../../config/settings.py)、`.env.example` | `YUQUE_TOKEN`、`YUQUE_API_BASE`，示例中只留空值 |
-| `ingestion/yuque_markdown.py` | 按 OpenAPI 与网页导出的实测差异调整规则（如有） |
-| `sources/yuque/manifests/itxia.toml` | 根据真实目录核对 slug，教程部分定稿 |
+| `sources/yuque/client.py` | 已实现 YuqueOpenApiClient：读取目录、offset/limit 分页列表（每页 100）和正文，复用快照目录路径逻辑，`X-Auth-Token` 请求头，默认请求间隔 0.5 秒；401／403 终止整批，详情 429、HTTP／网络／超时与格式错误记为单篇失败，列表错误在正文处理前终止整批 |
+| `sources/management/commands/import_yuque.py` | 已实现无 `--snapshot` 时使用 OpenAPI，缺 Token 启动失败；`--save-snapshot` 与 `--snapshot` 互斥，可与 `--dry-run` 同用，保存所有清单知识库的已分类正文，再从快照导入；`--only` 只限制导入，保存错误照常报告 |
+| [config/settings.py](../../../config/settings.py)、`.env.example`、`compose.yaml` | 已实现 `YUQUE_TOKEN`（空默认）、`YUQUE_API_BASE`（默认官方地址），示例不含真实 Token；Compose app 透传两项，空地址回退默认 |
+| `ingestion/yuque_markdown.py` | 未改动；按 OpenAPI 与网页导出的实测差异调整规则（如有），待 Token 到位后补测 |
+| `sources/yuque/manifests/itxia.toml` | 未改动；根据真实目录核对 slug，教程部分定稿，待 Token 到位后补测 |
 
 ### 5.2 完成后的系统状态
 
 - `import_yuque` 可以直接从语雀读取并导入，也可以把读取结果保存为快照。
-- 28 篇教程已导入开发环境并可检索，教程链路完整可用。
-- 保存的快照覆盖第一批全部 74 篇，阶段 5、6 可以离线基于它开发和验收。
+- 28 篇教程的真实开发环境导入、检索与人工抽查待 Token 到位后补测。
+- 保存范围覆盖清单内全部已分类文档，包含第一批 74 篇及未接入类别，跳过和未登记只保存元数据。即使指定 `--only` 也保存全部清单知识库；单篇保存失败记入报告，写盘失败终止整批。真实快照尚未保存，完整性核对待 Token 到位后补测，补齐后阶段 5、6 可离线基于它开发和验收。
 
 ### 5.3 验收
 
@@ -267,7 +269,9 @@ for c in doc.contexts:
 
 | 用例 | 检查 |
 | --- | --- |
-| `tests/integration/test_yuque_openapi.py`（新增） | 本地临时 HTTP 服务模拟语雀接口，不访问真实网络：请求路径与 `X-Auth-Token` 头、目录路径计算、401 终止、429 记为单篇失败、`--save-snapshot` 生成的快照可被快照模式读取、日志和报告中不出现 Token |
+| `tests/integration/test_yuque_openapi.py`（新增） | 本地临时 HTTP 服务模拟语雀接口，不访问真实语雀：路径与请求头、分页与目录路径、401／403 终止、429 与格式错误单篇失败、列表失败终止、快照离线兼容且保存未接入类别、`--only` 不缩小保存范围、日志／报告／快照无 Token、缺 Token 启动失败；隔离 PostgreSQL 与模型替身验证正式导入和 reused |
+| `tests/unit/test_yuque_openapi.py`、`tests/unit/test_yuque_client.py`（新增） | 不开 socket，以 HTTP 边界替身验证网络、超时、错误脱敏与默认请求间隔；快照失败移除旧正文、写盘失败终止 |
+| `tests/unit/test_yuque_importer.py`（扩充） | 快照读取失败覆盖未选择或未接入类别；阶段 3 的临时“OpenAPI 尚未实现”预期更新为缺少 `YUQUE_TOKEN` |
 
 手动验收需要 Token，结果注明日期记录在概览中，快照不提交：
 

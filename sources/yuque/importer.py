@@ -1,4 +1,4 @@
-"""快照批量导入编排；边界校验与原文 API 共用同一契约。"""
+"""语雀批量导入编排；边界校验与原文 API 共用同一契约。"""
 import re
 from collections import Counter
 from dataclasses import dataclass, field
@@ -102,7 +102,8 @@ class YuqueImportService:
         self.client, self.manifest = client, manifest
         self.category_pipelines, self.submit = category_pipelines, submit
 
-    def run(self, refs: Iterable[YuqueDocRef], *, only: Iterable[str] | None = None) -> ImportReport:
+    def run(self, refs: Iterable[YuqueDocRef], *, only: Iterable[str] | None = None,
+            read_errors: Mapping[str, DomainError] | None = None) -> ImportReport:
         refs = list(refs)
         selected = set(only) if only else None
         available = {f"{ref.book}/{ref.slug}" for ref in refs}
@@ -113,9 +114,13 @@ class YuqueImportService:
         ])
         for ref in refs:
             key = f"{ref.book}/{ref.slug}"
+            classification = self.manifest.classify(ref)
+            if read_errors and key in read_errors:
+                exc = read_errors[key]
+                report.rows.append(ImportRow(key, classification, "failed", detail=f"{exc.code}: {exc.message}"))
+                continue
             if selected is not None and key not in selected:
                 continue
-            classification = self.manifest.classify(ref)
             if classification.skip:
                 detail = classification.skip
                 canonical = self.manifest.canonical_for(ref)

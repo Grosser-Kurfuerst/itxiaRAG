@@ -337,10 +337,11 @@ def test_command_bad_manifest_fails_before_listing_or_submitting(snapshot):
     embedder.assert_not_called()
 
 
-def test_command_missing_snapshot_or_username_and_invalid_only_fail_at_startup(snapshot):
+def test_command_missing_token_or_username_and_invalid_only_fail_at_startup(snapshot, settings):
     directory, path = snapshot
+    settings.YUQUE_TOKEN = ""
     for options, message in [
-        ({"dry_run": True}, "OpenAPI 读取尚未实现"),
+        ({"dry_run": True}, "YUQUE_TOKEN"),
         ({"snapshot": str(directory)}, "--username"),
         ({"snapshot": str(directory), "dry_run": True, "only": ["unknown/doc"]}, "--only"),
     ]:
@@ -357,3 +358,22 @@ def test_command_missing_embedding_configuration_fails_before_account_lookup_or_
             call_command("import_yuque", manifest=str(path), snapshot=str(directory), username="maintainer")
     listing.assert_not_called()
     users.assert_not_called()
+
+
+def test_snapshot_fetch_failures_are_reported_even_for_unselected_unimplemented_categories(snapshot):
+    directory, path = snapshot
+    client, manifest = YuqueSnapshotClient(directory), Manifest.load(path)
+    registry = components.preprocessors()
+
+    def submit(source, raw, schema, version):
+        return SubmissionResult(registry.process(raw, schema, version))
+
+    failure = DomainError("YUQUE_RATE_LIMITED", "合成限流")
+    report = YuqueImportService(client, manifest, components.CATEGORY_PIPELINES, submit).run(
+        client.list_docs("help"), only=["help/second"], read_errors={"help/tool": failure},
+    )
+    assert [(row.doc, row.status) for row in report.rows] == [
+        ("help/second", "preprocessed"), ("help/tool", "failed"),
+    ]
+    assert report.rows[-1].classification.category == "tool_card"
+    assert report.rows[-1].detail == "YUQUE_RATE_LIMITED: 合成限流"

@@ -4,14 +4,14 @@
 
 ## 当前状态
 
-**阶段 1～3 已实现，阶段 4～6 未开始。** 原文 API 已支持 `text/x-yuque-markdown` 与 `tutorial@1`，教程可按章节自适应划分父段，附风险提示、时效提示与目录检索前缀，也可继续搭配原有三种 schema 使用。`import_yuque --snapshot` 已支持清单分类、离线试运行与批量导入，知识和工具条目报告为“未接入”。官方 OpenAPI 读取与真实教程验收待阶段 4。本目录描述第一批三类文档的需求与技术方案，实现按[分阶段实现方案](implementation-phases.md)推进；每完成一个阶段，按该阶段列出的范围同步文档，并在下表更新状态。
+**阶段 1～3 已实现；阶段 4 代码已实现，需 Token 的接口实测与真实教程验收待补；阶段 5、6 未开始。** 原文 API 已支持 `text/x-yuque-markdown` 与 `tutorial@1`，教程可按章节自适应划分父段，附风险提示、时效提示与目录检索前缀，也可继续搭配原有三种 schema 使用。`import_yuque` 已支持 OpenAPI／快照读取、清单分类、离线试运行与批量导入；`--save-snapshot` 保存清单内全部已分类正文，包括未接入类别，不受 `--only` 导入范围限制。知识和工具条目仍报告为“未接入”。本目录描述第一批三类文档的需求与技术方案，实现按[分阶段实现方案](implementation-phases.md)推进；每完成一个阶段，按该阶段列出的范围同步文档，并在下表更新状态。
 
 | 阶段 | 内容 | 状态 |
 | --- | --- | --- |
 | 1 | 语雀 Markdown 解析 | 已完成 |
 | 2 | 教程流水线 | 已完成 |
 | 3 | 导入命令（快照） | 已完成 |
-| 4 | 语雀读取与教程验收 | 未开始，需要语雀 Token |
+| 4 | 语雀读取与教程验收 | 代码已实现，需 Token 的接口实测与真实教程验收待补 |
 | 5 | 知识流水线 | 未开始 |
 | 6 | 工具条目流水线 | 未开始 |
 
@@ -19,7 +19,9 @@
 
 `article/partition-resize`、`article/install_win10_from_scratch` 与 `article/gagpcm` 分别指向 `help/partition-resize`、`help/install_win10` 与 `help/nju_network_guide`。重复副本始终跳过，不会自动导入或删除 canonical 文档。
 
-试运行成功状态为 `preprocessed`，不调用 Embedding 或保存；无账号时直接运行注册预处理器，提供账号时执行与 API 相同的来源权限校验。正式导入复用原文请求 Serializer、DTO 转换，依次调用 `preprocess_raw` 与 `import_processed`。操作命令见 [README](../../../README.md#语雀快照导入)。
+试运行成功状态为 `preprocessed`，不调用 Embedding 或数据库保存；无账号时直接运行注册预处理器，提供账号时执行与 API 相同的来源权限校验。`--save-snapshot --dry-run` 仍会保存快照文件。正式导入复用原文请求 Serializer、DTO 转换，依次调用 `preprocess_raw` 与 `import_processed`。操作命令见 [README](../../../README.md#语雀导入)。
+
+2026-10-09：阶段 4 的 OpenAPI 客户端与快照保存已接入命令，并新增本地临时 HTTP 服务测试。官方接口实测、按实测差异调整方言、真实目录 slug 核对、真实快照保存，以及 28 篇教程的真实导入／检索和人工抽查，均待 Token 到位后补测；本次不调整方言规则或清单，不声称阶段 4 已完整验收。
 
 ## 分批范围
 

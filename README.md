@@ -113,15 +113,22 @@ OpenAPI 的 401／403 会终止整批并提示检查 Token 与知识库权限；
 
 ## 公众号采集导入
 
-第三方公众号不能在线批量读取，笔吧推文采用“人工采集 + 离线导入”。把获准文章网页保存为 `<目录>/<账号目录>/<条目>.html`，同名 `.json` 旁注写 `title`（必填）、`url`、`date`、`author`、`account`。`url` 须是永久链接（含 `__biz`、`mid`、`idx`）或短链接，临时链接会报错；没有链接时以采集文件名作身份，入库后不要再改名或更换链接形式；采集目录与清单含原文信息，放在被忽略的 `.runtime/` 下，不提交。清单格式与身份规则见[来源连接器改造方案](docs/phase1/source-connector-design.md#5-清单)，评测须逐篇在 `metadata` 中登记 `entity_title`。
+第三方公众号不能在线批量读取，笔吧推文采用“下载或人工采集 + 离线导入”。清单 [bibar.toml](sources/wechat/manifests/bibar.toml) 的 `[connector]` 登记账号名与文章标题、发布日期，`fetch_wechat` 经搜狗微信搜索逐篇下载；账号、标题（统一全角半角）与日期全部一致才算找到，找不到或多篇一致报告失败，不猜测。已下载的文章跳过（`--force` 重下），默认每次请求间隔 3 秒（`--interval`），出现验证码时整批终止，稍后重跑即可续传。下载结果只有 `__biz/mid/idx` 链接，缺少 `sn`，原文链接打不开但身份稳定；每期同名的文章（如选购指南）搜狗通常搜不到最新一期，需人工采集。
+
+```sh
+.venv/bin/python manage.py fetch_wechat --manifest sources/wechat/manifests/bibar.toml \
+  --capture .runtime/wechat-capture
+```
+
+人工采集时把获准文章网页保存为 `<目录>/<账号目录>/<条目>.html`，同名 `.json` 旁注写 `title`（必填）、`url`、`date`、`author`、`account`。`url` 须是永久链接（含 `__biz`、`mid`、`idx`）或短链接，临时链接会报错；没有链接时以采集文件名作身份，入库后不要再改名或更换链接形式；采集目录含原文，放在被忽略的 `.runtime/` 下，不提交；清单只含标题、日期与分类。清单格式与身份规则见[来源连接器改造方案](docs/phase1/source-connector-design.md#5-清单)，评测须逐篇在 `metadata` 中登记 `entity_title`。
 
 ```sh
 # 试运行：无需账号、Embedding 或数据库连接
-.venv/bin/python manage.py import_wechat --manifest .runtime/wechat-manifest.toml \
+.venv/bin/python manage.py import_wechat --manifest sources/wechat/manifests/bibar.toml \
   --capture .runtime/wechat-capture --dry-run
 
 # 正式导入：账号需 maintain_source，internal 来源另需 read_internal
-.venv/bin/python manage.py import_wechat --manifest .runtime/wechat-manifest.toml \
+.venv/bin/python manage.py import_wechat --manifest sources/wechat/manifests/bibar.toml \
   --capture .runtime/wechat-capture --username maintainer
 ```
 

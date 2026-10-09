@@ -76,7 +76,7 @@ class SourceConnector(Protocol):
 
 由语雀清单泛化（`version = 2`）：
 
-- 根表声明 `source_type`，载入时必须与命令一致；`[connector]` 表放平台参数（如语雀的 `group`），由平台命令解释。
+- 根表声明 `source_type`，载入时必须与命令一致；`[connector]` 表放平台参数（如语雀的 `group`、公众号的下载列表），由平台命令解释。
 - 文档键使用 `ref.key`，`books` 改为 `collections`，路径规则用 `collection` 指定集合，按 `ref.collection_path` 最长前缀匹配，单篇条目优先。
 - 允许的类别由各平台声明（如语雀的 `CATEGORIES`），已接入的流水线由组合根的 `<平台>_CATEGORY_PIPELINES` 决定；清单中已声明但未接入的类别仍报告 `skipped`（未接入）。
 - 单篇条目可带 `metadata` 补丁，用于平台无法提供、预处理需要的字段，例如评测的 `entity_title`、`entity_headings`。补丁只能用于有 `category` 的条目，不能包含平台命名空间；来源身份和可见性不在 metadata 中，补丁无法覆盖。
@@ -129,7 +129,7 @@ request = {
 
 | 维度 | 语雀 | 笔吧公众号 |
 | --- | --- | --- |
-| 获取方式 | OpenAPI 或快照 | 人工采集的本地目录 `<dir>/<账号目录>/<条目>.html`，加同名 `.json` 旁注：`title`（必填）、`url`、`date`（YYYY-MM-DD）、`author`、`account`（显示名，缺省用目录名），不允许其他字段 |
+| 获取方式 | OpenAPI 或快照 | `fetch_wechat` 下载或人工采集的本地目录 `<dir>/<账号目录>/<条目>.html`，加同名 `.json` 旁注：`title`（必填）、`url`、`date`（YYYY-MM-DD）、`author`、`account`（显示名，缺省用目录名），不允许其他字段 |
 | `list()` 范围 | 清单登记的知识库 | 清单登记的账号目录 |
 | `canonical_locator` | `doc:<doc_id>` | 永久链接为 `mp:<__biz>:<mid>:<idx>`，短链接为 `mp:s:<id>`，两者不互通，采集应统一使用永久链接；旁注没有 `url` 时为 `wechat-capture:<账号目录>/<条目>`，此时采集文件不能改名。同一身份在本次列出的账号中出现两次时报错，要求人工去重 |
 | `source_url` | `https://www.yuque.com/<group>/<book>/<slug>` | 规范化后的永久链接（只保留 `__biz`、`mid`、`idx`、`sn`，`&amp;` 转义会先还原）或短链接；带 `timestamp`／`signature` 的临时链接或其他无法识别的链接在列出阶段报错，需换成永久链接或删除 `url` |
@@ -139,11 +139,20 @@ request = {
 | 类别与流水线 | `tutorial` 等五类，已接入 `tutorial@1` | `product_review`、`purchase_guide`，分别接入 `product_review@1`、`purchase_guide@1` |
 | 清单写法 | 目录规则为主，单篇覆盖为辅 | 逐篇登记为主：类别、`entity_title`、`entity_headings` |
 | 凭据 | `YUQUE_TOKEN` | 无 |
-| 实现 | [YuqueConnector](../../sources/yuque/connector.py)、[import_yuque](../../sources/management/commands/import_yuque.py) | [WechatCaptureConnector](../../sources/wechat/connector.py)、[import_wechat](../../sources/management/commands/import_wechat.py) |
+| 实现 | [YuqueConnector](../../sources/yuque/connector.py)、[import_yuque](../../sources/management/commands/import_yuque.py) | [WechatCaptureConnector](../../sources/wechat/connector.py)、[import_wechat](../../sources/management/commands/import_wechat.py)；下载见 [fetch_wechat](../../sources/management/commands/fetch_wechat.py) |
 
 笔吧推文的额外注意事项：
 
-- **获取**：公众号官方接口只能读取自有账号，不能全量读取第三方账号，因此只能“人工采集 + 离线导入”，没有在线同步。
+- **获取**：公众号官方接口只能读取自有账号，不能全量读取第三方账号，因此采用“下载或人工采集 + 离线导入”，没有在线同步。下载与导入共用清单，`[connector]` 写法如下；[fetch_wechat](../../sources/management/commands/fetch_wechat.py) 只写采集目录，不访问数据库，导入仍由 `import_wechat` 离线完成，因此临时链接过期、验证码中断都不影响重跑导入。
+
+  ```toml
+  [connector.accounts]
+  bibar = "笔吧评测室"            # 集合 → 搜狗结果中的公众号名
+  [connector.articles]            # 键须在 docs 中登记
+  "bibar/2026-09-28-laiku-gt16" = { title = "未来已来！聊一款新上市的主流游戏本", date = "2026-09-28" }
+  ```
+
+  [搜狗客户端](../../sources/wechat/sogou.py)依赖非公开页面格式：搜索结果取标题、账号与发布时间，跳转页拼出临时链接，文章页取 `biz/mid/idx/ct/nickname` 并去掉 script、style。只有账号、标题与日期都一致才下载；搜狗不支持匿名按时间筛选，每期同名文章往往搜不到最新一期，需人工采集。验证码属于整批失败（`SourceAccessError`），未找到、多篇一致和页面改版属于单篇失败。
 - **元数据**：类别（评测、选购指南、转载评测、不收录）和机型名无法从页面可靠推断，需要逐篇登记。
 - **身份稳定**：入库后不要再更换链接形式或采集文件名，否则会生成新的来源，旧来源目前没有删除入口。重复采集在列出阶段拦截，因此清单的 `skip`／`canonical` 不用于公众号去重；分批或用 `--only` 跨账号导入时，跨账号重复无法拦截，后导入的会覆盖同身份来源。
 - **内容质量属于 ingestion**：真实文章预处理测试发现，整句加粗被识别为标题导致散热条件与结果分离，接口子块混入噪音与价格，泛化图片说明（alt 为“图片”）没有警告。这些需在解析器和评测策略中改进，connector 不负责。

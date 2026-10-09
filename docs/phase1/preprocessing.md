@@ -39,8 +39,18 @@ RawDocument → ParseStep → StructureStep → ChunkStep → BuildDocumentStep 
 | text/html | HtmlParser | 标准库 HTMLParser 构建轻量节点树；优先微信 js_content，其次 body，再其次解析根；定位为内容块序号 |
 | text/markdown | MarkdownParser | 逐行识别块并在空行／类型变化时输出；定位为起止行号 |
 | text/plain | 复用 MarkdownParser | 仍会识别 Markdown 标题、列表等标记，没有独立的纯文本解析器 |
+| text/x-yuque-markdown | YuqueMarkdownParser | 按行规范化语雀方言，再交给 MarkdownParser；定位仍对应原文起止行号 |
 
-HTML 支持 h1～h6、短的独占粗体栏目与 `【栏目名】`、段落、列表、表格行和 pre 代码；保留 br 换行，忽略脚本与样式。图片保留 alt 说明或缺失说明占位，微信默认的 alt“图片”视为缺失说明，不下载图片或执行 OCR。Markdown 支持 ATX 标题、独占行的粗体标题、管道表格、列表与围栏代码，保留正文行尾双空格、代码围栏和缩进。
+HTML 支持 h1～h6、短的独占粗体栏目与 `【栏目名】`、段落、列表、表格行和 pre 代码；保留 br 换行，忽略脚本与样式。图片保留 alt 说明或缺失说明占位，默认的 alt“图片”视为缺失说明，不下载图片或执行 OCR。
+
+Markdown 支持 ATX 标题、独占行的粗体标题、管道表格、列表与围栏代码，保留正文行尾双空格、代码围栏和缩进。空 ATX 标题忽略。以下图片和引用文本形式是对所有 Markdown 输入（含 `text/plain`）的有意行为变化；重新导入含这些标记的资料时，正文与内容哈希可能改变：
+
+- 独占一行的 Markdown 图片生成 `image` 块，文本为 `[图片：说明]`，缺少 alt 或 alt 为“图片”时为 `[图片：未提供文字说明]`；地址只保留在块 metadata 的 `src`。行内图片替换为同样占位。占位与 HTML 一致，沿用 ParseStep 的图片缺少说明警告。
+- 连续 `>` 行生成 `quote` 块，去掉引用前缀并保留块内换行。首行为 GitHub 提示标记时生成 `callout`：NOTE／TIP 以【提示】开头，metadata `level=note`；IMPORTANT 以【注意】开头，`level=note`；WARNING 以【警告】开头，`level=warning`；CAUTION 以【警告】开头，`level=caution`。标记与正文之间保留换行。围栏代码（含引用／提示块内的围栏）中的图片、引用和标题标记原样保留。
+
+`MarkdownParser(pseudo_heading="level2")` 默认把整行加粗视为二级标题，保持既有伪标题行为。`pseudo_heading="nested_label"` 只把不超过 30 字且不含句内标点（，。；！？,;!?）的整行加粗视为标题，级别为最近真实 ATX 标题加一；没有真实标题时为 2，最高为 6，连续伪标题不互相抬升级别。其余整行加粗保留为段落。
+
+[YuqueMarkdownParser](../../ingestion/yuque_markdown.py) 默认使用 `nested_label`，也可注入其他 MarkdownParser。规范化按[语雀方言规则](yuque-ingestion/technical-design.md#42-规范化规则)移除白名单样式标签、删除线和文内锚点链接，将表格行内 `<br>`／`<br/>` 改为“；”、语雀提示块改为 GitHub 提示块、单行折叠块改为 `**标题**：正文`（丢弃其中图片）、独占一行的 HTML 图片改为 Markdown 图片，删除行内空加粗 `****`，空结构改为空行。白名单外尖括号（如 `<你的用户名>`）保留；围栏代码中的内容不做方言改写。每行只改写为一行或空行，保持原文行号。
 
 例如微信原文：
 
@@ -133,7 +143,7 @@ CleanBlocksStep 和 AnnotateBlocksStep 是扩展示意名称，当前没有内�
 }
 ```
 
-默认注册 `product_review@1`、`purchase_guide@1`、`experience_case@1`，三者均支持 text/html、text/markdown、text/plain。平台和 Schema 独立，例如语雀 Markdown 同样可以选择购买指南策略。media_type 可带 charset 参数，但内容必须 UTF-8。HTTP JSON 总大小仍限 2 MiB。
+默认注册 `product_review@1`、`purchase_guide@1`、`experience_case@1`，三者均支持 text/html、text/markdown、text/plain、text/x-yuque-markdown。平台和 Schema 独立，例如语雀 Markdown 同样可以选择购买指南策略。media_type 可带 charset 参数，但内容必须 UTF-8。HTTP JSON 总大小仍限 2 MiB。
 
 metadata 的 title/source_date/entity_title/entity_key/entity_headings/document_metadata/warnings 是通用控制字段，API 校验它们的格式。其余字段保留给来源或新增步骤，并写入文档 metadata；document_metadata 可显式补充文档元数据。未知日期留空，不使用导入日期。HTTP 不指定步骤顺序，步骤/策略在 config/components.py 的有序列表中配置；新增类型由显式 register 接入，不读取任何请求提供的 Python 路径。
 

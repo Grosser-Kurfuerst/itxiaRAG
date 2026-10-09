@@ -9,6 +9,7 @@ from ingestion.chunking import BudgetChunker
 from ingestion.parsers import ParserRegistry
 from ingestion.preprocessing import BuildDocumentStep, ChunkStep, ParseStep, PreprocessPipeline, StructureStep, ValidateStep
 from ingestion.strategies import ExperienceCaseStrategy, PurchaseGuideStrategy, ReviewStrategy
+from ingestion.yuque_markdown import YuqueMarkdownParser
 from retrieval.hybrid import MultiRouteRecall
 from retrieval.keyword import KeywordRetriever
 from retrieval.pipeline import PostRecallPipeline
@@ -47,6 +48,7 @@ def post_recall_pipeline():
 def preprocessors(*, counter=None, max_input_units=None):
     # Schema 是受信任应用代码的显式映射，不接受请求提供 Python 路径。
     parsers = ParserRegistry()
+    parsers.register("text/x-yuque-markdown", YuqueMarkdownParser())
 
     def pipeline(schema, strategy):
         chunker = BudgetChunker(

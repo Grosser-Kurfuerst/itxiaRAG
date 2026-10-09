@@ -195,9 +195,9 @@ class YuqueMarkdownParser:
 | 提示块 | `:::warning` … `:::` | 起始行改为 `> [!WARNING]`，块内行加 `> ` 前缀，结束行改为空行。tips／info／success／colorN 对应 NOTE，danger 对应 CAUTION |
 | 折叠块 | 单行 `<details><summary>S</summary>…</details>` | `**S**：正文文本`；用 HTML 解析取文本，丢弃其中图片 |
 | HTML 图片 | 独占一行的 `<img src alt>` | `![alt](src)`，交给通用图片规则 |
-| 空结构 | 空标题 `#### `、空加粗 `****`（含行内）、只含空样式的行、空引用行 `>` | 删除行内 `****`；空结构行改为空行，围栏代码内不处理 |
 | 文内锚点链接 | `[文字](#xxxx)` | `文字`；其他链接（含语雀站内链接、官网地址）保留 |
-| 删除线 | `~~…~~` | 删除 |
+| 删除线 | `~~…~~` | 删除；语雀把删除线内的行内代码写成 ``~~a~~`~~b~~`~~c~~``，只含删除内容的行内代码一并删除 |
+| 空结构 | 空标题 `#### `、空加粗 `****`（含行内）、只含空样式的行、空引用行 `>` | 删除行内 `****`；空结构行改为空行，围栏代码内不处理。放在最后，前面规则删空的行也会被清掉 |
 
 ### 4.3 MarkdownParser 通用增强
 
@@ -208,6 +208,7 @@ class YuqueMarkdownParser:
 | 图片 | 独占一行的图片生成 `image` 块，文本为 `[图片：说明]` 或 `[图片：未提供文字说明]`，src 放 metadata；行内图片替换为同样的占位 | 与 HtmlParser 的占位格式一致，ParseStep 的缺失说明警告可直接生效 |
 | 引用与提示块 | 连续 `>` 行生成 `quote` 块并去掉前缀。首行为 GitHub 提示标记时生成 `callout` 块：NOTE／TIP →【提示】（`level=note`）；IMPORTANT →【注意】（`level=note`）；WARNING →【警告】（`level=warning`）；CAUTION →【警告】（`level=caution`）。引用／提示块内的围栏代码不做图片替换等改写 | GitHub 提示块语法 |
 | 空标题 | `#` 后没有文字的行忽略 | |
+| 标题链接 | 标题（含伪标题）中的 `[文字](url)` 只保留文字 | 章节标题会进入父段标题和检索前缀；正文链接不变 |
 | 伪标题 | 构造参数 `pseudo_heading`，见下 | 默认 `level2`，保持现有行为 |
 
 `pseudo_heading` 有两种取值：

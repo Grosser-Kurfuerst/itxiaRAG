@@ -36,6 +36,7 @@ class MarkdownParser:
         r'''\s*(?:"[^"\n]*"|'[^'\n]*')?\s*\)'''
     )
     _quote = re.compile(r"^ {0,3}> ?(.*)$")
+    _link = re.compile(r"(?<!!)\[([^\]\n]*)\]\([^)\n]*\)")
     _callouts = {
         "[!NOTE]": ("note", "【提示】"),
         "[!TIP]": ("note", "【提示】"),
@@ -138,7 +139,7 @@ class MarkdownParser:
                 if heading:
                     real_heading_level = len(heading.group(1))
                 blocks.append(ContentBlock(
-                    "heading", heading.group(2) if heading else bold_heading.group(1),
+                    "heading", self._link.sub(r"\1", heading.group(2) if heading else bold_heading.group(1)),
                     level=real_heading_level if heading else (
                         2 if self.pseudo_heading == "level2" else min(real_heading_level + 1, 6)
                     ),

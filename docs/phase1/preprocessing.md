@@ -43,14 +43,14 @@ RawDocument → ParseStep → StructureStep → ChunkStep → BuildDocumentStep 
 
 HTML 支持 h1～h6、短的独占粗体栏目与 `【栏目名】`、段落、列表、表格行和 pre 代码；保留 br 换行，忽略脚本与样式。图片保留 alt 说明或缺失说明占位，默认的 alt“图片”视为缺失说明，不下载图片或执行 OCR。
 
-Markdown 支持 ATX 标题、独占行的粗体标题、管道表格、列表与围栏代码，保留正文行尾双空格、代码围栏和缩进。空 ATX 标题忽略。以下图片和引用文本形式是对所有 Markdown 输入（含 `text/plain`）的有意行为变化；重新导入含这些标记的资料时，正文与内容哈希可能改变：
+Markdown 支持 ATX 标题、独占行的粗体标题、管道表格、列表与围栏代码，保留正文行尾双空格、代码围栏和缩进。空 ATX 标题忽略；标题中的链接只保留链接文字，正文链接不变。以下图片和引用文本形式是对所有 Markdown 输入（含 `text/plain`）的有意行为变化；重新导入含这些标记的资料时，正文与内容哈希可能改变：
 
 - 独占一行的 Markdown 图片生成 `image` 块，文本为 `[图片：说明]`，缺少 alt 或 alt 为“图片”时为 `[图片：未提供文字说明]`；地址只保留在块 metadata 的 `src`。行内图片替换为同样占位。占位与 HTML 一致，沿用 ParseStep 的图片缺少说明警告。
 - 连续 `>` 行生成 `quote` 块，去掉引用前缀并保留块内换行。首行为 GitHub 提示标记时生成 `callout`：NOTE／TIP 以【提示】开头，metadata `level=note`；IMPORTANT 以【注意】开头，`level=note`；WARNING 以【警告】开头，`level=warning`；CAUTION 以【警告】开头，`level=caution`。标记与正文之间保留换行。围栏代码（含引用／提示块内的围栏）中的图片、引用和标题标记原样保留。
 
 `MarkdownParser(pseudo_heading="level2")` 默认把整行加粗视为二级标题，保持既有伪标题行为。`pseudo_heading="nested_label"` 只把不超过 30 字且不含句内标点（，。；！？,;!?）的整行加粗视为标题，级别为最近真实 ATX 标题加一；没有真实标题时为 2，最高为 6，连续伪标题不互相抬升级别。其余整行加粗保留为段落。
 
-[YuqueMarkdownParser](../../ingestion/yuque_markdown.py) 默认使用 `nested_label`，也可注入其他 MarkdownParser。规范化按[语雀方言规则](yuque-ingestion/technical-design.md#42-规范化规则)移除白名单样式标签、删除线和文内锚点链接，将表格行内 `<br>`／`<br/>` 改为“；”、语雀提示块改为 GitHub 提示块、单行折叠块改为 `**标题**：正文`（丢弃其中图片）、独占一行的 HTML 图片改为 Markdown 图片，删除行内空加粗 `****`，空结构改为空行。白名单外尖括号（如 `<你的用户名>`）保留；围栏代码中的内容不做方言改写。每行只改写为一行或空行，保持原文行号。
+[YuqueMarkdownParser](../../ingestion/yuque_markdown.py) 默认使用 `nested_label`，也可注入其他 MarkdownParser。规范化按[语雀方言规则](yuque-ingestion/technical-design.md#42-规范化规则)移除白名单样式标签、删除线（连同只含删除内容的行内代码）和文内锚点链接，将表格行内 `<br>`／`<br/>` 改为“；”、语雀提示块改为 GitHub 提示块、单行折叠块改为 `**标题**：正文`（丢弃其中图片）、独占一行的 HTML 图片改为 Markdown 图片，删除行内空加粗 `****`，空结构改为空行。白名单外尖括号（如 `<你的用户名>`）保留；围栏代码中的内容不做方言改写。每行只改写为一行或空行，保持原文行号。
 
 例如微信原文：
 

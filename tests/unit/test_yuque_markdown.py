@@ -91,6 +91,15 @@ def test_yuque_strikethrough_removes_deleted_text_only():
     assert normalize_yuque("有效 ~~废弃~~ ~~另一条~~正文\n") == "有效  正文\n"
 
 
+@pytest.mark.parametrize("content,expected", [
+    ("> ~~旧说明，~~`~~old.example~~`~~已失效~~", ""),
+    ("改用 ~~旧~~`~~old~~` `new` 接口", "改用  `new` 接口"),
+    ("## ~~作废标题~~", ""),
+])
+def test_yuque_strikethrough_drops_deleted_inline_code_and_resulting_empty_structures(content, expected):
+    assert normalize_yuque(content + "\n正文\n") == expected + "\n正文\n"
+
+
 @pytest.mark.parametrize("opening,closing", [("```markdown", "```"), ("~~~~markdown", "~~~~~")])
 def test_yuque_fenced_code_preserves_all_dialects_and_requires_matching_closer(opening, closing):
     content = (

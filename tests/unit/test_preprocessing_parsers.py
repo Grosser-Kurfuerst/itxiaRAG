@@ -151,6 +151,16 @@ def test_markdown_empty_headings_are_ignored_without_losing_neighboring_line_pos
     ]
 
 
+def test_markdown_heading_links_keep_text_while_body_links_remain():
+    blocks = MarkdownParser().parse(raw(
+        "## 工具 > [Parsec](https://example.invalid/parsec)\n**[官网](https://example.invalid/)**\n见 [文档](https://example.invalid/doc)",
+        "text/markdown",
+    ))
+    assert [(block.kind, block.text) for block in blocks] == [
+        ("heading", "工具 > Parsec"), ("heading", "官网"), ("paragraph", "见 [文档](https://example.invalid/doc)"),
+    ]
+
+
 def test_markdown_default_pseudo_headings_remain_level_two_for_long_or_punctuated_labels():
     labels = ["结论，仍然是标题。", "长" * 31]
     blocks = MarkdownParser().parse(raw("### 章节\n" + "\n".join(f"**{label}**" for label in labels), "text/markdown"))

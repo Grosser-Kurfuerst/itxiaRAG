@@ -86,12 +86,14 @@ def _anchor_links(line, _state):
 
 
 def _strikethrough(line, _state):
-    return re.sub(r"~~.*?~~", "", line)
+    # 语雀把删除线内的行内代码写成 ~~a~~`~~b~~`~~c~~，只含删除内容的代码一并删除。
+    line = re.sub(r"~~.*?~~", "\0", line)
+    return re.sub(r"`\0+`", "", line).replace("\0", "")
 
 
 _LINE_RULES = [
     _strip_styles, _table_breaks, _callout, _details, _html_image,
-    _empty_structures, _anchor_links, _strikethrough,
+    _anchor_links, _strikethrough, _empty_structures,
 ]
 
 

@@ -92,6 +92,7 @@ def test_visibility_uses_document_override_then_collection_default():
     (("docs", "help/install"), {"metadata": []}, "metadata"),
     (("docs", "help/install"), {"metadata": {"yuque": {}}}, "平台字段"),
     (("docs", "help/install"), {"metadata": {"reviewed_on": date(2026, 9, 28)}}, "日期请写成文本"),
+    (("docs", "help/install"), {"metadata": {"score": float("nan")}}, "metadata 只能包含"),
     (("path_rules", 0), {"extra": 1}, "未知字段"),
     (("path_rules", 0), {"collection": "missing"}, "collection"),
     (("path_rules", 0), {"category": "unknown"}, "category"),

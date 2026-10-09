@@ -9,6 +9,7 @@
 !embeddings/
 !ingestion/
 !retrieval/
+!sources/
 !tests/
 !fixtures/
 fixtures/*

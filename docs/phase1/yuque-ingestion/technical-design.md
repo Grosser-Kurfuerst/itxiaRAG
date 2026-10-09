@@ -1,6 +1,6 @@
 # 第一批技术方案：教程、工具条目与知识的预处理和导入
 
-本文给出满足[需求分析](requirements-analysis.md)的技术方案，覆盖操作教程（`tutorial`）、工具条目（`tool_card`）、知识科普／对比／速查（`knowledge`）三类语雀文档。现有原文预处理契约见[文档预处理](../preprocessing.md)，公共 DTO 与存储见[首期技术设计](../phase1-technical-design.md)。**阶段 1～3 已实现：Markdown 通用与语雀解析、教程章节策略与增强步骤、collection_path 校验和 tutorial@1、人工清单与快照导入命令已接入；OpenAPI 读取、知识与工具流水线仍为方案。**
+本文给出满足[需求分析](requirements-analysis.md)的技术方案，覆盖操作教程（`tutorial`）、工具条目（`tool_card`）、知识科普／对比／速查（`knowledge`）三类语雀文档。现有原文预处理契约见[文档预处理](../preprocessing.md)，公共 DTO 与存储见[首期技术设计](../phase1-technical-design.md)。**阶段 1～3 已实现；阶段 4 代码已实现，需 Token 的接口实测与真实教程验收待补；知识与工具流水线仍为方案，阶段 5、6 未开始。**
 
 ## 1. 设计目标与原则
 
@@ -391,12 +391,14 @@ class YuqueClient(Protocol):
 
 | 实现 | 用途 | 说明 |
 | --- | --- | --- |
-| YuqueOpenApiClient | 正式导入 | 读取 `GET /api/v2/repos/{group}/{book}/toc`、`/docs`、`/docs/{slug}`（取 Markdown `body`）。请求头为 `X-Auth-Token`，Token 来自环境变量 `YUQUE_TOKEN`。用标准库 urllib，与现有 Embedding 适配器一致。请求间隔固定 0.5 秒 |
+| YuqueOpenApiClient | 正式导入 | 读取 `GET /api/v2/repos/{group}/{book}/toc`、`/docs`、`/docs/{slug}`（取 `data.body`，不使用草稿）。请求头为 `X-Auth-Token`，Token 来自环境变量 `YUQUE_TOKEN`。用标准库 urllib，与现有 Embedding 适配器一致。前一次请求结束后至少间隔 0.5 秒再请求，测试可设为 0；默认 timeout 为 30 秒。docs 列表按 offset／limit 分页，每页上限 100，读取至不足一页 |
 | YuqueSnapshotClient | 离线试运行与测试 | 读取本地快照目录：`<dir>/<book>/toc.json`、`docs.json`、`<slug>.md`。OpenAPI 模式可用 `--save-snapshot` 生成快照 |
 
 两种实现是必要的：快照让试运行和单测不依赖网络与 Token。
 
-阶段 3 只实现快照客户端。`<dir>/<book>/toc.json` 与 `docs.json` 均采用 OpenAPI 响应结构 `{"data": [...]}`，便于阶段 4 直接保存接口响应。目录项包含 `type`（DOC／TITLE／LINK）、`title`、`uuid`、`parent_uuid`、`url`（文档 slug）、`doc_id`；文档项包含 `id`、`slug`、`title`、`content_updated_at`（带时区的 ISO 8601，如 `2025-11-23T13:23:51.000Z`）。正文为 `<slug>.md` UTF-8 文本。`toc_path` 沿 `parent_uuid` 向上取祖先标题，再按根到叶排序，不包含自身；祖先可以是 TITLE 或 DOC，不在目录中的文档路径为空。缺失或非法的列表／目录文件会启动失败；单篇正文文件读取失败记入该篇报告后继续。
+两种客户端复用同一目录路径计算。`<dir>/<book>/toc.json` 与 `docs.json` 均采用 OpenAPI 响应结构 `{"data": [...]}`，docs 保存合并后的完整分页列表，不保存响应头或认证信息。目录项包含 `type`（DOC／TITLE／LINK）、`title`、`uuid`、`parent_uuid`、`url`（文档 slug）、`doc_id`；文档项包含 `id`、`slug`、`title`、`content_updated_at`（带时区的 ISO 8601，如 `2025-11-23T13:23:51.000Z`）。正文为 `<slug>.md` UTF-8 文本。`toc_path` 沿 `parent_uuid` 向上取祖先标题，再按根到叶排序，不包含自身；祖先可以是 TITLE 或 DOC，不在目录中的文档路径为空。缺失或非法的列表／目录文件会启动失败；单篇正文文件读取失败记入该篇报告后继续。
+
+`YUQUE_TOKEN` 默认空，OpenAPI 模式启动时校验；`YUQUE_API_BASE` 默认 `https://www.yuque.com/api/v2`，留空也使用默认地址。真实接口格式与账号权限待 Token 到位后补测。
 
 ### 7.2 来源身份与元数据
 
@@ -481,19 +483,25 @@ summary: imported=… reused=… skipped=… unregistered=… failed=…
 .venv/bin/python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml \
   --snapshot .runtime/yuque-snapshot --dry-run
 
-# 正式导入单篇：阶段 3 使用快照，账号需 maintain_source（internal 文档另需 read_internal）
+# OpenAPI 试运行并保存快照：先配置并加载 YUQUE_TOKEN
 .venv/bin/python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml \
-  --snapshot .runtime/yuque-snapshot --username maintainer --only help/install_win10
+  --save-snapshot .runtime/yuque-openapi-snapshot --dry-run
+
+# OpenAPI 正式导入单篇：账号需 maintain_source（internal 文档另需 read_internal）
+.venv/bin/python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml \
+  --username maintainer --only help/install_win10
 ```
 
 | 参数 | 说明 |
 | --- | --- |
 | `--manifest` | 必填，导入清单；读取清单中出现的知识库 |
-| `--snapshot DIR` | 阶段 3 必填；缺省提示“OpenAPI 读取尚未实现”。阶段 4 再支持缺省读取 OpenAPI |
-| `--save-snapshot DIR` | 阶段 4 计划参数，当前未实现；保存目录应放在被忽略的 `.runtime/` 下 |
-| `--only` | 只处理指定文档（知识库/slug），可重复；只读取涉及的知识库 |
+| `--snapshot DIR` | 从本地快照读取，不需要语雀 Token；缺省使用 OpenAPI |
+| `--save-snapshot DIR` | 仅 OpenAPI 模式，与 `--snapshot` 互斥；先保存后导入，可与 `--dry-run` 同时使用。保存目录应放在被忽略的 `.runtime/` 下 |
+| `--only` | 只导入指定文档（知识库/slug），可重复；通常只读取涉及的知识库。保存快照时始终读取清单全部知识库及已分类正文 |
 | `--dry-run` | 只预处理并输出报告，成功状态 `preprocessed`；不提供账号时无需数据库连接，提供账号时校验权限 |
 | `--username` | 非试运行时必填，以该账号的权限执行导入，与 API 权限校验一致 |
+
+保存快照采用先下载、再用 `YuqueSnapshotClient` 导入的方式。保存范围是清单内所有知识库的目录、完整文档列表与所有已分类正文（含目录规则命中和未接入类别），覆盖第一批 74 篇；跳过、未登记不保存正文。`--only` 只限制导入，不缩小保存范围。任何正文读取失败均进入报告，包括未接入类别和未被 `--only` 选中的文档，保存失败的旧正文会移除，其他文档继续；成功读取的未接入类别仍不会导入。保存期间发生 401／403 会在导入前终止，已下载的文件可能保留。文件写入失败终止整批；失败快照可能不完整，应重跑补齐。
 
 ### 7.5 错误处理
 
@@ -504,8 +512,13 @@ summary: imported=… reused=… skipped=… unregistered=… failed=…
 | 清单条目在语雀中找不到 | 报告警告，提示 slug 可能已改名 |
 | 单篇预处理或导入失败（DomainError） | 记录错误码，继续下一篇；整批结束后命令以非零状态退出 |
 | 非试运行但 Embedding 未配置 | 启动时失败 |
-| 语雀 401／403 | 终止整批，提示检查 Token 与权限 |
-| 语雀 429、网络错误 | 当前篇记为失败并继续；修正后用 `--only` 重跑或整批重跑。不实现重试队列 |
+| OpenAPI 模式缺少 Token | `YUQUE_NOT_CONFIGURED`，启动即失败，提示配置环境变量 `YUQUE_TOKEN` |
+| 语雀 401／403 | 独立的 `YuqueAuthenticationError`，不会被导入服务当作单篇失败；命令转为 CommandError 终止整批，提示检查 `YUQUE_TOKEN` 与知识库权限。不会回滚之前已导入的文档 |
+| 单篇详情 429 | `YUQUE_RATE_LIMITED`，当前篇记为失败并继续；修正后用 `--only` 重跑或整批重跑。不实现重试队列 |
+| 单篇详情其他 HTTP、网络错误或超时 | `YUQUE_UNAVAILABLE`，当前篇失败并继续；不输出服务错误正文或底层异常详情 |
+| 单篇详情 JSON、响应结构或 body 类型异常 | `INVALID_YUQUE_RESPONSE`，当前篇失败并继续 |
+| 目录或文档列表读取失败 | 没有可归属的单篇，整批终止并输出相应错误码；命令先列完本次涉及的知识库，再处理正文，因此列表失败时不导入任何文档 |
+| 保存快照写入失败 | `SNAPSHOT_WRITE_FAILED`，终止整批，提示检查目录与文件权限 |
 
 Token 只从环境变量读取，不写入日志、报告或快照文件。
 
@@ -526,7 +539,7 @@ Token 只从环境变量读取，不写入日志、报告或快照文件。
 | ParseStep | 图片警告文案可配置 | 默认文案不变 |
 | 现有三种 schema 的策略 | 无 | — |
 | 存储、检索、标准导入 API | 无 | — |
-| 命令与配置 | 阶段 3 新增 `import_yuque --snapshot`；`INSTALLED_APPS` 增加 `sources`（无模型、无迁移）。`YUQUE_TOKEN`、`YUQUE_API_BASE` 待阶段 4 | 阶段 3 不改 `.env.example` |
+| 命令与配置 | `import_yuque` 支持 OpenAPI、`--snapshot` 与 `--save-snapshot`；`INSTALLED_APPS` 包含 `sources`（无模型、无迁移）。阶段 4 增加 `YUQUE_TOKEN`、`YUQUE_API_BASE` 与容器透传 | 快照模式无需 Token，原有参数语义保留 |
 
 ## 9. 扩展点
 
@@ -555,8 +568,11 @@ Token 只从环境变量读取，不写入日志、报告或快照文件。
 | `tests/unit/test_enrichment_steps.py` | 提示块进入父段或文档 warnings、时效表述、来源日期提示（含日期缺失）、工具身份、检索前缀与表头组合 |
 | `tests/unit/test_yuque_manifest.py` | 单篇条目优先于目录规则、目录规则命中、未登记、跳过、未接入类别、清单校验 |
 | `tests/unit/test_yuque_importer.py` | 快照客户端和假提交函数：试运行不编码、单篇失败不中断、报告状态、标题清洗与元数据、可见性来自清单 |
+| `tests/unit/test_yuque_client.py`、`tests/unit/test_yuque_openapi.py` | mock HTTP 边界，不开 socket；固定间隔与 timeout、网络与响应格式错误、认证独立异常、快照读写失败、错误消息不泄露 Token |
 
 ### 10.2 集成测试
+
+`tests/integration/test_yuque_openapi.py`：本地临时 HTTP 服务模拟目录、分页文档列表与详情，验证请求路径与认证头、祖先路径、401／403 终止、429 与其他详情错误单篇失败后继续、列表失败、缺少 Token 启动失败、74 篇合成快照覆盖未接入类别并兼容离线模式、日志／报告／快照不含 Token。正式导入用例使用隔离 PostgreSQL 与模型替身；不访问真实语雀。沙箱不支持 socket 时至少执行 collect-only，集成与全量测试由隔离环境复核。
 
 `tests/integration/test_yuque_ingestion.py`：使用隔离 PostgreSQL、项目账号的 API Token 认证和明确的模型替身，不访问语雀。当前覆盖教程原文 API 与合成快照管理命令：命令只导入教程、重复执行全部 reused、未登记／未接入／重复副本不写入、internal 来源权限与批次失败退出。后续阶段再扩充知识与工具 API 用例，检查：
 
@@ -613,4 +629,4 @@ Token 只从环境变量读取，不写入日志、报告或快照文件。
 | 子块 key 按小节加序号 | 同一小节正文增删可能移动该小节后续子块的 key | 与评测检索块的取舍一致，父段 key 不受影响 |
 | 通用解析增强改变图片与引用的文本形式 | 已导入的 Markdown 资料重新导入时内容哈希变化 | 当前只有测试数据；实现时回归并在文档预处理中记录 |
 | 子块合并逻辑与评测策略各有一份 | 两处规则可能逐渐分叉 | 共用相连判断函数；第一批稳定后评估是否统一 |
-| 语雀 Token 尚未到位 | 无法实测 OpenAPI，阶段 4 无法完成 | 阶段 1～3 只用合成样本或本机快照，可先完成；教程验收和阶段 5、6 可先用本机公开文档整理的快照推进，Token 到位后补 OpenAPI 实测；其余待确认项已于 2026-10-09 确认，见[需求分析第 7 节](requirements-analysis.md#7-范围外与待确认) |
+| 语雀 Token 尚未到位 | 阶段 4 代码已实现，真实接口与教程验收无法完成 | 本次离线单测通过，本地 HTTP 集成测试已新增且可收集，运行由隔离环境复核；接口实测、方言差异调整、真实目录 slug 核对、真实快照保存及教程验收待 Token 到位后补测；其余待确认项已于 2026-10-09 确认，见[需求分析第 7 节](requirements-analysis.md#7-范围外与待确认) |

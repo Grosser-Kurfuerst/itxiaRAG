@@ -173,6 +173,45 @@ JSON
 
 把 3.3 或 3.5 的 Token 换成 `$READER_TOKEN_FILE`，预期 `403`；普通账号可以检索公开来源，不能导入。公开／内部隔离和更新回归由下面的集成测试进一步验证。
 
+### 3.7 语雀 OpenAPI 与快照导入
+
+`.dockerignore` 白名单包含 `sources/`，镜像内提供语雀导入命令及 `sources/yuque/manifests/itxia.toml` 清单，同时继续排除 `__pycache__` 和 `*.py[cod]`。
+
+阶段 4 的读取与保存快照代码已实现；本节需要真实语雀 Token 的操作均待 Token 到位后补测，不代表已经完成接口实测、真实快照保存或 28 篇教程导入与检索验收。语雀 Token 与 3.1 的知识库 API Token 是两种凭据。
+
+在被忽略的 `.env.docker` 中设置获授权的 `YUQUE_TOKEN`，`YUQUE_API_BASE` 可保留 `https://www.yuque.com/api/v2` 或留空使用默认地址。Compose 将这两项透传至 app；改配置后重建容器，不在命令行中传 Token：
+
+```sh
+dc up -d --build app
+# OpenAPI 试运行：仅预处理教程，不编码或写入数据库
+dc exec app python manage.py import_yuque \
+  --manifest sources/yuque/manifests/itxia.toml --dry-run
+
+# 保存完整分类快照后试运行；快照保存在容器 /tmp，随后复制到宿主机
+dc exec app python manage.py import_yuque \
+  --manifest sources/yuque/manifests/itxia.toml \
+  --save-snapshot /tmp/yuque-openapi-snapshot --dry-run
+dc cp app:/tmp/yuque-openapi-snapshot .runtime/yuque-openapi-snapshot
+
+# 从刚保存的快照正式导入；需先创建具有 maintain_source、read_internal 的账号
+dc exec app python manage.py import_yuque \
+  --manifest sources/yuque/manifests/itxia.toml \
+  --snapshot /tmp/yuque-openapi-snapshot --username maintainer
+
+# 再执行同一命令，正文、元数据与流水线配置不变时应全部 reused
+dc exec app python manage.py import_yuque \
+  --manifest sources/yuque/manifests/itxia.toml \
+  --snapshot /tmp/yuque-openapi-snapshot --username maintainer
+```
+
+复制快照时使用新的宿主机目标目录，避免 `dc cp` 将目录嵌套到已存在的同名目录内。容器重建会丢失 `/tmp` 快照，后续离线运行可在宿主机按 README 的 `--snapshot` 命令读取，或把已保存的目录复制回 app。正式导入去掉 `--snapshot` 就使用 OpenAPI；单篇重跑可加 `--only help/install_win10`，参数可以重复。
+
+`--snapshot` 与 `--save-snapshot` 互斥，保存可与 `--dry-run` 同用。保存读取清单内所有知识库，写出 `toc.json`、合并所有分页的 `docs.json`（均为 `{"data": [...]}`）以及已分类正文；知识、工具、排障和案例虽未接入，仍保存正文，跳过和未登记只保留列表元数据。`--only` 只限制导入，不限制保存范围。检查报告中保存失败和缺失 slug；完整快照预期覆盖第一批 74 篇，实际目录与正文完整性待 Token 到位后补测。
+
+未接入类别报告为 `skipped`，不写入数据库；快照正文读取失败无论类别或 `--only` 都记为 `failed`，继续保存其余文档，结束后非零退出。详情的 429、其他 HTTP／网络错误、超时或格式错误同样按单篇处理；401／403 终止整批并提示检查 `YUQUE_TOKEN` 与知识库权限。目录／列表失败在任何正文处理前终止整批；写盘错误也终止整批。没有重试队列，修正后重跑；保存失败的正文旧文件会删除，不能把不完整快照当作完整数据。
+
+Token 不写入报告、日志或快照；快照含正文，和凭据一样不提交。重复导入仍可能调用 Embedding，`reused` 验证的是统一保存链的内容去重。真实教程验收与检索抽查见[阶段 4 验收](yuque-ingestion/implementation-phases.md#53-验收)。
+
 ## 4. 在 Docker 中运行自动测试
 
 使用独立 Compose 项目 `itxia-tests`，避免触碰运行服务的数据库和卷。测试内部再创建 PostgreSQL 测试库；模型使用明确的测试替身，不需要启动 Ollama。

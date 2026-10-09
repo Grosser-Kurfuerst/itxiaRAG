@@ -43,16 +43,19 @@
 ## 3. 后续连接器如何接入
 
 ```text
-未来 SourceConnector.fetch(locator) → RawDocument
-  → 按 document_schema + schema_version 选择 DocumentPreprocessor
+SourceConnector.list() → SourceRef → 清单（导入范围、类别、可见性、逐篇元数据）
+  → SourceConnector.fetch(ref) → RawDocument + 稳定身份与原文链接
+  → 原文导入请求 → 按 document_schema + schema_version 预处理
   → ProcessedDocument → 公共校验 → import_processed
 ```
+
+上图是[来源连接器改造方案](source-connector-design.md)的目标流程，尚未实现；现有语雀导入使用自己的读取协议，结构相同。该方案把清单、导入编排和报告抽成通用部分，平台只实现读取与身份，计划在接入笔吧推文批量导入时实施。
 
 平台与内容类型独立：同一语雀客户端可读取不同内容类别，再选择对应结构策略。已实现 HTML/Markdown 解析器、原有三类分段策略、教程策略、预算切分及原文 API；新增步骤/类型在组合根显式注册，保存和检索只依赖统一 DTO。语雀的类别清单、方言解析、章节策略、OpenAPI／快照导入命令已实现，见[语雀文档导入方案](yuque-ingestion/overview.md)。知识和工具流水线仍待后续阶段，不提供增量选项、删除同步或任务队列。
 
 语雀 Token 只通过环境变量 `YUQUE_TOKEN` 读取，请求头为 `X-Auth-Token`；`YUQUE_API_BASE` 默认 `https://www.yuque.com/api/v2`。需具备目标知识库读取权限，实际账号能力待 Token 到位后补测。401／403 终止整批，提示检查 Token 与知识库权限；列表读取失败也终止整批；单篇限流、网络或格式错误报告 `failed` 后继续。`--save-snapshot` 保存清单内全部已分类正文，含尚未接入的类别，供后续离线开发；`--only` 仅限制导入。Token 不写入日志、报告或快照，操作见[部署与验收](deployment.md#37-语雀-openapi-与快照导入)。
 
-SourceConnector 当前只有协议，没有具体平台实现。接入连接器时先用单篇离线样本验收，再扩展读取和同步。验收重点是正文完整性、标题层级、图片补录、表头单位、风险警告、来源日期和稳定身份；预处理输出通过公共校验，并完成[预处理专项与导入检索回归](../unit-testing-guidelines.md)。不能把“成功读取页面”当作“内容处理正确”。
+SourceConnector 当前只有 `fetch(locator) → RawDocument` 协议，没有具体平台实现，将按改造方案替换。接入连接器时先用单篇离线样本验收，再扩展读取和同步。验收重点是正文完整性、标题层级、图片补录、表头单位、风险警告、来源日期和稳定身份；预处理输出通过公共校验，并完成[预处理专项与导入检索回归](../unit-testing-guidelines.md)。不能把“成功读取页面”当作“内容处理正确”。
 
 ## 4. 官方参考与待验证项
 

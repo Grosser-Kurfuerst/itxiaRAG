@@ -8,13 +8,18 @@ from django.contrib.auth.models import Permission
 from django.core.management import call_command
 
 from catalog.models import EvidenceUnit, KnowledgeSource
-from tests.unit.test_wechat_connector import capture  # noqa: F401  复用合成采集目录。
+from tests.wechat_capture import build_capture
 
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db]
 
 
-def test_capture_command_imports_reviews_and_guides_then_reimport_reuses(capture, embedder):  # noqa: F811
+@pytest.fixture
+def capture(tmp_path):
+    return build_capture(tmp_path)
+
+
+def test_capture_command_imports_reviews_and_guides_then_reimport_reuses(capture, embedder):
     root, manifest = capture
     actor = get_user_model().objects.create_user("wechat-maintainer")
     actor.user_permissions.set(Permission.objects.filter(

@@ -95,7 +95,7 @@ class Manifest:
                 try:
                     json.dumps(metadata, allow_nan=False)
                 except (TypeError, ValueError):
-                    raise ManifestError(f"docs.{key}.metadata 只能包含文本、数字、布尔、数组和表，日期请写成文本") from None
+                    raise ManifestError(f"docs.{key}.metadata 只能包含文本、有限数字、布尔、数组和表，日期请写成文本") from None
         self.path_rules = data.get("path_rules", [])
         if not isinstance(self.path_rules, list):
             raise ManifestError("path_rules 必须是表数组")

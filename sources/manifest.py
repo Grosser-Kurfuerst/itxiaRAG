@@ -1,4 +1,5 @@
 """人工导入清单：单篇优先，目录规则按最长前缀匹配；类别集合由各平台声明。"""
+import json
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
@@ -90,6 +91,11 @@ class Manifest:
                 # 平台命名空间由连接器维护，清单只补充平台给不了的预处理字段。
                 if source_type in metadata:
                     raise ManifestError(f"docs.{key}.metadata 不能覆盖平台字段 {source_type}")
+                # TOML 日期时间会以 Python 对象进入 JSONField，载入时就拒绝。
+                try:
+                    json.dumps(metadata)
+                except TypeError:
+                    raise ManifestError(f"docs.{key}.metadata 只能包含文本、数字、布尔、数组和表，日期请写成文本") from None
         self.path_rules = data.get("path_rules", [])
         if not isinstance(self.path_rules, list):
             raise ManifestError("path_rules 必须是表数组")

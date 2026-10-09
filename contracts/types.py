@@ -72,7 +72,7 @@ class SourceRef:
     title: str
     collection_path: tuple[str, ...] = ()
     updated_at: datetime | None = None
-    extra: dict = field(default_factory=dict)
+    extra: dict = field(default_factory=dict, hash=False)
 
 
 @dataclass(frozen=True)

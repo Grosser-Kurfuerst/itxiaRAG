@@ -444,3 +444,14 @@ def test_command_source_access_error_aborts_whole_batch_without_report(snapshot)
         with pytest.raises(CommandError, match="合成凭据失效"):
             call_command("import_yuque", manifest=str(path), snapshot=str(directory), dry_run=True, stdout=output)
     assert "summary:" not in output.getvalue()
+
+
+def test_unencodable_yuque_markdown_is_a_per_document_failure(snapshot):
+    directory, _ = snapshot
+    connector = YuqueConnector(YuqueSnapshotClient(directory), "synthetic", ["help"])
+    ref = connector.list()[0]
+    assert hash(ref) == hash(replace(ref, extra={}))  # extra 不参与哈希，引用可放入集合。
+    with patch.object(YuqueSnapshotClient, "read_markdown", return_value="合成\ud83d"):
+        with pytest.raises(DomainError) as error:
+            connector.fetch(ref)
+    assert error.value.code == "INVALID_YUQUE_RESPONSE"

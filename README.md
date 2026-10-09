@@ -125,7 +125,7 @@ OpenAPI 的 401／403 会终止整批并提示检查 Token 与知识库权限；
   --capture .runtime/wechat-capture --username maintainer
 ```
 
-`--only`、`--dry-run`、`--username` 与报告状态同语雀导入。旁注缺失或非法、账号目录不存在时整批终止；单篇读取或预处理失败记为 `failed` 后继续。
+`--only`、`--dry-run`、`--username` 与报告状态同语雀导入。旁注缺失或非法、账号目录不存在、同一文章重复采集时整批终止；单篇读取或预处理失败记为 `failed` 后继续。
 
 ## 验证
 

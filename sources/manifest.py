@@ -93,8 +93,8 @@ class Manifest:
                     raise ManifestError(f"docs.{key}.metadata 不能覆盖平台字段 {source_type}")
                 # TOML 日期时间会以 Python 对象进入 JSONField，载入时就拒绝。
                 try:
-                    json.dumps(metadata)
-                except TypeError:
+                    json.dumps(metadata, allow_nan=False)
+                except (TypeError, ValueError):
                     raise ManifestError(f"docs.{key}.metadata 只能包含文本、数字、布尔、数组和表，日期请写成文本") from None
         self.path_rules = data.get("path_rules", [])
         if not isinstance(self.path_rules, list):

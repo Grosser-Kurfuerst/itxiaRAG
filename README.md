@@ -113,7 +113,7 @@ OpenAPI 的 401／403 会终止整批并提示检查 Token 与知识库权限；
 
 ## 公众号采集导入
 
-第三方公众号不能在线批量读取，笔吧推文采用“下载或人工采集 + 离线导入”。清单 [bibar.toml](sources/wechat/manifests/bibar.toml) 的 `[connector]` 登记账号名与文章标题、发布日期，`fetch_wechat` 经搜狗微信搜索逐篇下载；账号、标题（统一全角半角）与日期全部一致才算找到，找不到或多篇一致报告失败，不猜测。已下载的文章跳过（`--force` 重下），默认每次请求间隔 3 秒（`--interval`），出现验证码时整批终止，稍后重跑即可续传。下载结果只有 `__biz/mid/idx` 链接，缺少 `sn`，原文链接打不开但身份稳定；每期同名的文章（如选购指南）搜狗通常搜不到最新一期，需人工采集。
+第三方公众号不能在线批量读取，笔吧推文采用“下载或人工采集 + 离线导入”。清单 [bibar.toml](sources/wechat/manifests/bibar.toml) 的 `[connector]` 登记账号名与文章标题、发布日期，`fetch_wechat` 经搜狗微信搜索逐篇下载；账号、标题（统一全角半角）与日期全部一致才算找到，找不到或多篇一致记为单篇失败，不猜测，继续下一篇，结束后以非零状态退出。已下载的文章跳过（`--force` 重下），`--only` 可重复、只下载指定条目，默认每次请求间隔 3 秒（`--interval`），出现验证码时整批终止，稍后重跑即可续传。`import_wechat` 同样校验 `[connector]`，写错时启动即失败，不会被静默忽略。下载结果只有 `__biz/mid/idx` 链接，缺少 `sn`，原文链接打不开但身份稳定；每期同名的文章（如选购指南）搜狗通常搜不到最新一期，需人工采集。
 
 ```sh
 .venv/bin/python manage.py fetch_wechat --manifest sources/wechat/manifests/bibar.toml \

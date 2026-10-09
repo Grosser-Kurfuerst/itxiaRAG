@@ -1,6 +1,6 @@
 # 第一批技术方案：教程、工具条目与知识的预处理和导入
 
-本文给出满足[需求分析](requirements-analysis.md)的技术方案，覆盖操作教程（`tutorial`）、工具条目（`tool_card`）、知识科普／对比／速查（`knowledge`）三类语雀文档。现有原文预处理契约见[文档预处理](../preprocessing.md)，公共 DTO 与存储见[首期技术设计](../phase1-technical-design.md)。**阶段 1 的 MarkdownParser 通用增强、YuqueMarkdownParser 与媒体类型注册已实现；其余新增类、文件与命令仍为方案。**
+本文给出满足[需求分析](requirements-analysis.md)的技术方案，覆盖操作教程（`tutorial`）、工具条目（`tool_card`）、知识科普／对比／速查（`knowledge`）三类语雀文档。现有原文预处理契约见[文档预处理](../preprocessing.md)，公共 DTO 与存储见[首期技术设计](../phase1-technical-design.md)。**阶段 1～2 已实现：MarkdownParser 通用增强、YuqueMarkdownParser、媒体类型注册、教程章节策略与增强步骤、collection_path 校验和 tutorial@1 已接入；其余配置、增强步骤与导入命令仍为方案。**
 
 ## 1. 设计目标与原则
 
@@ -274,7 +274,7 @@ class SectionedDocumentStrategy:   # 实现 StructureStrategy
 
 `merge_blocks` 参照评测检索块的合并算法另写，复用 [strategies.py](../../../ingestion/strategies.py) 中的 `_keeps_with`、`_join`。[ReviewStrategy](../../../ingestion/strategies.py) 第一批不改：它的合并带有评测专用的栏目层级判断，为复用而重构只会扩大回归范围；两边都稳定后再考虑统一。
 
-- **断点**：父段内的任一标题（含伪标题）开启新子块，标题与其后内容相连。
+- **断点**：父段内的任一标题（含伪标题）开启新子块，标题与其后内容相连。连续标题尚无正文时按原文顺序带入后续块，key 与 `section` 取最后一个标题，定位覆盖这些标题。
 - **相连规则**：
   - 沿用 `_keeps_with`：以“：”或“；”结尾的引导句与后文相连；连续列表项、表格行相连；“1、”“2、”式编号段落相连。
   - 新增：`callout` 块与前一块相连，使警告留在所属步骤内。
@@ -288,8 +288,8 @@ class SectionedDocumentStrategy:   # 实现 StructureStrategy
   - 行组目标长度远小于模型预算，正常不会再被 BudgetChunker 二次切分。
   - 其他配置下表格整体参与合并，超预算时由 BudgetChunker 按行切分并附表头（现有能力）。
 - **图片**：
-  - 无说明图片在建树前过滤，不进入父段和子块。
-  - 每个父段过滤掉的数量写入父段 metadata `omitted_images`。
+  - 无说明图片在建树前移除占位（含 Markdown 行内图片及 HTML 图文混排），仅整理含占位行的多余空白；其他行原样保留，包括代码与列表缩进、连续空格和行尾空白，块内换行保留。移除后仅剩空白的块整体过滤；占位不进入父段和子块，原文块序号与定位保持不变。
+  - 每个父段原文区间中移除的占位数写入父段 metadata `omitted_images`。
   - 有说明的图片按段落保留。
 
 ### 5.4 标题、key、定位与检索文本
@@ -315,16 +315,18 @@ tool_card@1 : Parse → Structure(Sectioned[TOOL_CARD]) → ToolIdentity   → C
 ```
 
 ```python
-# config/components.py（示意）：现有 pipeline() 增加 enrich 参数
-def pipeline(schema, strategy, enrich=()):
+# config/components.py（示意）：现有 pipeline() 增加 enrich 与 image_warning 参数
+def pipeline(schema, strategy, enrich=(), *, image_warning=None):
     chunker = BudgetChunker(...)
+    parse = ParseStep(parsers) if image_warning is None else ParseStep(parsers, image_warning=image_warning)
     return PreprocessPipeline([
-        ParseStep(parsers), StructureStep(strategy), *enrich, ChunkStep(chunker),
+        parse, StructureStep(strategy), *enrich, ChunkStep(chunker),
         BuildDocumentStep(document_schema=schema), ValidateStep(input_validator=chunker.validate),
     ])
 
 registry.register("tutorial", 1, pipeline("tutorial", SectionedDocumentStrategy(TUTORIAL),
-                  [CalloutWarningStep(), TimeExpressionStep(), RetrievalPrefixStep()]))
+                  [CalloutWarningStep(), TimeExpressionStep(), RetrievalPrefixStep()],
+                  image_warning="原文含未转写的截图，操作界面以原文链接为准"))
 ```
 
 三个 schema 与输入格式无关，也可以处理微信或其他平台的 HTML、Markdown 教程。

@@ -6,9 +6,11 @@ from catalog.storage import DjangoDocumentStore
 from embeddings.openai_compatible import OpenAICompatibleEmbedding
 from ingestion.registry import PreprocessorRegistry
 from ingestion.chunking import BudgetChunker
+from ingestion.enrichment import CalloutWarningStep, RetrievalPrefixStep, TimeExpressionStep
 from ingestion.parsers import ParserRegistry
 from ingestion.preprocessing import BuildDocumentStep, ChunkStep, ParseStep, PreprocessPipeline, StructureStep, ValidateStep
 from ingestion.strategies import ExperienceCaseStrategy, PurchaseGuideStrategy, ReviewStrategy
+from ingestion.sections import SectionedDocumentStrategy, TUTORIAL
 from ingestion.yuque_markdown import YuqueMarkdownParser
 from retrieval.hybrid import MultiRouteRecall
 from retrieval.keyword import KeywordRetriever
@@ -50,13 +52,14 @@ def preprocessors(*, counter=None, max_input_units=None):
     parsers = ParserRegistry()
     parsers.register("text/x-yuque-markdown", YuqueMarkdownParser())
 
-    def pipeline(schema, strategy):
+    def pipeline(schema, strategy, enrich=(), *, image_warning=None):
         chunker = BudgetChunker(
             max_input_units=settings.PREPROCESS_MAX_INPUT_BYTES if max_input_units is None else max_input_units,
             counter=counter,
         )
+        parse = ParseStep(parsers) if image_warning is None else ParseStep(parsers, image_warning=image_warning)
         return PreprocessPipeline([
-            ParseStep(parsers), StructureStep(strategy), ChunkStep(chunker),
+            parse, StructureStep(strategy), *enrich, ChunkStep(chunker),
             BuildDocumentStep(document_schema=schema),
             ValidateStep(input_validator=chunker.validate),
         ])
@@ -65,4 +68,7 @@ def preprocessors(*, counter=None, max_input_units=None):
     registry.register("product_review", 1, pipeline("product_review", ReviewStrategy()))
     registry.register("purchase_guide", 1, pipeline("purchase_guide", PurchaseGuideStrategy()))
     registry.register("experience_case", 1, pipeline("experience_case", ExperienceCaseStrategy()))
+    registry.register("tutorial", 1, pipeline("tutorial", SectionedDocumentStrategy(TUTORIAL),
+                                            [CalloutWarningStep(), TimeExpressionStep(), RetrievalPrefixStep()],
+                                            image_warning="原文含未转写的截图，操作界面以原文链接为准"))
     return registry

@@ -63,6 +63,30 @@ def test_raw_metadata_is_open_for_future_source_specific_fields():
     assert serializer.is_valid(), serializer.errors
 
 
+@pytest.mark.parametrize("collection_path", [
+    "目录", None, {}, [1], [True], [[]], ["目录"] * 11, ["长" * 101],
+])
+def test_collection_path_rejects_invalid_type_count_and_length(collection_path):
+    data = payload()
+    data["raw"]["metadata"]["collection_path"] = collection_path
+    with pytest.raises(ValidationError):
+        RawSourceImportSerializer(data=data).is_valid(raise_exception=True)
+
+
+@pytest.mark.parametrize("collection_path", [[], ["目录"], ["长" * 100] * 10])
+def test_collection_path_is_readable_by_preprocessing_and_preserved_in_document_metadata(collection_path):
+    data = payload("## 安装篇\n\n安装步骤。")
+    data["preprocess"]["schema"] = "tutorial"
+    data["raw"]["metadata"].update(title="教程", collection_path=collection_path)
+    serializer = RawSourceImportSerializer(data=data)
+    serializer.is_valid(raise_exception=True)
+    _, raw, schema, version = import_raw_dtos(serializer.validated_data)
+    assert raw.metadata["collection_path"] == collection_path
+    document = components.preprocessors(max_input_units=5000).process(raw, schema, version)
+    assert document.metadata["collection_path"] == collection_path
+    assert document.contexts[0].children[0].retrieval_prefix == " > ".join([*collection_path, "教程"])
+
+
 def actor(*permissions):
     return Mock(is_authenticated=True, is_active=True,
                 has_perm=Mock(side_effect=lambda name: name.split(".")[-1] in permissions))
@@ -85,6 +109,33 @@ def test_import_raw_uses_registered_pipeline_and_standard_embedding_save_contrac
     expected_texts = [f"{p.title}\n{c.body}" for p in document.contexts for c in p.children]
     assert embedder.embed_documents.call_args.args[0] == expected_texts
     assert len(vectors) == len(expected_texts)
+
+
+@pytest.mark.parametrize("media_type,content", [
+    ("text/markdown", "## 安装篇\n\n点击下一步 ![](shot.png)  确认选项。 ![](extra.png)\n\n"
+     "![分区界面](partition.png)"),
+    ("text/html", '<h2>安装篇</h2><p>点击下一步 <img>  确认选项。 <img></p>'
+     '<p><img alt="分区界面"></p>'),
+])
+def test_tutorial_raw_import_removes_inline_images_before_embedding_and_keeps_warning(media_type, content):
+    data = payload(content)
+    data["preprocess"]["schema"] = "tutorial"
+    data["raw"]["media_type"] = media_type
+    serializer = RawSourceImportSerializer(data=data)
+    serializer.is_valid(raise_exception=True)
+    source, raw, schema, version = import_raw_dtos(serializer.validated_data)
+    embedder = Mock(space_id="test-space")
+    embedder.embed_documents.side_effect = lambda texts: [[1.0, 0.0] for _ in texts]
+    store = Mock()
+    import_raw(source, raw, schema, version, actor("maintain_source"),
+               registry=components.preprocessors(), embedder=embedder, store=store)
+    document = store.save.call_args.args[1]
+    parent, = document.contexts
+    assert parent.body == "安装篇\n\n点击下一步 确认选项。\n\n[图片：分区界面]"
+    assert parent.metadata["omitted_images"] == 2
+    assert document.warnings == ["原文含未转写的截图，操作界面以原文链接为准"]
+    assert all("未提供文字说明" not in child.body for child in parent.children)
+    assert all("未提供文字说明" not in text for text in embedder.embed_documents.call_args.args[0])
 
 
 def test_permissions_and_source_visibility_block_preprocessing_and_model_calls():

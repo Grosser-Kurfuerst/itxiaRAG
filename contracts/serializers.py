@@ -99,6 +99,7 @@ class RawMetadataSerializer(serializers.Serializer):
     entity_title = TextField(max_length=200, required=False)
     entity_key = TextField(max_length=100, required=False)
     entity_headings = serializers.ListField(child=TextField(max_length=200), max_length=100, default=list)
+    collection_path = serializers.ListField(child=TextField(max_length=100), max_length=10, required=False)
     document_metadata = serializers.DictField(default=dict)
     warnings = serializers.ListField(child=TextField(max_length=500), default=list)
 

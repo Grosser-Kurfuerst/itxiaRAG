@@ -10,24 +10,40 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 
 from config import components
-from contracts.errors import DomainError
+from contracts.errors import DomainError, SourceAccessError
 from contracts.types import ImportResult
-from sources.yuque.client import YuqueDocRef, YuqueSnapshotClient
-from sources.yuque.importer import SubmissionResult, YuqueImportService, build_request, clean_title
-from sources.yuque.manifest import Manifest
+from sources.importing import SourceImportService, SubmissionResult, build_request
+from sources.manifest import Manifest
+from sources.yuque.client import YuqueSnapshotClient
+from sources.yuque.connector import CATEGORIES, YuqueConnector, clean_title
+
+
+def load(path):
+    return Manifest.load(path, source_type="yuque", categories=CATEGORIES)
+
+
+def service(directory, path, submit):
+    connector = YuqueConnector(YuqueSnapshotClient(directory), "synthetic", ["help", "textbook"])
+    return SourceImportService(connector, load(path), components.YUQUE_CATEGORY_PIPELINES, submit)
+
+
+def help_refs(directory):
+    return YuqueConnector(YuqueSnapshotClient(directory), "synthetic", ["help"]).list()
 
 
 @pytest.fixture
 def snapshot(tmp_path):
     manifest_path = tmp_path / "manifest.toml"
-    manifest_path.write_text('''version = 1
+    manifest_path.write_text('''version = 2
+source_type = "yuque"
+[connector]
 group = "synthetic"
-[books.help]
+[collections.help]
 visibility = "public"
-[books.textbook]
+[collections.textbook]
 visibility = "internal"
 [[path_rules]]
-book = "help"
+collection = "help"
 path_prefix = ["工具"]
 category = "tool_card"
 [docs."help/install"]
@@ -106,9 +122,19 @@ def test_title_cleaning_is_limited_to_prefixes_and_trailing_stars(title, expecte
 
 def test_request_identity_metadata_beijing_date_and_visibility(snapshot):
     directory, path = snapshot
-    manifest = Manifest.load(path)
-    ref = YuqueSnapshotClient(directory).list_docs("help")[0]
-    request = build_request(ref, "合成正文\n", manifest, schema="tutorial", version=1)
+    manifest = load(path)
+    connector = YuqueConnector(YuqueSnapshotClient(directory), "synthetic", ["help", "textbook"])
+    refs = connector.list()
+    ref, internal = refs[0], refs[-1]
+
+    def request_for(item):
+        return build_request("yuque", connector.fetch(item), manifest, schema="tutorial", version=1,
+                             classification=manifest.classify(item))
+
+    request = request_for(ref)
+    assert ref.key == "help/install" and internal.key == "textbook/install"
+    assert request["raw"]["content"].startswith("## 安装篇")
+    assert request["raw"]["media_type"] == "text/x-yuque-markdown"
     assert request["source"] == {
         "source_type": "yuque", "canonical_locator": "doc:1", "visibility": "public",
         "source_url": "https://www.yuque.com/synthetic/help/install",
@@ -116,20 +142,45 @@ def test_request_identity_metadata_beijing_date_and_visibility(snapshot):
     metadata = request["raw"]["metadata"]
     assert metadata["source_date"] == "2025-11-24"  # UTC 晚间跨北京时间日期。
     assert metadata["collection_path"] == ["上级目录", "父文档"]
-    assert metadata["title"] == "合成安装" and metadata["yuque"]["title_raw"] == ref.title
+    title_raw = "【推送归档】教程 | 合成安装 ⭐⭐"
+    assert metadata["title"] == "合成安装" == ref.title
     assert metadata["yuque"] == {
-        "doc_id": 1, "book": "help", "slug": "install", "title_raw": ref.title,
+        "doc_id": 1, "book": "help", "slug": "install", "title_raw": title_raw,
         "content_updated_at": "2025-11-23T18:23:51+00:00", "classified_by": "manifest",
     }
-    internal = YuqueSnapshotClient(directory).list_docs("textbook")[0]
-    assert build_request(internal, "正文", manifest, schema="tutorial", version=1)["source"]["visibility"] == "internal"
+    assert list(metadata) == ["title", "source_date", "collection_path", "yuque"]
+    assert request_for(internal)["source"]["visibility"] == "internal"
     manifest.docs["help/install"]["visibility"] = "internal"
-    assert build_request(ref, "正文", manifest, schema="tutorial", version=1)["source"]["visibility"] == "internal"
+    assert request_for(ref)["source"]["visibility"] == "internal"
+
+
+def test_manifest_metadata_patch_is_merged_without_touching_platform_namespace(snapshot):
+    directory, path = snapshot
+    manifest = load(path)
+    manifest.docs["help/install"]["metadata"] = {"title": "人工标题", "entity_title": "合成实体"}
+    connector = YuqueConnector(YuqueSnapshotClient(directory), "synthetic", ["help"])
+    ref = connector.list()[0]
+    metadata = build_request("yuque", connector.fetch(ref), manifest, schema="tutorial", version=1,
+                             classification=manifest.classify(ref))["raw"]["metadata"]
+    assert metadata["title"] == "人工标题" and metadata["entity_title"] == "合成实体"
+    assert metadata["yuque"]["classified_by"] == "manifest"
+
+
+def test_non_utf8_content_is_a_domain_error(snapshot):
+    directory, path = snapshot
+    manifest = load(path)
+    connector = YuqueConnector(YuqueSnapshotClient(directory), "synthetic", ["help"])
+    ref = connector.list()[0]
+    fetched = connector.fetch(ref)
+    fetched = replace(fetched, raw=replace(fetched.raw, content=b"\xff"))
+    with pytest.raises(DomainError) as error:
+        build_request("yuque", fetched, manifest, schema="tutorial", version=1,
+                      classification=manifest.classify(ref))
+    assert error.value.code == "INVALID_RAW_DOCUMENT"
 
 
 def test_service_records_all_statuses_counts_warnings_and_continues_after_domain_error(snapshot):
     directory, path = snapshot
-    client, manifest = YuqueSnapshotClient(directory), Manifest.load(path)
     registry = components.preprocessors()
     submitted = []
 
@@ -141,8 +192,7 @@ def test_service_records_all_statuses_counts_warnings_and_continues_after_domain
         doc = registry.process(raw, schema, version)
         return SubmissionResult(doc, ImportResult(uuid4(), [uuid4()], reused=True))
 
-    service = YuqueImportService(client, manifest, components.CATEGORY_PIPELINES, submit)
-    report = service.run(client.list_docs("help"))
+    report = service(directory, path, submit).run(help_refs(directory))
     rows = {row.doc: row for row in report.rows}
     assert submitted == ["doc:1", "doc:2"]
     assert rows["help/install"].status == "failed" and "SYNTHETIC_FAILURE" in rows["help/install"].detail
@@ -155,7 +205,7 @@ def test_service_records_all_statuses_counts_warnings_and_continues_after_domain
     for key in ["help/tool", "help/knowledge", "help/trouble"]:
         assert rows[key].status == "skipped" and rows[key].detail == "未接入"
     assert report.summary == {"imported": 0, "reused": 1, "preprocessed": 0, "skipped": 5, "unregistered": 2, "failed": 1}
-    assert any("help/missing" in warning and "slug 可能已改名" in warning for warning in report.warnings)
+    assert any("help/missing" in warning and "标识可能已改名" in warning for warning in report.warnings)
     formatted = report.format()
     for text in ["category(by)", "parents", "children", "tool_card(path_rule)", "summary:"]:
         assert text in formatted
@@ -164,14 +214,13 @@ def test_service_records_all_statuses_counts_warnings_and_continues_after_domain
 
 def test_successful_submit_records_imported_and_only_suppresses_unrelated_missing_warnings(snapshot):
     directory, path = snapshot
-    client = YuqueSnapshotClient(directory)
     registry = components.preprocessors()
 
     def submit(source, raw, schema, version):
         return SubmissionResult(registry.process(raw, schema, version), ImportResult(uuid4(), [uuid4()], False))
 
-    report = YuqueImportService(client, Manifest.load(path), components.CATEGORY_PIPELINES, submit).run(
-        client.list_docs("help"), only=["help/second", "help/missing"],
+    report = service(directory, path, submit).run(
+        help_refs(directory), only=["help/second", "help/missing"],
     )
     assert [row.status for row in report.rows] == ["imported"]
     assert len(report.warnings) == 1 and "help/missing" in report.warnings[0]
@@ -180,7 +229,6 @@ def test_successful_submit_records_imported_and_only_suppresses_unrelated_missin
 @pytest.mark.parametrize("reused,status", [(None, "preprocessed"), (False, "imported"), (True, "reused")])
 def test_success_report_truncates_and_deduplicates_warnings_without_changing_document(snapshot, reused, status):
     directory, path = snapshot
-    client = YuqueSnapshotClient(directory)
     registry = components.preprocessors()
     long_warning = "合成提示块：" + "提示内容" * 800
     boundary_warning = "短" * 30
@@ -197,8 +245,8 @@ def test_success_report_truncates_and_deduplicates_warnings_without_changing_doc
         result = None if reused is None else ImportResult(uuid4(), [uuid4()], reused)
         return SubmissionResult(document, result)
 
-    report = YuqueImportService(client, Manifest.load(path), components.CATEGORY_PIPELINES, submit).run(
-        client.list_docs("help"), only=["help/install"],
+    report = service(directory, path, submit).run(
+        help_refs(directory), only=["help/install"],
     )
     assert report.rows[0].status == status
     assert report.rows[0].detail == "；".join([long_warning[:30] + "…", boundary_warning, multiline_warning])
@@ -211,12 +259,11 @@ def test_success_report_truncates_and_deduplicates_warnings_without_changing_doc
 
 def test_bad_request_or_missing_markdown_is_a_per_document_failure(snapshot):
     directory, path = snapshot
-    client = YuqueSnapshotClient(directory)
-    refs = client.list_docs("help")[:2]
+    refs = help_refs(directory)[:2]
     (directory / "help/install.md").write_text("", encoding="utf-8")
     (directory / "help/second.md").unlink()
     submit = Mock()
-    report = YuqueImportService(client, Manifest.load(path), components.CATEGORY_PIPELINES, submit).run(refs)
+    report = service(directory, path, submit).run(refs)
     assert [row.status for row in report.rows] == ["failed", "failed"]
     assert "INVALID_REQUEST" in report.rows[0].detail
     assert "SNAPSHOT_READ_FAILED" in report.rows[1].detail
@@ -240,7 +287,7 @@ def test_command_dry_run_needs_no_account_database_embedding_or_store(snapshot):
     output = StringIO()
     with patch("config.components.embedding_provider") as embedder, \
             patch("config.components.document_store") as store, \
-            patch("sources.management.commands.import_yuque.get_user_model") as users:
+            patch("sources.commands.get_user_model") as users:
         call_command("import_yuque", manifest=str(path), snapshot=str(directory), dry_run=True, stdout=output)
     embedder.assert_not_called()
     store.assert_not_called()
@@ -265,7 +312,7 @@ def test_command_dry_run_with_account_enforces_internal_permissions_and_finishes
     actor = Mock(is_authenticated=True, is_active=True)
     actor.has_perm.side_effect = lambda permission: permission == "catalog.maintain_source"
     output = StringIO()
-    with patch("sources.management.commands.import_yuque.get_user_model") as users:
+    with patch("sources.commands.get_user_model") as users:
         users.return_value.objects.get.return_value = actor
         with pytest.raises(CommandError, match="1 篇失败"):
             call_command("import_yuque", manifest=str(path), snapshot=str(directory), dry_run=True,
@@ -280,7 +327,7 @@ def test_command_formal_import_uses_raw_main_chain_once_per_doc_and_reports_coun
     store = Mock()
     store.save.side_effect = lambda *args: ImportResult(uuid4(), [uuid4()], False)
     output = StringIO()
-    with patch("sources.management.commands.import_yuque.get_user_model") as users, \
+    with patch("sources.commands.get_user_model") as users, \
             patch("config.components.embedding_provider", return_value=embedder), \
             patch("config.components.document_store", return_value=store), \
             patch("config.components.preprocessors", return_value=registry), \
@@ -308,7 +355,7 @@ def test_command_formal_import_failure_happens_before_embedding_or_save(snapshot
     message = "合成失败消息：" + "保留完整消息" * 20
     registry.process.side_effect = DomainError("SYNTHETIC_FAILURE", message)
     output = StringIO()
-    with patch("sources.management.commands.import_yuque.get_user_model") as users, \
+    with patch("sources.commands.get_user_model") as users, \
             patch("config.components.preprocessors", return_value=registry), \
             patch("config.components.embedding_provider") as embedder, \
             patch("config.components.document_store") as store:
@@ -328,7 +375,7 @@ def test_command_formal_import_failure_happens_before_embedding_or_save(snapshot
 
 def test_command_bad_manifest_fails_before_listing_or_submitting(snapshot):
     directory, path = snapshot
-    path.write_text('version = 1\ngroup = "synthetic"\nunknown = true', encoding="utf-8")
+    path.write_text('version = 2\nsource_type = "yuque"\nunknown = true', encoding="utf-8")
     with patch.object(YuqueSnapshotClient, "list_docs") as listing, \
             patch("config.components.embedding_provider") as embedder:
         with pytest.raises(CommandError, match="未知字段"):
@@ -353,7 +400,7 @@ def test_command_missing_embedding_configuration_fails_before_account_lookup_or_
     directory, path = snapshot
     settings.EMBEDDING = {"base_url": "", "model": "", "dimensions": 0, "revision": ""}
     with patch.object(YuqueSnapshotClient, "list_docs") as listing, \
-            patch("sources.management.commands.import_yuque.get_user_model") as users:
+            patch("sources.commands.get_user_model") as users:
         with pytest.raises(CommandError, match="EMBEDDING_NOT_CONFIGURED"):
             call_command("import_yuque", manifest=str(path), snapshot=str(directory), username="maintainer")
     listing.assert_not_called()
@@ -362,18 +409,38 @@ def test_command_missing_embedding_configuration_fails_before_account_lookup_or_
 
 def test_snapshot_fetch_failures_are_reported_even_for_unselected_unimplemented_categories(snapshot):
     directory, path = snapshot
-    client, manifest = YuqueSnapshotClient(directory), Manifest.load(path)
     registry = components.preprocessors()
 
     def submit(source, raw, schema, version):
         return SubmissionResult(registry.process(raw, schema, version))
 
     failure = DomainError("YUQUE_RATE_LIMITED", "合成限流")
-    report = YuqueImportService(client, manifest, components.CATEGORY_PIPELINES, submit).run(
-        client.list_docs("help"), only=["help/second"], read_errors={"help/tool": failure},
+    report = service(directory, path, submit).run(
+        help_refs(directory), only=["help/second"], read_errors={"help/tool": failure},
     )
     assert [(row.doc, row.status) for row in report.rows] == [
         ("help/second", "preprocessed"), ("help/tool", "failed"),
     ]
     assert report.rows[-1].classification.category == "tool_card"
     assert report.rows[-1].detail == "YUQUE_RATE_LIMITED: 合成限流"
+
+
+@pytest.mark.parametrize("connector", ['[connector]\n', '[connector]\ngroup = "a/b"\n',
+                                       '[connector]\ngroup = "synthetic"\nextra = 1\n'])
+def test_command_rejects_invalid_connector_table_before_listing(snapshot, connector):
+    directory, path = snapshot
+    text = path.read_text(encoding="utf-8").replace('[connector]\ngroup = "synthetic"\n', connector)
+    path.write_text(text, encoding="utf-8")
+    with patch.object(YuqueSnapshotClient, "list_docs") as listing:
+        with pytest.raises(CommandError, match="connector"):
+            call_command("import_yuque", manifest=str(path), snapshot=str(directory), dry_run=True)
+    listing.assert_not_called()
+
+
+def test_command_source_access_error_aborts_whole_batch_without_report(snapshot):
+    directory, path = snapshot
+    output = StringIO()
+    with patch.object(YuqueSnapshotClient, "read_markdown", side_effect=SourceAccessError("合成凭据失效")):
+        with pytest.raises(CommandError, match="合成凭据失效"):
+            call_command("import_yuque", manifest=str(path), snapshot=str(directory), dry_run=True, stdout=output)
+    assert "summary:" not in output.getvalue()

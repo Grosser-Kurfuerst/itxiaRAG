@@ -76,14 +76,14 @@ Makefile 默认使用 `.venv/bin/python`。已在其他虚拟环境安装依赖�
 | [语雀 Markdown](../tests/unit/test_yuque_markdown.py) | 方言规范化、行号保持与代码保真 |
 | [章节策略](../tests/unit/test_sections.py) | 章节父段、子块与正文边界 |
 | [增强步骤](../tests/unit/test_enrichment_steps.py) | 风险、时效提示与目录检索前缀 |
-| [语雀清单](../tests/unit/test_yuque_manifest.py) | 严格校验、单篇优先与最长目录前缀；仓库清单覆盖附录 74 篇、28 篇教程 |
-| [快照导入](../tests/unit/test_yuque_importer.py) | OpenAPI 结构快照、祖先路径、元数据、报告状态、逐篇失败继续、命令试运行与启动错误；不访问数据库／模型 |
+| [来源清单](../tests/unit/test_source_manifest.py) | 通用清单严格校验、单篇优先与最长目录前缀、元数据补丁；语雀仓库清单覆盖附录 74 篇、28 篇教程 |
+| [快照导入](../tests/unit/test_yuque_importer.py) | OpenAPI 结构快照、语雀连接器身份与元数据、通用导入服务报告状态、逐篇失败继续、整批访问错误终止、命令试运行与启动错误；不访问数据库／模型 |
 | [语雀 HTTP 边界](../tests/unit/test_yuque_openapi.py)、[语雀客户端](../tests/unit/test_yuque_client.py) | 不开 socket，替换 HTTP 边界验证网络／超时、响应格式、默认间隔、认证独立异常、快照失败与 Token 不进入错误消息 |
 | [语雀集成](../tests/integration/test_yuque_ingestion.py) | 原文 API 与 `call_command` 快照导入、数据库保存与 reused、internal 权限、未登记／未接入不导入；隔离 PostgreSQL 与模型替身 |
 | [语雀 OpenAPI](../tests/integration/test_yuque_openapi.py) | 本地 HTTP 服务模拟路径与认证头、分页、祖先路径、401／403 终止、单篇失败继续、列表失败、快照覆盖未接入类别并可离线读取、无 Token 启动失败与输出不泄露 Token；正式导入使用隔离 PostgreSQL 与模型替身 |
 
 ```sh
-.venv/bin/python -m pytest tests/unit/test_yuque_manifest.py tests/unit/test_yuque_importer.py tests/unit/test_yuque_client.py tests/unit/test_yuque_openapi.py -q
+.venv/bin/python -m pytest tests/unit/test_source_manifest.py tests/unit/test_yuque_importer.py tests/unit/test_yuque_client.py tests/unit/test_yuque_openapi.py -q
 # 需要上节配置的隔离 PostgreSQL
 .venv/bin/python -m pytest tests/integration/test_yuque_ingestion.py tests/integration/test_yuque_openapi.py -q
 ```

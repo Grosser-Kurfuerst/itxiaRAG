@@ -19,7 +19,7 @@ from retrieval.steps import GroupParentsStep, RRFFusionStep, TopKParentsStep
 from retrieval.vector import VectorRetriever
 
 
-CATEGORY_PIPELINES = {"tutorial": ("tutorial", 1)}
+YUQUE_CATEGORY_PIPELINES = {"tutorial": ("tutorial", 1)}
 
 
 def embedding_provider():

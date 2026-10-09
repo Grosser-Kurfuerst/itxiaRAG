@@ -10,7 +10,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlencode
 from urllib.request import Request, urlopen
 
-from contracts.errors import DomainError
+from contracts.errors import DomainError, SourceAccessError
+from sources.manifest import valid_component
 
 
 @dataclass(frozen=True)
@@ -26,11 +27,6 @@ class YuqueDocRef:
 class YuqueClient(Protocol):
     def list_docs(self, book: str) -> list[YuqueDocRef]: ...
     def read_markdown(self, ref: YuqueDocRef) -> str: ...
-
-
-def valid_component(value):
-    return (isinstance(value, str) and bool(value.strip())
-            and value not in {".", ".."} and not any(char in value for char in "/\\\x00"))
 
 
 def _items(payload):
@@ -67,7 +63,7 @@ def _doc_refs(book, toc, docs):
     return refs
 
 
-class YuqueAuthenticationError(Exception):
+class YuqueAuthenticationError(SourceAccessError):
     """与单篇 DomainError 分开，防止导入服务吞掉整批认证失败。"""
 
     def __init__(self):

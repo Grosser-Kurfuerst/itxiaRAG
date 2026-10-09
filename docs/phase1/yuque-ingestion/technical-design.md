@@ -9,7 +9,7 @@
 
   | 维度 | 标识 | 负责方 |
   | --- | --- | --- |
-  | 平台 | `source_type=yuque` | `sources/yuque`：读取接口、导入清单、标题清洗 |
+  | 平台 | `source_type=yuque` | `sources/yuque`：读取客户端、连接器（身份、链接、标题清洗、平台元数据）、导入清单 |
   | 格式方言 | `media_type=text/x-yuque-markdown` | `ingestion` 中的语雀 Markdown 解析器 |
   | 内容结构 | `schema=tutorial/tool_card/knowledge` | `ingestion` 中的章节策略与增强步骤 |
 
@@ -25,10 +25,11 @@
 
 ```text
 语雀（官方 OpenAPI，或本地快照）
-  → YuqueClient：列出文档引用、读取 Markdown                                        [sources/yuque，新增]
-  → Manifest.classify：单篇条目 → 目录规则；未登记不导入                              [sources/yuque，新增]
-  → CATEGORY_PIPELINES：tutorial→tutorial@1，tool_card→tool_card@1，knowledge→knowledge@1   [组合根，新增]
-  → build_request：标题清洗，组装 SourceSpec 与 RawDocument                          [sources/yuque，新增]
+  → YuqueConnector.list：经 YuqueClient 列出文档，映射为 SourceRef                     [sources/yuque]
+  → Manifest.classify：单篇条目 → 目录规则；未登记不导入                              [sources/manifest.py，通用]
+  → YUQUE_CATEGORY_PIPELINES：tutorial→tutorial@1，tool_card→tool_card@1，knowledge→knowledge@1   [组合根]
+  → YuqueConnector.fetch：读取 Markdown，生成身份、链接、清洗后标题与平台元数据         [sources/yuque]
+  → build_request：合并清单元数据补丁与可见性，组装原文导入请求                         [sources/importing.py，通用]
   → preprocess_raw：权限与来源校验                                                   [ingestion.pipeline，已有]
   → PreprocessorRegistry.process(raw, schema, version)：按 schema 选择流水线          [已有]
       ParseStep(YuqueMarkdownParser)                                                [新解析器]
@@ -49,25 +50,27 @@
 | [ingestion/preprocessing.py](../../../ingestion/preprocessing.py) | 修改 | ParseStep 的图片警告文案可配置，默认不变 |
 | [config/components.py](../../../config/components.py) | 修改 | 注册语雀媒体类型、三条流水线与类别映射 |
 | [contracts/serializers.py](../../../contracts/serializers.py) | 修改 | RawMetadataSerializer 增加通用字段 `collection_path` |
-| `sources/yuque/client.py` | 新增 | YuqueDocRef、YuqueClient 协议、OpenAPI 与快照两种实现 |
-| `sources/yuque/manifest.py` | 新增 | 清单读取与校验（标准库 tomllib）、`classify` |
-| `sources/yuque/importer.py` | 新增 | 标题清洗与请求组装函数、YuqueImportService、导入报告 |
-| `sources/management/commands/import_yuque.py` | 新增 | 命令行入口，负责装配依赖 |
-| `sources/yuque/manifests/itxia.toml` | 新增 | itxia 团队导入清单，只含文档标识、类别、跳过原因和可见性 |
+| [sources/yuque/client.py](../../../sources/yuque/client.py) | 新增 | YuqueDocRef、YuqueClient 协议、OpenAPI 与快照两种实现 |
+| [sources/yuque/connector.py](../../../sources/yuque/connector.py) | 新增 | 语雀类别集合、标题清洗、YuqueConnector（实现通用 SourceConnector） |
+| [sources/manifest.py](../../../sources/manifest.py) | 新增（通用） | 清单读取与校验（标准库 tomllib）、`classify`，各平台共用 |
+| [sources/importing.py](../../../sources/importing.py) | 新增（通用） | `build_request`、SourceImportService、导入报告，各平台共用 |
+| [sources/commands.py](../../../sources/commands.py) | 新增（通用） | 来源导入命令基类：清单、账号、试运行、提交与报告 |
+| [sources/management/commands/import_yuque.py](../../../sources/management/commands/import_yuque.py) | 新增 | 命令行入口，只负责语雀参数与连接器装配 |
+| [sources/yuque/manifests/itxia.toml](../../../sources/yuque/manifests/itxia.toml) | 新增 | itxia 团队导入清单，只含文档标识、类别、跳过原因和可见性 |
 
 `sources` 作为无模型的 Django 应用加入 `INSTALLED_APPS`，只为提供管理命令。
 
 ### 2.3 依赖方向
 
 ```text
-sources.management（组合） → sources.yuque → ingestion.pipeline、contracts
+sources.management（组合） → sources.commands、sources.yuque → sources.importing、sources.manifest → ingestion.pipeline、contracts
 config.components → ingestion.*（解析器、章节策略、增强步骤）
 ingestion 不依赖 sources；sources 导入经 preprocess_raw 与 import_processed，不直接操作 ORM 或模型服务
 ```
 
-语雀方言解析器放在 `ingestion`，因为它是格式适配器，与 HtmlParser 优先读取微信 `js_content` 的做法一致。读取接口、清单和标题清洗是平台知识，留在 `sources/yuque`。
+语雀方言解析器放在 `ingestion`，因为它是格式适配器，与 HtmlParser 优先读取微信 `js_content` 的做法一致。读取接口、身份与标题清洗是平台知识，留在 `sources/yuque`；清单、导入服务和命令基类与平台无关，放在 `sources` 公共模块。
 
-平台读取不实现现有的 [SourceConnector](../../../contracts/types.py) 协议：它的 `fetch(locator)` 只返回 RawDocument，而导入还需要 SourceSpec 和类别。等出现第二个平台、需要统一连接器入口时，再按实际需要调整该协议，调整方向见[来源连接器改造方案](../source-connector-design.md)。
+语雀通过 [YuqueConnector](../../../sources/yuque/connector.py) 实现通用 [SourceConnector](../../../contracts/types.py) 协议（`list() → SourceRef`、`fetch(ref) → FetchedSource`），协议与公共模块见[来源连接器改造方案](../source-connector-design.md)。
 
 ## 3. 运行时类别选择
 
@@ -79,7 +82,7 @@ ingestion 不依赖 sources；sources 导入经 preprocess_raw 与 import_proces
 
 ```python
 # 组合根：类别 → 流程。清单只写类别，流程版本由受信任代码决定。
-CATEGORY_PIPELINES = {
+YUQUE_CATEGORY_PIPELINES = {
     "tutorial": ("tutorial", 1),
 }
 # 阶段 5、6 接入对应流水线后，再添加 knowledge、tool_card。
@@ -95,7 +98,7 @@ class Classification:
     skip: str | None = None    # duplicate / deprecated / index / meta 等
 
 class Manifest:
-    def classify(self, ref: YuqueDocRef) -> Classification:
+    def classify(self, ref: SourceRef) -> Classification:
         """先查单篇条目，再按最长路径前缀匹配目录规则；都没有时返回 decided_by="none"。"""
 ```
 
@@ -121,17 +124,20 @@ class Manifest:
 
 ```toml
 # sources/yuque/manifests/itxia.toml
-version = 1
+version = 2
+source_type = "yuque"
+
+[connector]                    # 平台参数，由语雀命令解释
 group = "itxia"
 
-[books.help]
+[collections.help]             # 集合即语雀知识库
 visibility = "public"
 
-[books.textbook]
+[collections.textbook]
 visibility = "internal"        # 已确认：培训手册面向社员
 
 [[path_rules]]                 # 目录规则：命中的文档无需逐篇登记
-book = "help"
+collection = "help"
 path_prefix = ["IT侠常用工具大全"]
 category = "tool_card"
 
@@ -152,11 +158,12 @@ category = "troubleshooting"   # 已分类但第一批未接入
 - 文档键用“知识库/slug”，便于人工阅读；来源身份用数字 ID（见 7.2）。slug 改名后清单条目找不到，报告提示更新。
 - 载入时严格校验，出错直接失败：
   - 未知字段，或 `category` 和 `skip` 同时出现或都缺失；`skip` 必须是非空原因。
-  - 类别不在已定义集合内：第一批的 `tutorial`、`tool_card`、`knowledge`，以及已分类但暂未接入的 `troubleshooting`、`case`。
+  - 类别不在语雀已定义集合内（[CATEGORIES](../../../sources/yuque/connector.py)）：第一批的 `tutorial`、`tool_card`、`knowledge`，以及已分类但暂未接入的 `troubleshooting`、`case`。
   - `canonical` 只能用于跳过条目，且必须指向清单中存在的单篇条目。
   - 可见性不是 `public` 或 `internal`。
-  - `version` 不是整数 1，团队／知识库／文档标识非法，文档引用了未登记的知识库。
-  - `path_rules` 必须为表数组，且只能包含 `book`、`path_prefix`、`category`；知识库必须已登记，前缀必须为 1～10 项非空文本、每项最多 100 字；同一知识库的相同前缀不得重复。
+  - `version` 不是整数 2，`source_type` 不是 `yuque`，`[connector]` 不是只含合法 `group`，知识库／文档标识非法，文档引用了未登记的知识库。
+  - `path_rules` 必须为表数组，且只能包含 `collection`、`path_prefix`、`category`；知识库必须已登记，前缀必须为 1～10 项非空文本、每项最多 100 字；同一知识库的相同前缀不得重复。
+  - 单篇 `metadata` 补丁只能用于有 `category` 的条目，必须是表，且不能包含平台命名空间 `yuque`。
 - 单篇 `visibility` 可以覆盖知识库默认值。
 
 仓库清单覆盖附录全部 74 篇（46 个单篇分类条目与 28 篇工具目录规则），另含 3 个重复跳过条目：`article/partition-resize` → `help/partition-resize`、`article/install_win10_from_scratch` → `help/install_win10`、`article/gagpcm` → `help/nju_network_guide`。
@@ -397,15 +404,17 @@ class YuqueClient(Protocol):
 
 两种实现是必要的：快照让试运行和单测不依赖网络与 Token。
 
+[YuqueConnector](../../../sources/yuque/connector.py) 把客户端适配为通用 SourceConnector：`list()` 遍历构造时传入的知识库，把 YuqueDocRef 映射为 SourceRef（`collection=book`、`key="book/slug"`、`canonical_locator="doc:<id>"`、清洗后的标题、`collection_path=toc_path`，doc_id、slug、原标题放 `extra`）；`fetch(ref)` 读取 Markdown，返回原文、原文链接与平台元数据。
+
 两种客户端复用同一目录路径计算。`<dir>/<book>/toc.json` 与 `docs.json` 均采用 OpenAPI 响应结构 `{"data": [...]}`，docs 保存合并后的完整分页列表，不保存响应头或认证信息。目录项包含 `type`（DOC／TITLE／LINK）、`title`、`uuid`、`parent_uuid`、`url`（文档 slug）、`doc_id`；文档项包含 `id`、`slug`、`title`、`content_updated_at`（带时区的 ISO 8601，如 `2025-11-23T13:23:51.000Z`）。正文为 `<slug>.md` UTF-8 文本。`toc_path` 沿 `parent_uuid` 向上取祖先标题，再按根到叶排序，不包含自身；祖先可以是 TITLE 或 DOC，不在目录中的文档路径为空。缺失或非法的列表／目录文件会启动失败；单篇正文文件读取失败记入该篇报告后继续。
 
 `YUQUE_TOKEN` 默认空，OpenAPI 模式启动时校验；`YUQUE_API_BASE` 默认 `https://www.yuque.com/api/v2`，留空也使用默认地址。真实接口格式与账号权限待 Token 到位后补测。
 
 ### 7.2 来源身份与元数据
 
-`build_request(ref, markdown, manifest)` 组装一篇文档的导入请求，其中标题清洗规则为：去掉【推送归档】等方括号前缀、“教程 \|”“Tips \|”等栏目前缀和末尾的 ⭐，原标题存为 `title_raw`。
+身份、链接、标题和平台元数据由 `YuqueConnector.fetch` 生成，通用的 `build_request(source_type, fetched, manifest, schema=..., version=..., classification=...)` 再合并清单的单篇 `metadata` 补丁与可见性，并在平台命名空间中写入 `classified_by`。标题清洗规则为：去掉【推送归档】等方括号前缀、“教程 \|”“Tips \|”等栏目前缀和末尾的 ⭐，原标题存为 `title_raw`。
 
-实现中 schema/version 由组合根映射传入 `build_request(..., schema=..., version=...)`。栏目前缀简化为开头不超过 20 字的“栏目 \|”（兼容全角竖线与空栏目），不会删除标题中间的方括号或星号。请求 dict 经原文 API 同一个 `RawSourceImportSerializer` 与 `import_raw_dtos` 转换为 DTO，复用标题长度、日期与目录路径等字段校验。清洗后为空或超出契约范围会记为单篇 `INVALID_REQUEST`；元数据时间用带时区的 ISO 8601 保留完整更新时间。
+schema/version 由组合根映射传入。栏目前缀简化为开头不超过 20 字的“栏目 \|”（兼容全角竖线与空栏目），不会删除标题中间的方括号或星号。请求 dict 经原文 API 同一个 `RawSourceImportSerializer` 与 `import_raw_dtos` 转换为 DTO，复用标题长度、日期与目录路径等字段校验。清洗后为空或超出契约范围会记为单篇 `INVALID_REQUEST`；元数据时间用带时区的 ISO 8601 保留完整更新时间。
 
 ```json
 {
@@ -444,18 +453,20 @@ class YuqueClient(Protocol):
 
 ### 7.3 导入服务
 
+导入服务与平台无关，见 [sources/importing.py](../../../sources/importing.py)：
+
 ```python
-class YuqueImportService:
-    def __init__(self, client: YuqueClient, manifest: Manifest,
+class SourceImportService:
+    def __init__(self, connector: SourceConnector, manifest: Manifest,
                  category_pipelines: Mapping[str, tuple[str, int]], submit): ...
-    def run(self, refs: Iterable[YuqueDocRef]) -> ImportReport: ...
+    def run(self, refs: Iterable[SourceRef], *, only=None, read_errors=None) -> ImportReport: ...
 ```
 
 每篇文档的处理顺序：
 
 1. `manifest.classify(ref)` 判定类别，按 3.2 的状态表决定是否导入；不导入的直接记录。
 2. 查映射表得到 schema@version。
-3. 读取 Markdown，`build_request` 组装 SourceSpec 与 RawDocument。
+3. `connector.fetch(ref)` 读取 Markdown，`build_request` 组装原文导入请求。
 4. 调用注入的 `submit(source, raw, schema, version)`：正式导入依次调用 `preprocess_raw` 与 `import_processed`，试运行提供账号时为 `preprocess_raw`，不提供账号时直接调用 `registry.process`。试运行只预处理不编码不保存。
 5. 记录父段数、子块数、`reused`、警告和错误码。
 
@@ -510,11 +521,11 @@ summary: imported=… reused=… skipped=… unregistered=… failed=…
 | --- | --- |
 | 清单格式错误、未知类别或字段 | 启动时失败，不处理任何文档 |
 | 未登记、类别未接入、清单跳过 | 记入报告，不导入 |
-| 清单条目在语雀中找不到 | 报告警告，提示 slug 可能已改名 |
+| 清单条目在语雀中找不到 | 报告警告，提示标识可能已改名 |
 | 单篇预处理或导入失败（DomainError） | 记录错误码，继续下一篇；整批结束后命令以非零状态退出 |
 | 非试运行但 Embedding 未配置 | 启动时失败 |
 | OpenAPI 模式缺少 Token | `YUQUE_NOT_CONFIGURED`，启动即失败，提示配置环境变量 `YUQUE_TOKEN` |
-| 语雀 401／403 | 独立的 `YuqueAuthenticationError`，不会被导入服务当作单篇失败；命令转为 CommandError 终止整批，提示检查 `YUQUE_TOKEN` 与知识库权限。不会回滚之前已导入的文档 |
+| 语雀 401／403 | `YuqueAuthenticationError`（通用 `SourceAccessError` 的子类），不会被导入服务当作单篇失败；命令转为 CommandError 终止整批，提示检查 `YUQUE_TOKEN` 与知识库权限。不会回滚之前已导入的文档 |
 | 单篇详情 429 | `YUQUE_RATE_LIMITED`，当前篇记为失败并继续；修正后用 `--only` 重跑或整批重跑。不实现重试队列 |
 | 单篇详情其他 HTTP、网络错误或超时 | `YUQUE_UNAVAILABLE`，当前篇失败并继续；不输出服务错误正文或底层异常详情 |
 | 单篇详情 JSON、响应结构或 body 类型异常 | `INVALID_YUQUE_RESPONSE`，当前篇失败并继续 |
@@ -552,7 +563,7 @@ Token 只从环境变量读取，不写入日志、报告或快照文件。
 | 接入单案例 | 用 `max_parent_chars` 取极大值的 SectionProfile 实现整篇一父段，或给 ExperienceCaseStrategy 加该模式；注册并加入映射表 |
 | 调整某类参数 | 注册新版本（如 `tutorial@2`），映射改指向新版本；旧版本保留便于对比 |
 | 其他平台的教程 | 直接使用 `tutorial@1`，配合 `text/html` 或 `text/markdown` |
-| 新平台 | 新增读取客户端；有自己的方言时新增方言解析器。需要跨平台复用清单或连接器入口时，再抽取公共模块 |
+| 新平台 | 实现 SourceConnector、编写清单与继承 SourceImportCommand 的薄命令；有自己的方言时新增方言解析器，见[来源连接器改造方案](../source-connector-design.md) |
 | 增加自动分类信号 | 在 `Manifest.classify` 的目录规则之后增加判定；规则变多、需要独立替换时再拆成规则对象 |
 
 ## 10. 测试与验收
@@ -567,8 +578,8 @@ Token 只从环境变量读取，不写入日志、报告或快照文件。
 | `tests/unit/test_yuque_markdown.py` | 每条方言规则、行号保持、占位符与代码块保真、折叠块、表格内换行 |
 | `tests/unit/test_sections.py` | 自适应顶层、包裹标题下降、超长下钻与导语父段、过短父段合并、无标题文档、子块相连规则、key 稳定、标题截断、表格行组、图片计数 |
 | `tests/unit/test_enrichment_steps.py` | 提示块进入父段或文档 warnings、时效表述、来源日期提示（含日期缺失）、工具身份、检索前缀与表头组合 |
-| `tests/unit/test_yuque_manifest.py` | 单篇条目优先于目录规则、目录规则命中、未登记、跳过、未接入类别、清单校验 |
-| `tests/unit/test_yuque_importer.py` | 快照客户端和假提交函数：试运行不编码、单篇失败不中断、报告状态、标题清洗与元数据、可见性来自清单 |
+| `tests/unit/test_source_manifest.py` | 通用清单：单篇条目优先于目录规则、目录规则命中、未登记、跳过、未接入类别、元数据补丁、清单校验 |
+| `tests/unit/test_yuque_importer.py` | 快照连接器和假提交函数：试运行不编码、单篇失败不中断、整批访问错误终止、报告状态、标题清洗与元数据、可见性来自清单 |
 | `tests/unit/test_yuque_client.py`、`tests/unit/test_yuque_openapi.py` | mock HTTP 边界，不开 socket；固定间隔与 timeout、网络与响应格式错误、认证独立异常、快照读写失败、错误消息不泄露 Token |
 
 ### 10.2 集成测试

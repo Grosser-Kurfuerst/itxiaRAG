@@ -20,6 +20,7 @@ from retrieval.vector import VectorRetriever
 
 
 YUQUE_CATEGORY_PIPELINES = {"tutorial": ("tutorial", 1)}
+WECHAT_CATEGORY_PIPELINES = {"product_review": ("product_review", 1), "purchase_guide": ("purchase_guide", 1)}
 
 
 def embedding_provider():

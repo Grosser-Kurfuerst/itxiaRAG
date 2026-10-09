@@ -1,6 +1,6 @@
 # 来源连接器改造方案
 
-状态：迁移步骤 1～3 已实现，语雀已改为实现 SourceConnector；笔吧连接器与通用契约测试（步骤 4～5）待实现。当前资料准备与提交方式见[来源接入说明](source-ingestion-plan.md)，预处理契约见[文档预处理](preprocessing.md)，语雀现有实现见[语雀技术方案](yuque-ingestion/technical-design.md)。
+状态：迁移步骤 1～4 已实现：语雀改为实现 SourceConnector，新增公众号本地采集目录连接器与 `import_wechat`；通用契约测试（步骤 5）待实现。当前资料准备与提交方式见[来源接入说明](source-ingestion-plan.md)，预处理契约见[文档预处理](preprocessing.md)，语雀现有实现见[语雀技术方案](yuque-ingestion/technical-design.md)。
 
 ## 1. 背景
 
@@ -89,8 +89,11 @@ source_type = "wechat"
 visibility = "internal"
 
 [docs."笔吧评测室/2026-09-28-laike-gt16"]
-category = "laptop_review"
+category = "product_review"
 metadata = { entity_title = "联想 来酷GT 16 酷睿版" }
+
+[docs."笔吧评测室/2026-09-30-reprint"]
+skip = "reprint"                # 转载评测不收录
 ```
 
 ## 6. 导入服务与错误
@@ -118,22 +121,25 @@ request = {
 
 错误分两级，沿用语雀已有做法：
 
-- `SourceAccessError`：凭据失效、无权限、列表读取失败，终止整批（由 `YuqueAuthenticationError` 泛化）。
-- `DomainError`：单篇读取或格式错误，该篇报告 `failed` 后继续。
+- `list()` 在导入服务开始前调用，其中任何错误（列表文件缺失、旁注非法等）都终止整批，不处理任何正文。
+- `fetch()` 抛 `SourceAccessError`（凭据失效、无权限，如 `YuqueAuthenticationError`）时终止整批，命令转为 CommandError。
+- `fetch()` 抛 `DomainError`（单篇读取或格式错误）时，该篇报告 `failed` 后继续。
 
 ## 7. 平台差异
 
 | 维度 | 语雀 | 笔吧公众号 |
 | --- | --- | --- |
-| 获取方式 | OpenAPI 或快照 | 人工采集的本地目录：每篇 `.html` 加同名 `.json` 旁注（标题、账号、作者、发布时间、链接） |
-| `list()` 范围 | 清单登记的 books | 采集目录 |
-| `canonical_locator` | `doc:<doc_id>` | `mp:<__biz>:<mid>:<idx>`；取不到时用清单人工键 |
-| `source_url` | `https://www.yuque.com/<group>/<book>/<slug>` | 规范化后的永久链接，不用带 `timestamp`／`signature` 的临时链接 |
+| 获取方式 | OpenAPI 或快照 | 人工采集的本地目录 `<dir>/<账号目录>/<条目>.html`，加同名 `.json` 旁注：`title`（必填）、`url`、`date`（YYYY-MM-DD）、`author`、`account`（显示名，缺省用目录名），不允许其他字段 |
+| `list()` 范围 | 清单登记的知识库 | 清单登记的账号目录 |
+| `canonical_locator` | `doc:<doc_id>` | 永久链接为 `mp:<__biz>:<mid>:<idx>`，短链接为 `mp:s:<id>`；都取不到时为 `wechat-capture:<账号目录>/<条目>`，此时采集文件不能改名 |
+| `source_url` | `https://www.yuque.com/<group>/<book>/<slug>` | 规范化后的永久链接（只保留 `__biz`、`mid`、`idx`、`sn`）或短链接；带 `timestamp`／`signature` 的临时链接或非公众号链接不保存 |
 | `media_type` | `text/x-yuque-markdown` | `text/html` |
 | 方言解析器 | YuqueMarkdownParser（已有） | 视预处理质量决定是否增加微信 HTML 方言解析 |
-| 平台元数据 | `metadata["yuque"]`：doc_id、book、slug 等 | `metadata["wechat"]`：账号、作者、发布时间 |
+| 平台元数据 | `metadata["yuque"]`：doc_id、book、slug 等 | `metadata["wechat"]`：账号、作者；发布日期写入公共键 `source_date` |
+| 类别与流水线 | `tutorial` 等五类，已接入 `tutorial@1` | `product_review`、`purchase_guide`，分别接入 `product_review@1`、`purchase_guide@1` |
 | 清单写法 | 目录规则为主，单篇覆盖为辅 | 逐篇登记为主：类别、`entity_title`、`entity_headings` |
 | 凭据 | `YUQUE_TOKEN` | 无 |
+| 实现 | [YuqueConnector](../../sources/yuque/connector.py)、[import_yuque](../../sources/management/commands/import_yuque.py) | [WechatCaptureConnector](../../sources/wechat/connector.py)、[import_wechat](../../sources/management/commands/import_wechat.py) |
 
 笔吧推文的额外注意事项：
 
@@ -151,7 +157,7 @@ request = {
    - `list()` 的 `key` 与 `canonical_locator` 不重复，重复调用结果稳定；
    - `fetch()` 结果组装的请求能通过 `RawSourceImportSerializer`；
    - metadata 含 `title`，`source_date` 格式合法；
-   - 凭据或列表失败抛 `SourceAccessError`，单篇失败抛 `DomainError`。
+   - 列表失败在 `list()` 中抛出；凭据失败抛 `SourceAccessError`，单篇失败抛 `DomainError`。
 
 ## 9. 实施顺序与待定事项
 
@@ -159,6 +165,6 @@ request = {
 
 待定事项：
 
-- 采集目录旁注 JSON 的字段与永久链接的获取方式，以实际采集方法为准。
+- 旁注字段已按第 7 节实现；永久链接的获取方式以实际采集方法为准，取不到时使用采集键。
 - `sources` 应用名与 API 路径 `/api/v1/sources/` 同名但含义不同，是否改名为 `connectors` 在实施时决定。
 - 是否需要单篇 `fetch` 入口（例如 API 按链接导入单篇），出现需求时再增加 `resolve(locator) → SourceRef`。

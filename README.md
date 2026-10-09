@@ -111,6 +111,22 @@ OpenAPI 模式从环境变量 `YUQUE_TOKEN` 读取获授权的语雀 Token，空
 
 OpenAPI 的 401／403 会终止整批并提示检查 Token 与知识库权限；详情读取的 429、其他 HTTP／网络错误、超时和格式错误记为单篇失败。目录或文档列表读取失败时整批终止，尚不处理任何正文。容器内配置和操作见[部署与验收](docs/phase1/deployment.md#37-语雀-openapi-与快照导入)。
 
+## 公众号采集导入
+
+第三方公众号不能在线批量读取，笔吧推文采用“人工采集 + 离线导入”。把获准文章网页保存为 `<目录>/<账号目录>/<条目>.html`，同名 `.json` 旁注写 `title`（必填）、`url`、`date`、`author`、`account`；采集目录与清单含原文信息，放在被忽略的 `.runtime/` 下，不提交。清单格式与身份规则见[来源连接器改造方案](docs/phase1/source-connector-design.md#5-清单)，评测须逐篇在 `metadata` 中登记 `entity_title`。
+
+```sh
+# 试运行：无需账号、Embedding 或数据库连接
+.venv/bin/python manage.py import_wechat --manifest .runtime/wechat-manifest.toml \
+  --capture .runtime/wechat-capture --dry-run
+
+# 正式导入：账号需 maintain_source，internal 来源另需 read_internal
+.venv/bin/python manage.py import_wechat --manifest .runtime/wechat-manifest.toml \
+  --capture .runtime/wechat-capture --username maintainer
+```
+
+`--only`、`--dry-run`、`--username` 与报告状态同语雀导入。旁注缺失或非法、账号目录不存在时整批终止；单篇读取或预处理失败记为 `failed` 后继续。
+
 ## 验证
 
 ```sh

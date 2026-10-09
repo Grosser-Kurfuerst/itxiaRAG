@@ -78,14 +78,16 @@ Makefile 默认使用 `.venv/bin/python`。已在其他虚拟环境安装依赖�
 | [增强步骤](../tests/unit/test_enrichment_steps.py) | 风险、时效提示与目录检索前缀 |
 | [来源清单](../tests/unit/test_source_manifest.py) | 通用清单严格校验、单篇优先与最长目录前缀、元数据补丁；语雀仓库清单覆盖附录 74 篇、28 篇教程 |
 | [快照导入](../tests/unit/test_yuque_importer.py) | OpenAPI 结构快照、语雀连接器身份与元数据、通用导入服务报告状态、逐篇失败继续、整批访问错误终止、命令试运行与启动错误；不访问数据库／模型 |
+| [公众号采集连接器](../tests/unit/test_wechat_connector.py) | 永久链接、短链接与临时链接的身份规则，旁注校验，元数据，`import_wechat` 试运行、清单错误与整批终止；不访问数据库／模型 |
 | [语雀 HTTP 边界](../tests/unit/test_yuque_openapi.py)、[语雀客户端](../tests/unit/test_yuque_client.py) | 不开 socket，替换 HTTP 边界验证网络／超时、响应格式、默认间隔、认证独立异常、快照失败与 Token 不进入错误消息 |
 | [语雀集成](../tests/integration/test_yuque_ingestion.py) | 原文 API 与 `call_command` 快照导入、数据库保存与 reused、internal 权限、未登记／未接入不导入；隔离 PostgreSQL 与模型替身 |
 | [语雀 OpenAPI](../tests/integration/test_yuque_openapi.py) | 本地 HTTP 服务模拟路径与认证头、分页、祖先路径、401／403 终止、单篇失败继续、列表失败、快照覆盖未接入类别并可离线读取、无 Token 启动失败与输出不泄露 Token；正式导入使用隔离 PostgreSQL 与模型替身 |
+| [公众号采集集成](../tests/integration/test_wechat_ingestion.py) | `call_command` 导入评测与选购指南、可见性、身份与链接、reused；隔离 PostgreSQL 与模型替身 |
 
 ```sh
-.venv/bin/python -m pytest tests/unit/test_source_manifest.py tests/unit/test_yuque_importer.py tests/unit/test_yuque_client.py tests/unit/test_yuque_openapi.py -q
+.venv/bin/python -m pytest tests/unit/test_source_manifest.py tests/unit/test_yuque_importer.py tests/unit/test_wechat_connector.py tests/unit/test_yuque_client.py tests/unit/test_yuque_openapi.py -q
 # 需要上节配置的隔离 PostgreSQL
-.venv/bin/python -m pytest tests/integration/test_yuque_ingestion.py tests/integration/test_yuque_openapi.py -q
+.venv/bin/python -m pytest tests/integration/test_yuque_ingestion.py tests/integration/test_yuque_openapi.py tests/integration/test_wechat_ingestion.py -q
 ```
 
 沙箱禁止 socket 时，HTTP 集成与 PostgreSQL 全量测试由编排者在隔离环境运行，可先用 `--collect-only` 确认可收集。需真实语雀 Token 的接口实测、方言差异修正、目录 slug 核对、快照保存与教程验收待 Token 到位后补测，本地服务与模型替身不代表真实接口或语料质量验收通过。

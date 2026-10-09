@@ -69,6 +69,23 @@ Makefile 默认使用 `.venv/bin/python`。已在其他虚拟环境安装依赖�
 
 [原文集成用例](../tests/integration/test_raw_ingestion.py) 使用真实 Token API 和 PostgreSQL、明确的模型替身，检查三类文档导入／检索、重复与更新、预算切分、权限及失败保留已有文档。专项通过后，修改实现还需运行 `make test` 验证整个导入与检索链。
 
+语雀专项的合成正文和快照均由测试代码生成，不提交真实原文：
+
+| 用例文件 | 重点检查 |
+| --- | --- |
+| [语雀 Markdown](../tests/unit/test_yuque_markdown.py) | 方言规范化、行号保持与代码保真 |
+| [章节策略](../tests/unit/test_sections.py) | 章节父段、子块与正文边界 |
+| [增强步骤](../tests/unit/test_enrichment_steps.py) | 风险、时效提示与目录检索前缀 |
+| [语雀清单](../tests/unit/test_yuque_manifest.py) | 严格校验、单篇优先与最长目录前缀；仓库清单覆盖附录 74 篇、28 篇教程 |
+| [快照导入](../tests/unit/test_yuque_importer.py) | OpenAPI 结构快照、祖先路径、元数据、报告状态、逐篇失败继续、命令试运行与启动错误；不访问数据库／模型 |
+| [语雀集成](../tests/integration/test_yuque_ingestion.py) | 原文 API 与 `call_command` 快照导入、数据库保存与 reused、internal 权限、未登记／未接入不导入；隔离 PostgreSQL 与模型替身 |
+
+```sh
+.venv/bin/python -m pytest tests/unit/test_yuque_manifest.py tests/unit/test_yuque_importer.py -q
+# 需要上节配置的隔离 PostgreSQL
+.venv/bin/python -m pytest tests/integration/test_yuque_ingestion.py -q
+```
+
 3. 验证部署服务与真实模型时，按 [Docker 原文导入验收](phase1/deployment.md#35-验收原文预处理导入) 操作，检查返回完整父段与命中定位。真实文章还需人工检查标题识别、父子边界、测试条件／结果和图片补录；自动测试的通过不能证明真实语料划分与检索质量。
 
 ## 完成定义

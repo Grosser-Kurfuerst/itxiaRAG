@@ -1,0 +1,174 @@
+# 第一批 74 篇：28 教程、31 工具（28 篇由目录规则覆盖）、15 知识。
+# 清单只保存标识和分类；不保存正文、快照或凭据。
+version = 1
+group = "itxia"
+
+[books.help]
+visibility = "public"
+
+[books.article]
+visibility = "public"
+
+[books.textbook]
+visibility = "internal"
+
+[books.basic-computer]
+visibility = "public"
+
+[books.dygh8t]
+visibility = "public"
+
+[[path_rules]]
+book = "help"
+path_prefix = ["IT侠常用工具大全"]
+category = "tool_card"
+
+[docs."help/change_win_account_name"]
+category = "tutorial"
+
+[docs."help/clean_and_backup"]
+category = "tutorial"
+
+[docs."help/double_o365"]
+category = "tutorial"
+
+[docs."help/find_official_website"]
+category = "tutorial"
+
+[docs."help/find_your_support"]
+category = "tutorial"
+
+[docs."help/get_o365"]
+category = "tutorial"
+
+[docs."help/hello_my_pc"]
+category = "tutorial"
+
+[docs."help/install_win10"]
+category = "tutorial"
+
+[docs."help/login_nju_network_in_hacker_way"]
+category = "tutorial"
+
+[docs."help/nju_itsc_warranty"]
+category = "tutorial"
+
+[docs."help/nju_network_guide"]
+category = "tutorial"
+
+[docs."help/partition-resize"]
+category = "tutorial"
+
+[docs."help/remote_access"]
+category = "tutorial"
+
+[docs."help/setup_office"]
+category = "tutorial"
+
+[docs."help/sweep_out_malware"]
+category = "tutorial"
+
+[docs."help/vhqnnk"]
+category = "tutorial"
+
+[docs."help/win10_activation_short"]
+category = "tutorial"
+
+[docs."help/win10_on_intel_mac"]
+category = "tutorial"
+
+[docs."help/win_drivers"]
+category = "tutorial"
+
+[docs."article/hlkpwa"]
+category = "tutorial"
+
+[docs."article/nju_adobe_tips"]
+category = "tutorial"
+
+[docs."article/otp_intro"]
+category = "tutorial"
+
+[docs."textbook/au70ga5onvxr2vqa"]
+category = "tutorial"
+
+[docs."textbook/hardware_maintenance"]
+category = "tutorial"
+
+[docs."textbook/make_pe"]
+category = "tutorial"
+
+[docs."textbook/manage_data"]
+category = "tutorial"
+
+[docs."textbook/physical_cleaning"]
+category = "tutorial"
+
+[docs."textbook/yo04izg5or2hurpo"]
+category = "tutorial"
+
+[docs."article/eup0ky"]
+category = "tool_card"
+
+[docs."article/rholvp"]
+category = "tool_card"
+
+[docs."textbook/recommended_tools"]
+category = "tool_card"
+
+[docs."help/download_win10"]
+category = "knowledge"
+
+[docs."help/nju_network_cost"]
+category = "knowledge"
+
+[docs."help/sys_volume"]
+category = "knowledge"
+
+[docs."help/to_office_or_not_to_office"]
+category = "knowledge"
+
+[docs."help/win10_activation"]
+category = "knowledge"
+
+[docs."help/windows_short_commands"]
+category = "knowledge"
+
+[docs."article/ezh9iz"]
+category = "knowledge"
+
+[docs."article/fayvxs"]
+category = "knowledge"
+
+[docs."article/got2cs"]
+category = "knowledge"
+
+[docs."article/vg6cg1"]
+category = "knowledge"
+
+[docs."textbook/bitlocker"]
+category = "knowledge"
+
+[docs."textbook/fix_network"]
+category = "knowledge"
+
+[docs."textbook/slang"]
+category = "knowledge"
+
+[docs."basic-computer/vrash83101eeivsm"]
+category = "knowledge"
+
+[docs."dygh8t/mwsgeb"]
+category = "knowledge"
+
+[docs."article/partition-resize"]
+skip = "duplicate"
+canonical = "help/partition-resize"
+
+[docs."article/install_win10_from_scratch"]
+skip = "duplicate"
+canonical = "help/install_win10"
+
+[docs."article/gagpcm"]
+skip = "duplicate"
+canonical = "help/nju_network_guide"

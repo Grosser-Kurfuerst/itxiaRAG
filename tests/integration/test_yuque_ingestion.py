@@ -1,9 +1,13 @@
+import json
 from datetime import date
+from io import StringIO
 from unittest.mock import patch
 
 import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
+from django.core.management import call_command
+from django.core.management.base import CommandError
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
@@ -128,3 +132,91 @@ def test_internal_tutorial_is_only_visible_to_authorized_token_accounts(embedder
         authorized = maintainer.post("/api/v1/search/", {"query": "安装", "top_k": 5}, format="json")
         assert authorized.status_code == 200 and len(authorized.data["contexts"]) == 1
         assert authorized.data["contexts"][0]["source"]["document_schema"] == "tutorial"
+
+
+def command_snapshot(tmp_path):
+    manifest = tmp_path / "manifest.toml"
+    manifest.write_text('''version = 1
+group = "synthetic"
+[books.help]
+visibility = "public"
+[books.textbook]
+visibility = "internal"
+[[path_rules]]
+book = "help"
+path_prefix = ["工具"]
+category = "tool_card"
+[docs."help/install"]
+category = "tutorial"
+[docs."help/copy"]
+skip = "duplicate"
+canonical = "help/install"
+[docs."help/knowledge"]
+category = "knowledge"
+[docs."textbook/install"]
+category = "tutorial"
+''', encoding="utf-8")
+    snapshot = tmp_path / "snapshot"
+    for book, slugs in [("help", ["install", "tool", "copy", "knowledge", "new"]), ("textbook", ["install"])]:
+        directory = snapshot / book
+        directory.mkdir(parents=True)
+        docs = [{"id": index + (100 if book == "textbook" else 1), "slug": slug,
+                 "title": "【推送归档】教程 | 合成安装 ⭐",
+                 "content_updated_at": "2025-11-23T18:23:51.000Z"} for index, slug in enumerate(slugs)]
+        toc = [
+            {"type": "TITLE", "title": "工具", "uuid": "tools", "parent_uuid": "", "url": "", "doc_id": None},
+            {"type": "DOC", "title": "合成工具", "uuid": "tool", "parent_uuid": "tools", "url": "tool", "doc_id": 2},
+        ] if book == "help" else []
+        (directory / "docs.json").write_text(json.dumps({"data": docs}), encoding="utf-8")
+        (directory / "toc.json").write_text(json.dumps({"data": toc}), encoding="utf-8")
+        (directory / "install.md").write_text("## 安装篇\n\n安装前先备份数据，再检查电池续航。", encoding="utf-8")
+    return manifest, snapshot
+
+
+def command_account(*permissions):
+    user = get_user_model().objects.create_user("command-" + "-".join(permissions))
+    user.user_permissions.set(Permission.objects.filter(content_type__app_label="catalog", codename__in=permissions))
+    return user
+
+
+def test_snapshot_command_imports_only_tutorials_and_reimport_reuses_all_sources(tmp_path, embedder):
+    manifest, snapshot = command_snapshot(tmp_path)
+    actor = command_account("maintain_source", "read_internal")
+    first, repeated = StringIO(), StringIO()
+    with patch("config.components.embedding_provider", return_value=embedder):
+        call_command("import_yuque", manifest=str(manifest), snapshot=str(snapshot), username=actor.username, stdout=first)
+        sources = list(KnowledgeSource.objects.order_by("canonical_locator"))
+        assert len(sources) == 2 and all(source.source_type == "yuque" for source in sources)
+        assert {source.canonical_locator for source in sources} == {"doc:1", "doc:100"}
+        assert all(source.title == "合成安装" and source.source_date == date(2025, 11, 24) for source in sources)
+        assert sources[0].source_url == "https://www.yuque.com/synthetic/help/install"
+        assert {source.visibility for source in sources} == {"public", "internal"}
+        assert all(source.document_schema == "tutorial" for source in sources)
+        ids = list(EvidenceUnit.objects.order_by("id").values_list("id", flat=True))
+        call_command("import_yuque", manifest=str(manifest), snapshot=str(snapshot), username=actor.username, stdout=repeated)
+    assert "imported=2" in first.getvalue() and "reused=2" in repeated.getvalue()
+    assert "skipped=3" in first.getvalue() and "unregistered=1" in first.getvalue()
+    assert "tool_card(path_rule)" in first.getvalue() and "未接入" in first.getvalue()
+    assert list(EvidenceUnit.objects.order_by("id").values_list("id", flat=True)) == ids
+
+
+def test_snapshot_command_enforces_internal_visibility_and_failed_batch_exit(tmp_path, embedder):
+    manifest, snapshot = command_snapshot(tmp_path)
+    actor = command_account("maintain_source")
+    output = StringIO()
+    with patch("config.components.embedding_provider", return_value=embedder):
+        with pytest.raises(CommandError, match="1 篇失败"):
+            call_command("import_yuque", manifest=str(manifest), snapshot=str(snapshot), username=actor.username, stdout=output)
+    assert "NOT_FOUND" in output.getvalue() and "imported=1" in output.getvalue()
+    assert list(KnowledgeSource.objects.values_list("visibility", flat=True)) == ["public"]
+
+
+def test_snapshot_command_rejects_accounts_without_maintain_source_before_import(tmp_path, embedder):
+    manifest, snapshot = command_snapshot(tmp_path)
+    actor = command_account()
+    with patch("config.components.embedding_provider", return_value=embedder), \
+            patch("config.components.preprocessors") as registry:
+        with pytest.raises(CommandError, match="PERMISSION_DENIED"):
+            call_command("import_yuque", manifest=str(manifest), snapshot=str(snapshot), username=actor.username)
+    registry.assert_not_called()
+    assert not KnowledgeSource.objects.exists()

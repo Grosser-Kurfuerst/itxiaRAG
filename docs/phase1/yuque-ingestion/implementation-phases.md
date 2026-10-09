@@ -1,6 +1,6 @@
 # 分阶段实现方案
 
-本文把[技术方案](technical-design.md)拆成 6 个可以独立合并的阶段。每个阶段完成后，系统都能正常启动和运行，已有功能不受影响，新增功能可以通过现有入口实际使用和验收。**阶段 1～2 已实现：语雀 Markdown 解析与教程流水线已接入原文 API，阶段 3～6 未开始。**
+本文把[技术方案](technical-design.md)拆成 6 个可以独立合并的阶段。每个阶段完成后，系统都能正常启动和运行，已有功能不受影响，新增功能可以通过现有入口实际使用和验收。**阶段 1～3 已实现：语雀 Markdown 解析与教程流水线已接入原文 API，清单与快照导入命令已接入；阶段 4～6 未开始。**
 
 ## 1. 总体安排
 
@@ -203,7 +203,7 @@ for c in doc.contexts:
 | [config/components.py](../../../config/components.py) | `CATEGORY_PIPELINES`，本阶段只有 `tutorial` |
 | `sources/yuque/manifests/itxia.toml` | 第一批 74 篇的清单初稿：原型生成后人工复核，只含知识库、slug、类别、跳过原因和可见性。三类都登记，知识和工具暂为“未接入” |
 
-快照目录格式见[技术方案 7.1](technical-design.md#71-平台读取)。
+快照目录格式见[技术方案 7.1](technical-design.md#71-平台读取)，`toc.json` 和 `docs.json` 均保存 OpenAPI 响应结构 `{"data": [...]}`。试运行成功报告为 `preprocessed`；无账号时不连接数据库，直接调用注册预处理器，有账号时走 `preprocess_raw` 权限校验。正式导入依次调用 `preprocess_raw` 与 `import_processed`，只预处理一次。
 
 ### 4.2 完成后的系统状态
 

@@ -106,6 +106,14 @@ def test_invalid_sidecar_fails_listing_with_clear_error(tmp_path, sidecar, messa
     assert error.value.code == "INVALID_CAPTURE"
 
 
+def test_same_article_captured_twice_fails_listing(capture):
+    root, _ = capture
+    write(root / "synthetic-lab", "2026-10-03-copy", REVIEW_HTML, title="重复采集",
+          url=PERMANENT.replace("&scene=21", "&scene=126"))
+    with pytest.raises(DomainError, match="2026-10-03-copy 与 synthetic-lab/2026-09-28-review 是同一篇文章"):
+        WechatCaptureConnector(root, ["synthetic-lab"]).list()
+
+
 def test_missing_account_directory_fails_listing_and_missing_page_fails_one_fetch(capture):
     root, _ = capture
     with pytest.raises(DomainError, match="缺少账号目录"):

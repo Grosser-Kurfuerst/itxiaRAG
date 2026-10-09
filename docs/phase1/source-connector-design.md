@@ -131,7 +131,7 @@ request = {
 | --- | --- | --- |
 | 获取方式 | OpenAPI 或快照 | 人工采集的本地目录 `<dir>/<账号目录>/<条目>.html`，加同名 `.json` 旁注：`title`（必填）、`url`、`date`（YYYY-MM-DD）、`author`、`account`（显示名，缺省用目录名），不允许其他字段 |
 | `list()` 范围 | 清单登记的知识库 | 清单登记的账号目录 |
-| `canonical_locator` | `doc:<doc_id>` | 永久链接为 `mp:<__biz>:<mid>:<idx>`，短链接为 `mp:s:<id>`；都取不到时为 `wechat-capture:<账号目录>/<条目>`，此时采集文件不能改名 |
+| `canonical_locator` | `doc:<doc_id>` | 永久链接为 `mp:<__biz>:<mid>:<idx>`，短链接为 `mp:s:<id>`；都取不到时为 `wechat-capture:<账号目录>/<条目>`，此时采集文件不能改名。同一身份出现两次时列出阶段报错，要求人工去重 |
 | `source_url` | `https://www.yuque.com/<group>/<book>/<slug>` | 规范化后的永久链接（只保留 `__biz`、`mid`、`idx`、`sn`）或短链接；带 `timestamp`／`signature` 的临时链接或非公众号链接不保存 |
 | `media_type` | `text/x-yuque-markdown` | `text/html` |
 | 方言解析器 | YuqueMarkdownParser（已有） | 视预处理质量决定是否增加微信 HTML 方言解析 |

@@ -70,6 +70,10 @@ class WechatCaptureConnector:
                     raise DomainError("INVALID_CAPTURE", f"采集文件名非法：{page.name}")
                 sidecar = _sidecar(page.with_suffix(".json"), key)
                 canonical, url = article_identity(sidecar.get("url"), key)
+                # 同一文章采集两次会互相覆盖，列出阶段就要求人工去重。
+                duplicate = next((ref.key for ref in refs if ref.canonical_locator == canonical), None)
+                if duplicate:
+                    raise DomainError("INVALID_CAPTURE", f"{key} 与 {duplicate} 是同一篇文章，请删除重复采集")
                 refs.append(SourceRef(
                     collection=account, key=key, canonical_locator=canonical, title=sidecar["title"].strip(),
                     extra={"source_url": url, "date": sidecar.get("date"),

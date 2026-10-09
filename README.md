@@ -113,7 +113,7 @@ OpenAPI 的 401／403 会终止整批并提示检查 Token 与知识库权限；
 
 ## 公众号采集导入
 
-第三方公众号不能在线批量读取，笔吧推文采用“人工采集 + 离线导入”。把获准文章网页保存为 `<目录>/<账号目录>/<条目>.html`，同名 `.json` 旁注写 `title`（必填）、`url`、`date`、`author`、`account`；采集目录与清单含原文信息，放在被忽略的 `.runtime/` 下，不提交。清单格式与身份规则见[来源连接器改造方案](docs/phase1/source-connector-design.md#5-清单)，评测须逐篇在 `metadata` 中登记 `entity_title`。
+第三方公众号不能在线批量读取，笔吧推文采用“人工采集 + 离线导入”。把获准文章网页保存为 `<目录>/<账号目录>/<条目>.html`，同名 `.json` 旁注写 `title`（必填）、`url`、`date`、`author`、`account`。`url` 须是永久链接（含 `__biz`、`mid`、`idx`）或短链接，临时链接会报错；没有链接时以采集文件名作身份，入库后不要再改名或更换链接形式；采集目录与清单含原文信息，放在被忽略的 `.runtime/` 下，不提交。清单格式与身份规则见[来源连接器改造方案](docs/phase1/source-connector-design.md#5-清单)，评测须逐篇在 `metadata` 中登记 `entity_title`。
 
 ```sh
 # 试运行：无需账号、Embedding 或数据库连接

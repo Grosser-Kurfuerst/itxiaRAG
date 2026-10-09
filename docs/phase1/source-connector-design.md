@@ -68,7 +68,7 @@ class SourceConnector(Protocol):
 ```
 
 - **列出与读取分离**：清单匹配、跳过和 `--only` 过滤在读取正文前完成。
-- **身份归 connector**：`canonical_locator` 与 `source_url` 的生成规则只有平台知道。身份必须在改名、重新采集后保持不变；取不到稳定标识时由清单提供人工键，不能用会过期的链接。
+- **身份归 connector**：`canonical_locator` 与 `source_url` 的生成规则只有平台知道。身份必须在改名、重新采集后保持不变；取不到稳定标识时退回人工稳定键（如公众号的采集键），不能用会过期的链接。无法识别的标识应在列出阶段报错，不能静默降级，否则重新采集会产生无法删除的重复来源。
 - **范围放构造参数**：`list()` 不带参数，读取范围（知识库、目录、账号）由构造参数传入，协议不随平台概念增加参数。
 - **元数据约定**：`RawDocument.metadata` 的公共键为 `title`、`source_date`、`collection_path`；平台私有字段放在 `metadata[source_type]` 下（语雀现为 `metadata["yuque"]`）。导入服务在该命名空间中写入 `classified_by`，因此语雀请求与改造前完全一致，已导入文档的内容哈希不变。
 
@@ -131,8 +131,8 @@ request = {
 | --- | --- | --- |
 | 获取方式 | OpenAPI 或快照 | 人工采集的本地目录 `<dir>/<账号目录>/<条目>.html`，加同名 `.json` 旁注：`title`（必填）、`url`、`date`（YYYY-MM-DD）、`author`、`account`（显示名，缺省用目录名），不允许其他字段 |
 | `list()` 范围 | 清单登记的知识库 | 清单登记的账号目录 |
-| `canonical_locator` | `doc:<doc_id>` | 永久链接为 `mp:<__biz>:<mid>:<idx>`，短链接为 `mp:s:<id>`；都取不到时为 `wechat-capture:<账号目录>/<条目>`，此时采集文件不能改名。同一身份出现两次时列出阶段报错，要求人工去重 |
-| `source_url` | `https://www.yuque.com/<group>/<book>/<slug>` | 规范化后的永久链接（只保留 `__biz`、`mid`、`idx`、`sn`）或短链接；带 `timestamp`／`signature` 的临时链接或非公众号链接不保存 |
+| `canonical_locator` | `doc:<doc_id>` | 永久链接为 `mp:<__biz>:<mid>:<idx>`，短链接为 `mp:s:<id>`，两者不互通，采集应统一使用永久链接；旁注没有 `url` 时为 `wechat-capture:<账号目录>/<条目>`，此时采集文件不能改名。同一身份在本次列出的账号中出现两次时报错，要求人工去重 |
+| `source_url` | `https://www.yuque.com/<group>/<book>/<slug>` | 规范化后的永久链接（只保留 `__biz`、`mid`、`idx`、`sn`，`&amp;` 转义会先还原）或短链接；带 `timestamp`／`signature` 的临时链接或其他无法识别的链接在列出阶段报错，需换成永久链接或删除 `url` |
 | `media_type` | `text/x-yuque-markdown` | `text/html` |
 | 方言解析器 | YuqueMarkdownParser（已有） | 视预处理质量决定是否增加微信 HTML 方言解析 |
 | 平台元数据 | `metadata["yuque"]`：doc_id、book、slug 等 | `metadata["wechat"]`：账号、作者；发布日期写入公共键 `source_date` |
@@ -145,12 +145,13 @@ request = {
 
 - **获取**：公众号官方接口只能读取自有账号，不能全量读取第三方账号，因此只能“人工采集 + 离线导入”，没有在线同步。
 - **元数据**：类别（评测、选购指南、转载评测、不收录）和机型名无法从页面可靠推断，需要逐篇登记。
+- **身份稳定**：入库后不要再更换链接形式或采集文件名，否则会生成新的来源，旧来源目前没有删除入口。重复采集在列出阶段拦截，因此清单的 `skip`／`canonical` 不用于公众号去重；分批或用 `--only` 跨账号导入时，跨账号重复无法拦截，后导入的会覆盖同身份来源。
 - **内容质量属于 ingestion**：真实文章预处理测试发现，整句加粗被识别为标题导致散热条件与结果分离，接口子块混入噪音与价格，泛化图片说明（alt 为“图片”）没有警告。这些需在解析器和评测策略中改进，connector 不负责。
 
 ## 8. 迁移步骤
 
 1. 在 `contracts/types.py` 定义新协议与 DTO，替换旧 `SourceConnector`，同步[首期技术设计](phase1-technical-design.md)与[来源接入说明](source-ingestion-plan.md)。
-2. 将清单、导入服务、报告从 `sources/yuque` 迁到 `sources/` 公共模块；`books` 改名 `collections`，类别集合改为由 `category_pipelines` 决定，并支持单篇 `metadata` 补丁。
+2. 将清单、导入服务、报告从 `sources/yuque` 迁到 `sources/` 公共模块；`books` 改名 `collections`，类别集合改为由各平台声明，并支持单篇 `metadata` 补丁。
 3. 语雀改为实现 SourceConnector：`YuqueDocRef` 映射为 `SourceRef`（doc_id、book、slug 放 `extra`），`build_request` 中身份、链接、标题清洗和平台元数据移入 `fetch`；OpenAPI 与快照仍是两种实现，`--save-snapshot` 保留在语雀命令中。现有语雀单元与集成测试作为回归。
 4. 新增笔吧本地目录 connector 与清单，命令入口只负责参数与装配。
 5. 补充通用 connector 契约测试 [test_source_connectors.py](../../tests/unit/test_source_connectors.py)，新增平台在其中登记合成数据构造函数，所有实现必须通过：

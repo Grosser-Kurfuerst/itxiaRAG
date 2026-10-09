@@ -3,6 +3,7 @@
 目录结构为 `<dir>/<账号目录>/<条目>.html` 加同名 `<条目>.json` 旁注，旁注字段为
 title（必填）、url、date（YYYY-MM-DD）、author、account（账号显示名，缺省用目录名）。
 """
+import html
 import json
 import re
 from datetime import date
@@ -19,8 +20,15 @@ SIDECAR_FIELDS = {"title", "url", "date", "author", "account"}
 
 
 def article_identity(url: str | None, key: str) -> tuple[str, str | None]:
-    """永久链接得到稳定身份与规范链接；临时链接带签名会过期，退回采集键且不保存链接。"""
-    parts = urlsplit(url or "")
+    """永久链接或短链接得到稳定身份与规范链接，没有链接时退回采集键。
+
+    临时链接带签名会过期，无法识别的链接无法去重，都直接拒绝，避免身份静默降级产生重复来源。
+    短链接与永久链接身份不互通，同一账号的采集应统一使用永久链接。
+    """
+    if url is None:
+        return f"wechat-capture:{key}", None
+    # 从网页源码复制的链接常带 &amp; 转义。
+    parts = urlsplit(html.unescape(url.strip()))
     if parts.scheme in {"http", "https"} and parts.hostname == "mp.weixin.qq.com":
         query = parse_qs(parts.query)
         biz, mid, idx, sn = (query.get(name, [""])[0] for name in ("__biz", "mid", "idx", "sn"))
@@ -30,7 +38,7 @@ def article_identity(url: str | None, key: str) -> tuple[str, str | None]:
         match = re.fullmatch(r"/s/([A-Za-z0-9_-]+)", parts.path)
         if match:
             return f"mp:s:{match[1]}", f"https://mp.weixin.qq.com/s/{match[1]}"
-    return f"wechat-capture:{key}", None
+    raise DomainError("INVALID_CAPTURE", f"{key} 旁注 url 不是公众号永久链接或短链接；临时链接请换成永久链接或删除 url")
 
 
 def _sidecar(path: Path, key: str) -> dict:
@@ -46,6 +54,8 @@ def _sidecar(path: Path, key: str) -> dict:
         raise DomainError("INVALID_CAPTURE", f"{key} 旁注字段必须是文本")
     if data.get("date") is not None:
         try:
+            if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", data["date"]):
+                raise ValueError
             date.fromisoformat(data["date"])
         except ValueError:
             raise DomainError("INVALID_CAPTURE", f"{key} 旁注 date 必须是 YYYY-MM-DD") from None

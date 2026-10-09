@@ -1,4 +1,3 @@
-import json
 from io import StringIO
 from unittest.mock import patch
 
@@ -8,60 +7,36 @@ from django.core.management.base import CommandError
 
 from contracts.errors import DomainError
 from sources.wechat.connector import WechatCaptureConnector, article_identity
-
-
-REVIEW_HTML = ('<html><body><div id="js_content"><h2>合成笔记本 A</h2><p><strong>配置</strong></p><p>16GB 内存。</p>'
-               '<p><strong>续航</strong></p><p>续航约 9 小时。</p></div></body></html>')
-GUIDE_HTML = ('<div id="js_content"><h1>合成选购指南</h1><h2>6000元</h2><h3>合成笔记本 A</h3><p>续航好。</p>'
-              '<h3>合成笔记本 B</h3><p>游戏快。</p></div>')
-PERMANENT = "https://mp.weixin.qq.com/s?__biz=MzA5MDAwMDAwMA==&mid=2650000001&idx=2&sn=abc123&chksm=x&scene=21"
-
-
-def write(directory, name, html, **sidecar):
-    directory.mkdir(parents=True, exist_ok=True)
-    (directory / f"{name}.html").write_text(html, encoding="utf-8")
-    (directory / f"{name}.json").write_text(json.dumps(sidecar, ensure_ascii=False), encoding="utf-8")
+from tests.wechat_capture import PERMANENT, REVIEW_HTML, build_capture, write
 
 
 @pytest.fixture
 def capture(tmp_path):
-    root = tmp_path / "capture"
-    account = root / "synthetic-lab"
-    write(account, "2026-09-28-review", REVIEW_HTML, title="合成评测：笔记本 A", url=PERMANENT,
-          date="2026-09-28", author="合成作者", account="合成评测室")
-    write(account, "2026-09-30-guide", GUIDE_HTML, title="合成选购指南",
-          url="https://mp.weixin.qq.com/s/AbC-123_x")
-    write(account, "2026-10-01-reprint", "<p>合成转载</p>", title="合成转载评测")
-    write(account, "2026-10-02-new", "<p>合成新文章</p>", title="未登记文章")
-    manifest = tmp_path / "manifest.toml"
-    manifest.write_text('''version = 2
-source_type = "wechat"
-[collections.synthetic-lab]
-visibility = "internal"
-[docs."synthetic-lab/2026-09-28-review"]
-category = "product_review"
-metadata = { entity_title = "合成笔记本 A" }
-[docs."synthetic-lab/2026-09-30-guide"]
-category = "purchase_guide"
-visibility = "public"
-[docs."synthetic-lab/2026-10-01-reprint"]
-skip = "reprint"
-''', encoding="utf-8")
-    return root, manifest
+    return build_capture(tmp_path)
 
 
 @pytest.mark.parametrize("url,expected", [
     (PERMANENT, ("mp:MzA5MDAwMDAwMA==:2650000001:2",
                  "https://mp.weixin.qq.com/s?__biz=MzA5MDAwMDAwMA%3D%3D&mid=2650000001&idx=2&sn=abc123")),
     ("http://mp.weixin.qq.com/s?__biz=MzA5&mid=1&idx=1", ("mp:MzA5:1:1", "https://mp.weixin.qq.com/s?__biz=MzA5&mid=1&idx=1")),
+    ("https://mp.weixin.qq.com/s?__biz=MzA5&amp;mid=1&amp;idx=1", ("mp:MzA5:1:1", "https://mp.weixin.qq.com/s?__biz=MzA5&mid=1&idx=1")),
     ("https://mp.weixin.qq.com/s/AbC-123_x?scene=1", ("mp:s:AbC-123_x", "https://mp.weixin.qq.com/s/AbC-123_x")),
-    ("https://mp.weixin.qq.com/s?src=11&timestamp=1&ver=1&signature=x", ("wechat-capture:lab/item", None)),
-    ("https://mp.weixin.qq.com/s?__biz=MzA5&mid=abc&idx=1", ("wechat-capture:lab/item", None)),
-    ("https://example.com/s/AbC", ("wechat-capture:lab/item", None)),
     (None, ("wechat-capture:lab/item", None)),
 ])
 def test_article_identity_uses_permanent_links_and_falls_back_to_capture_key(url, expected):
     assert article_identity(url, "lab/item") == expected
+
+
+@pytest.mark.parametrize("url", [
+    "https://mp.weixin.qq.com/s?src=11&timestamp=1&ver=1&signature=x",
+    "https://mp.weixin.qq.com/s?__biz=MzA5&mid=abc&idx=1",
+    "https://example.com/s/AbC",
+    "",
+])
+def test_temporary_or_unrecognized_links_are_rejected_instead_of_silently_degrading(url):
+    with pytest.raises(DomainError, match="不是公众号永久链接或短链接") as error:
+        article_identity(url, "lab/item")
+    assert error.value.code == "INVALID_CAPTURE"
 
 
 def test_list_reads_sidecars_in_order_and_fetch_returns_html_with_platform_metadata(capture):
@@ -94,6 +69,8 @@ def test_list_reads_sidecars_in_order_and_fetch_returns_html_with_platform_metad
     ('{"title": " "}', "缺少标题"),
     ('{"title": "合成", "author": 1}', "必须是文本"),
     ('{"title": "合成", "date": "2026/09/28"}', "YYYY-MM-DD"),
+    ('{"title": "合成", "date": "20260928"}', "YYYY-MM-DD"),
+    ('{"title": "合成", "url": "https://mp.weixin.qq.com/s?src=11&signature=x"}', "永久链接"),
 ])
 def test_invalid_sidecar_fails_listing_with_clear_error(tmp_path, sidecar, message):
     directory = tmp_path / "lab"

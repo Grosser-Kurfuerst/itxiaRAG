@@ -18,12 +18,36 @@ def _decode(raw: RawDocument) -> str:
         raise DomainError("INVALID_RAW_DOCUMENT", "原文必须是 UTF-8 文本") from None
 
 
-class MarkdownParser:
-    """保留标题、列表、表格和带语言标记的代码块，不改写段落正文。"""
+def _image_text(alt: str) -> str:
+    # 编辑器默认 alt 为“图片”，不构成文字说明。
+    alt = alt.strip()
+    return f"[图片：{alt}]" if alt and alt != "图片" else "[图片：未提供文字说明]"
 
-    _heading = re.compile(r"^ {0,3}(#{1,6})\s+(.+?)\s*#*\s*$")
+
+class MarkdownParser:
+    """保留 Markdown 块结构，图片与提示块转为可检索的文字。"""
+
+    _heading = re.compile(r"^ {0,3}(#{1,6})\s+(.*?)\s*#*\s*$")
+    _empty_heading = re.compile(r"^ {0,3}#{1,6}\s*$")
     _list = re.compile(r"^\s*(?:[-*+]\s+|\d+[.)]\s+)")
     _fence = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
+    _image = re.compile(
+        r'!\[([^\]\n]*)\]\(\s*(<[^>\n]*>|(?:[^()\s]|\([^()\s]*\))*)'
+        r'''\s*(?:"[^"\n]*"|'[^'\n]*')?\s*\)'''
+    )
+    _quote = re.compile(r"^ {0,3}> ?(.*)$")
+    _callouts = {
+        "[!NOTE]": ("note", "【提示】"),
+        "[!TIP]": ("note", "【提示】"),
+        "[!IMPORTANT]": ("note", "【注意】"),
+        "[!WARNING]": ("warning", "【警告】"),
+        "[!CAUTION]": ("caution", "【警告】"),
+    }
+
+    def __init__(self, pseudo_heading: str = "level2"):
+        if pseudo_heading not in {"level2", "nested_label"}:
+            raise ValueError("pseudo_heading 必须为 level2 或 nested_label")
+        self.pseudo_heading = pseudo_heading
 
     def parse(self, raw: RawDocument) -> list[ContentBlock]:
         lines = _decode(raw).splitlines(keepends=True)
@@ -31,19 +55,50 @@ class MarkdownParser:
         pending: list[str] = []
         kind, start = "paragraph", 1
         fence_marker = ""
+        quote_fence_marker = ""
+        real_heading_level = 1
 
         def flush():
             nonlocal pending
-            text = "".join(pending).strip("\n")
+            joined = "".join(pending)
+            text = joined.strip("\n")
+            block_kind, metadata = kind, {}
+            if kind == "quote":
+                first, _, body = joined.partition("\n")
+                callout = self._callouts.get(first.strip())
+                if callout:
+                    block_kind = "callout"
+                    level, label = callout
+                    metadata = {"level": level}
+                    body = body.rstrip("\n")
+                    text = label + ("\n" + body if body else "")
             if text.strip():
                 blocks.append(ContentBlock(
-                    kind, text, ordinal=len(blocks) + 1,
+                    block_kind, text, ordinal=len(blocks) + 1, metadata=metadata,
                     locator={"line_start": start, "line_end": start + len(pending) - 1},
                 ))
             pending = []
 
         for number, line in enumerate(lines, 1):
             bare = line.rstrip("\n")
+            quote = self._quote.match(bare)
+            if not quote:
+                quote_fence_marker = ""
+            elif not fence_marker:
+                quoted_fence = self._fence.match(quote.group(1))
+                if quote_fence_marker or quoted_fence:
+                    if pending and kind != "quote":
+                        flush()
+                    if not pending:
+                        kind, start = "quote", number
+                    pending.append(quote.group(1) + ("\n" if line.endswith("\n") else ""))
+                    if not quote_fence_marker:
+                        quote_fence_marker = quoted_fence.group(1)
+                    elif quoted_fence and quoted_fence.group(1)[0] == quote_fence_marker[0] and (
+                        len(quoted_fence.group(1)) >= len(quote_fence_marker) and not quoted_fence.group(2).strip()
+                    ):
+                        quote_fence_marker = ""
+                    continue
             fence = self._fence.match(bare)
             if fence_marker:
                 pending.append(line)
@@ -58,27 +113,50 @@ class MarkdownParser:
                 kind, start, fence_marker = "code", number, fence.group(1)
                 pending.append(line)
                 continue
-            heading = self._heading.match(bare)
-            bold_heading = re.fullmatch(r"\s*\*\*(.+?)\*\*\s*", bare)
-            if heading or bold_heading:
+            image = self._image.fullmatch(bare.strip())
+            if image:
                 flush()
                 blocks.append(ContentBlock(
+                    "image", _image_text(image.group(1)), ordinal=len(blocks) + 1,
+                    locator={"line_start": number, "line_end": number},
+                    metadata={"src": image.group(2).strip("<>")},
+                ))
+                continue
+            bare = self._image.sub(lambda match: _image_text(match.group(1)), bare)
+            line = bare + ("\n" if line.endswith("\n") else "")
+            heading = self._heading.match(bare)
+            if self._empty_heading.fullmatch(bare) or (heading and not heading.group(2).strip()):
+                flush()
+                continue
+            bold_heading = re.fullmatch(r"\s*\*\*(.+?)\*\*\s*", bare)
+            if bold_heading and self.pseudo_heading == "nested_label":
+                label = bold_heading.group(1).strip()
+                if not label or len(label) > 30 or re.search(r"[，。；！？,;!?]", label):
+                    bold_heading = None
+            if heading or bold_heading:
+                flush()
+                if heading:
+                    real_heading_level = len(heading.group(1))
+                blocks.append(ContentBlock(
                     "heading", heading.group(2) if heading else bold_heading.group(1),
-                    level=len(heading.group(1)) if heading else 2,
+                    level=real_heading_level if heading else (
+                        2 if self.pseudo_heading == "level2" else min(real_heading_level + 1, 6)
+                    ),
                     ordinal=len(blocks) + 1, locator={"line_start": number, "line_end": number},
                 ))
                 continue
             if not bare.strip():
                 flush()
                 continue
-            next_kind = "table" if bare.lstrip().startswith("|") else (
+            quote = self._quote.match(bare)
+            next_kind = "quote" if quote else "table" if bare.lstrip().startswith("|") else (
                 "list" if self._list.match(bare) else "paragraph"
             )
             if pending and next_kind != kind:
                 flush()
             if not pending:
                 kind, start = next_kind, number
-            pending.append(line)
+            pending.append(quote.group(1) + ("\n" if line.endswith("\n") else "") if quote else line)
         flush()
         return blocks
 
@@ -95,9 +173,7 @@ class _Node:
         if self.tag == "br":
             return "\n"
         if self.tag == "img":
-            alt = (self.attrs.get("alt") or "").strip()
-            # 微信编辑器默认 alt 为“图片”，不构成文字说明。
-            return f"[图片：{alt}]" if alt and alt != "图片" else "[图片：未提供文字说明]"
+            return _image_text(self.attrs.get("alt") or "")
         return "".join(child if isinstance(child, str) else child.text() for child in self.children)
 
     def find(self, predicate):

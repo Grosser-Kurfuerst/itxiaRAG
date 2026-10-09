@@ -166,3 +166,47 @@ def test_raw_model_failure_preserves_existing_document(embedder):
             response = client.post("/api/v1/sources/raw/", data, format="json")
             assert response.status_code == 502
         assert list(EvidenceUnit.objects.values_list("body", flat=True)) == previous
+
+
+def test_raw_yuque_markdown_import_and_search_use_normalized_text_and_existing_image_warning(embedder):
+    client = client_for("maintain_source")
+    content = (
+        '# 合成语雀经验\n\n## 电池案例\n\n<font color="red">续航不足，检查电池。</font>\n\n'
+        ':::warning\n拆机前断开电源并备份数据。\n:::\n\n'
+        '![图片](https://cdn.nlark.com/synthetic/battery.png)\n\n'
+        '| 条件 | 结果 |\n| --- | --- |\n| 检查电池 | 续航不足<br/>更换后恢复 |\n'
+    )
+    data = request_payload("experience_case", content, "text/x-yuque-markdown")
+    data["source"].update(source_type="yuque", canonical_locator="synthetic:yuque-experience")
+    with patch("config.components.embedding_provider", return_value=embedder):
+        imported = client.post("/api/v1/sources/raw/", data, format="json")
+        assert imported.status_code == 200, imported.data
+        source = KnowledgeSource.objects.get()
+        assert source.document_schema == "experience_case"
+        assert source.warnings == ["原文含未提供文字说明的图片，关键参数需人工补录。"]
+        response = client.post("/api/v1/search/", {"query": "续航不足", "top_k": 5}, format="json")
+    assert response.status_code == 200, response.data
+    assert len(response.data["contexts"]) == 1
+    context = response.data["contexts"][0]
+    assert context["title"] == "电池案例"
+    assert context["text"] == ContextUnit.objects.get().body
+    assert "续航不足，检查电池。" in context["text"]
+    assert "【警告】\n拆机前断开电源并备份数据。" in context["text"]
+    assert "[图片：未提供文字说明]" in context["text"]
+    assert "| 检查电池 | 续航不足；更换后恢复 |" in context["text"]
+    assert all(marker not in context["text"] for marker in ["<font", "</font>", ":::", "cdn.nlark.com", "<br"])
+    for match in context["matches"]:
+        child = EvidenceUnit.objects.get(pk=match["evidence_id"])
+        locator = child.locator
+        assert context["text"][locator["parent_char_start"]:locator["parent_char_end"]] == child.body
+
+
+def test_raw_api_still_rejects_unknown_media_type_before_embedding_or_save():
+    client = client_for("maintain_source")
+    with patch("config.components.embedding_provider") as provider:
+        response = client.post("/api/v1/sources/raw/", request_payload(media_type="text/x-unknown"), format="json")
+        assert response.status_code == 400, response.data
+        assert response.data["error"]["code"] == "UNSUPPORTED_MEDIA_TYPE"
+        assert response.data["error"]["message"] == "不支持该原文格式"
+        provider.assert_not_called()
+    assert not KnowledgeSource.objects.exists()

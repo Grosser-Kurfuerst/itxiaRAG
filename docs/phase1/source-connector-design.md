@@ -1,20 +1,20 @@
 # 来源连接器改造方案
 
-状态：方案，未实现。计划在接入第二个平台（笔吧推文批量导入）时实施，语雀导入作为回归基线。当前资料准备与提交方式见[来源接入说明](source-ingestion-plan.md)，预处理契约见[文档预处理](preprocessing.md)，语雀现有实现见[语雀技术方案](yuque-ingestion/technical-design.md)。
+状态：迁移步骤 1～3 已实现，语雀已改为实现 SourceConnector；笔吧连接器与通用契约测试（步骤 4～5）待实现。当前资料准备与提交方式见[来源接入说明](source-ingestion-plan.md)，预处理契约见[文档预处理](preprocessing.md)，语雀现有实现见[语雀技术方案](yuque-ingestion/technical-design.md)。
 
 ## 1. 背景
 
-[SourceConnector](../../contracts/types.py) 目前只有 `fetch(locator) → RawDocument` 协议，没有任何实现。语雀导入没有使用它，而是在 [sources/yuque](../../sources/yuque/) 中定义了自己的 `YuqueClient.list_docs / read_markdown`，原因是一次导入除了正文还需要：
+改造前 [SourceConnector](../../contracts/types.py) 只有 `fetch(locator) → RawDocument` 协议，没有任何实现。语雀导入没有使用它，而是在 [sources/yuque](../../sources/yuque/) 中定义了自己的 `YuqueClient.list_docs / read_markdown`，原因是一次导入除了正文还需要：
 
 | 导入需要 | 语雀现状 | `fetch(locator)` 能否表达 |
 | --- | --- | --- |
 | 有哪些文档、如何遍历 | `list_docs(book)` 返回 `YuqueDocRef` | 不能，调用方必须事先知道 locator |
-| 稳定身份 `canonical_locator`、原文链接 | [build_request](../../sources/yuque/importer.py) 由 doc_id、book、slug 拼出 | 不能，RawDocument 不含 SourceSpec |
+| 稳定身份 `canonical_locator`、原文链接 | `build_request` 由 doc_id、book、slug 拼出 | 不能，RawDocument 不含 SourceSpec |
 | 标题、来源日期、目录路径 | `YuqueDocRef` 与 `clean_title` | 只能放进 metadata，没有约定 |
-| 可见性 | 清单 [visibility_for](../../sources/yuque/manifest.py) | 不能，属于治理决策 |
+| 可见性 | 清单 `visibility_for` | 不能，属于治理决策 |
 | 类别与流水线 | 清单 `classify` + `CATEGORY_PIPELINES` | 不能，同上 |
 
-另一方面，[YuqueImportService.run](../../sources/yuque/importer.py) 中清单判断、请求组装、校验提交和报告汇总都与语雀无关。改造目标是把这部分抽成通用流程，平台只实现读取。
+另一方面，原 `YuqueImportService.run` 中清单判断、请求组装、校验提交和报告汇总都与语雀无关。改造目标是把这部分抽成通用流程，平台只实现读取。
 
 ## 2. 目标与边界
 
@@ -27,12 +27,12 @@
 
 | 部分 | 职责 | 通用／各平台不同 | 位置 |
 | --- | --- | --- | --- |
-| 协议与 DTO：`SourceConnector`、`SourceRef`、`FetchedSource` | 规定 connector 的输出 | 通用 | `contracts/types.py`（替换现有 SourceConnector） |
-| Connector 实现 | 列出文档、读取原文、生成稳定身份与原文链接、清洗标题、整理平台元数据 | 各平台不同 | `sources/<平台>/` |
-| 清单 Manifest | 导入范围、类别、可见性、逐篇元数据补丁 | 代码通用；每个平台一份 TOML | 代码在 `sources/` 公共模块，TOML 在 `sources/<平台>/manifests/` |
-| 导入服务 SourceImportService | 清单分流、组装原文导入请求、校验提交、汇总报告 | 通用 | `sources/` 公共模块 |
-| 错误约定 | 整批失败与单篇失败分级 | 通用约定，各 connector 按约定抛出 | `contracts` 与各 connector |
-| 命令入口 | 解析参数（Token、目录、清单）、装配依赖、打印报告 | 运行与报告通用；参数与装配各平台不同 | `sources/management/commands/` |
+| 协议与 DTO：`SourceConnector`、`SourceRef`、`FetchedSource` | 规定 connector 的输出 | 通用 | [contracts/types.py](../../contracts/types.py) |
+| Connector 实现 | 列出文档、读取原文、生成稳定身份与原文链接、清洗标题、整理平台元数据；声明本平台类别集合 | 各平台不同 | `sources/<平台>/`，如 [语雀](../../sources/yuque/connector.py) |
+| 清单 Manifest | 导入范围、类别、可见性、逐篇元数据补丁 | 代码通用；每个平台一份 TOML | [sources/manifest.py](../../sources/manifest.py)，TOML 在 `sources/<平台>/manifests/` |
+| 导入服务 SourceImportService | 清单分流、组装原文导入请求、校验提交、汇总报告 | 通用 | [sources/importing.py](../../sources/importing.py) |
+| 错误约定 | 整批失败与单篇失败分级 | 通用约定，各 connector 按约定抛出 | [contracts/errors.py](../../contracts/errors.py) 与各 connector |
+| 命令入口 | 解析参数（Token、目录、清单）、装配依赖、打印报告 | 基类 [SourceImportCommand](../../sources/commands.py) 负责清单、账号、试运行、提交与报告；平台命令只写参数与装配 | `sources/management/commands/` |
 | 预处理链 | 格式解析 → 结构策略 → 增强 → 切分 → 校验 → 入库 | 通用，按 media_type 与 schema 选择 | `ingestion/`、[组合根](../../config/components.py) |
 | 　方言解析器 | 平台特有的格式写法 | 可选，按平台提供（如 YuqueMarkdownParser） | `ingestion/` |
 | 　结构策略 | 父段与子块组织 | 按内容类型区分，与平台无关 | `ingestion/` |
@@ -45,12 +45,13 @@
 @dataclass(frozen=True)
 class SourceRef:
     """列表阶段的轻量引用：不含正文，用于清单匹配、报告和读取。"""
-    key: str                                # 清单与报告用的可读键，如 help/install_win10
+    collection: str                         # 清单登记的集合：语雀知识库、公众号账号等
+    key: str                                # 清单与报告用的可读键“集合/条目”，如 help/install_win10
     canonical_locator: str                  # 稳定身份，如 doc:55035323；改名不变
     title: str
-    collection_path: tuple[str, ...] = ()   # 知识库、目录、账号等，供清单路径规则匹配
+    collection_path: tuple[str, ...] = ()   # 集合内的目录路径（不含集合本身），供清单路径规则匹配
     updated_at: datetime | None = None
-    extra: Mapping[str, Any] = field(default_factory=dict)  # 平台私有字段
+    extra: dict = field(default_factory=dict)  # 平台私有字段
 
 
 @dataclass(frozen=True)
@@ -69,18 +70,19 @@ class SourceConnector(Protocol):
 - **列出与读取分离**：清单匹配、跳过和 `--only` 过滤在读取正文前完成。
 - **身份归 connector**：`canonical_locator` 与 `source_url` 的生成规则只有平台知道。身份必须在改名、重新采集后保持不变；取不到稳定标识时由清单提供人工键，不能用会过期的链接。
 - **范围放构造参数**：`list()` 不带参数，读取范围（知识库、目录、账号）由构造参数传入，协议不随平台概念增加参数。
-- **元数据约定**：`RawDocument.metadata` 的公共键为 `title`、`source_date`、`collection_path`；平台私有字段放在 `metadata[source_type]` 下（语雀现为 `metadata["yuque"]`）。
+- **元数据约定**：`RawDocument.metadata` 的公共键为 `title`、`source_date`、`collection_path`；平台私有字段放在 `metadata[source_type]` 下（语雀现为 `metadata["yuque"]`）。导入服务在该命名空间中写入 `classified_by`，因此语雀请求与改造前完全一致，已导入文档的内容哈希不变。
 
 ## 5. 清单
 
-由现有语雀清单泛化，结构基本不变：
+由语雀清单泛化（`version = 2`）：
 
-- 文档键使用 `ref.key`，`books` 改为 `collections`，路径规则按 `ref.collection_path` 最长前缀匹配，单篇条目优先。
-- 允许的类别不在代码中写死，改为由各平台的 `category_pipelines` 决定；清单中出现未接入的类别仍按现有行为报告 `skipped`。
-- 单篇条目可带 `metadata` 补丁，用于平台无法提供、预处理需要的字段，例如评测的 `entity_title`、`entity_headings`，或人工稳定键。补丁不能覆盖来源身份和可见性。
+- 根表声明 `source_type`，载入时必须与命令一致；`[connector]` 表放平台参数（如语雀的 `group`），由平台命令解释。
+- 文档键使用 `ref.key`，`books` 改为 `collections`，路径规则用 `collection` 指定集合，按 `ref.collection_path` 最长前缀匹配，单篇条目优先。
+- 允许的类别由各平台声明（如语雀的 `CATEGORIES`），已接入的流水线由组合根的 `<平台>_CATEGORY_PIPELINES` 决定；清单中已声明但未接入的类别仍报告 `skipped`（未接入）。
+- 单篇条目可带 `metadata` 补丁，用于平台无法提供、预处理需要的字段，例如评测的 `entity_title`、`entity_headings`。补丁只能用于有 `category` 的条目，不能包含平台命名空间；来源身份和可见性不在 metadata 中，补丁无法覆盖。
 
 ```toml
-version = 1
+version = 2
 source_type = "wechat"
 
 [collections."笔吧评测室"]

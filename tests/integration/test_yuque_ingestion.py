@@ -136,14 +136,16 @@ def test_internal_tutorial_is_only_visible_to_authorized_token_accounts(embedder
 
 def command_snapshot(tmp_path):
     manifest = tmp_path / "manifest.toml"
-    manifest.write_text('''version = 1
+    manifest.write_text('''version = 2
+source_type = "yuque"
+[connector]
 group = "synthetic"
-[books.help]
+[collections.help]
 visibility = "public"
-[books.textbook]
+[collections.textbook]
 visibility = "internal"
 [[path_rules]]
-book = "help"
+collection = "help"
 path_prefix = ["工具"]
 category = "tool_card"
 [docs."help/install"]

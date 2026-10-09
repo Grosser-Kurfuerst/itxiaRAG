@@ -86,14 +86,16 @@ def openapi_command(tmp_path, settings, yuque_server):
     base_url, state = yuque_server
     settings.YUQUE_TOKEN, settings.YUQUE_API_BASE = TEST_TOKEN, base_url
     manifest = tmp_path / "manifest.toml"
-    manifest.write_text('''version = 1
+    manifest.write_text('''version = 2
+source_type = "yuque"
+[connector]
 group = "synthetic"
-[books.help]
+[collections.help]
 visibility = "public"
-[books.textbook]
+[collections.textbook]
 visibility = "internal"
 [[path_rules]]
-book = "help"
+collection = "help"
 path_prefix = ["工具"]
 category = "tool_card"
 [docs."help/install"]

@@ -1,25 +1,28 @@
 # 第一批 74 篇：28 教程、31 工具（28 篇由目录规则覆盖）、15 知识。
 # 清单只保存标识和分类；不保存正文、快照或凭据。
-version = 1
+version = 2
+source_type = "yuque"
+
+[connector]
 group = "itxia"
 
-[books.help]
+[collections.help]
 visibility = "public"
 
-[books.article]
+[collections.article]
 visibility = "public"
 
-[books.textbook]
+[collections.textbook]
 visibility = "internal"
 
-[books.basic-computer]
+[collections.basic-computer]
 visibility = "public"
 
-[books.dygh8t]
+[collections.dygh8t]
 visibility = "public"
 
 [[path_rules]]
-book = "help"
+collection = "help"
 path_prefix = ["IT侠常用工具大全"]
 category = "tool_card"
 

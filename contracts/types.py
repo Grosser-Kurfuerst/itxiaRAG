@@ -1,7 +1,7 @@
 """跨模块 DTO 和变化点协议；不依赖 Django ORM 或模型厂商。"""
 from dataclasses import dataclass, field
-from datetime import date
-from typing import Literal, Protocol, TypeAlias
+from datetime import date, datetime
+from typing import Iterable, Literal, Protocol, TypeAlias
 from uuid import UUID
 
 
@@ -59,8 +59,36 @@ class RawDocument:
     metadata: dict = field(default_factory=dict)
 
 
+@dataclass(frozen=True)
+class SourceRef:
+    """连接器列表阶段的轻量引用：不含正文，供清单匹配、报告和读取。
+
+    key 约定为“集合/条目”，集合是知识库、公众号等清单可见性单位；
+    collection_path 是集合内的目录路径，不含集合本身。
+    """
+    collection: str
+    key: str
+    canonical_locator: str
+    title: str
+    collection_path: tuple[str, ...] = ()
+    updated_at: datetime | None = None
+    extra: dict = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class FetchedSource:
+    """一篇原文及其来源链接；raw.metadata 公共键为 title、source_date、collection_path。"""
+    ref: SourceRef
+    raw: RawDocument
+    source_url: str | None = None
+
+
 class SourceConnector(Protocol):
-    def fetch(self, locator: str) -> RawDocument: ...
+    """平台只负责列出与读取；导入范围、类别和可见性由清单决定。"""
+    source_type: str
+
+    def list(self) -> Iterable[SourceRef]: ...
+    def fetch(self, ref: SourceRef) -> FetchedSource: ...
 
 
 class DocumentPreprocessor(Protocol):

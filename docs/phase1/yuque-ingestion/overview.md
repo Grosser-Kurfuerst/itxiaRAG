@@ -4,16 +4,22 @@
 
 ## 当前状态
 
-**阶段 1～2 已实现，阶段 3～6 未开始。** 原文 API 已支持 `text/x-yuque-markdown` 与 `tutorial@1`，教程可按章节自适应划分父段，附风险提示、时效提示与目录检索前缀，也可继续搭配原有三种 schema 使用。当前可以逐篇手工提交教程，没有语雀读取客户端、导入清单或批量命令。本目录描述第一批三类文档的需求与技术方案，实现按[分阶段实现方案](implementation-phases.md)推进；每完成一个阶段，按该阶段列出的范围同步文档，并在下表更新状态。
+**阶段 1～3 已实现，阶段 4～6 未开始。** 原文 API 已支持 `text/x-yuque-markdown` 与 `tutorial@1`，教程可按章节自适应划分父段，附风险提示、时效提示与目录检索前缀，也可继续搭配原有三种 schema 使用。`import_yuque --snapshot` 已支持清单分类、离线试运行与批量导入，知识和工具条目报告为“未接入”。官方 OpenAPI 读取与真实教程验收待阶段 4。本目录描述第一批三类文档的需求与技术方案，实现按[分阶段实现方案](implementation-phases.md)推进；每完成一个阶段，按该阶段列出的范围同步文档，并在下表更新状态。
 
 | 阶段 | 内容 | 状态 |
 | --- | --- | --- |
 | 1 | 语雀 Markdown 解析 | 已完成 |
 | 2 | 教程流水线 | 已完成 |
-| 3 | 导入命令（快照） | 未开始 |
+| 3 | 导入命令（快照） | 已完成 |
 | 4 | 语雀读取与教程验收 | 未开始，需要语雀 Token |
 | 5 | 知识流水线 | 未开始 |
 | 6 | 工具条目流水线 | 未开始 |
+
+导入清单位于 [sources/yuque/manifests/itxia.toml](../../../sources/yuque/manifests/itxia.toml)。第一批 74 篇由 46 个单篇分类条目与工具目录规则覆盖，另外登记 3 个重复副本跳过条目。新增文档先试运行，按报告补写单篇 `category` 或 `skip`；只有稳定且类别一致的目录才增加 `path_rules`，单篇条目优先于最长目录前缀。可见性由单篇覆盖知识库默认，`textbook` 为 internal。清单只保存标识、类别与权限，不保存正文。
+
+`article/partition-resize`、`article/install_win10_from_scratch` 与 `article/gagpcm` 分别指向 `help/partition-resize`、`help/install_win10` 与 `help/nju_network_guide`。重复副本始终跳过，不会自动导入或删除 canonical 文档。
+
+试运行成功状态为 `preprocessed`，不调用 Embedding 或保存；无账号时直接运行注册预处理器，提供账号时执行与 API 相同的来源权限校验。正式导入复用原文请求 Serializer、DTO 转换，依次调用 `preprocess_raw` 与 `import_processed`。操作命令见 [README](../../../README.md#语雀快照导入)。
 
 ## 分批范围
 

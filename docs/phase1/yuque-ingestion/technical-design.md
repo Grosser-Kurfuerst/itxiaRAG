@@ -1,6 +1,6 @@
 # 第一批技术方案：教程、工具条目与知识的预处理和导入
 
-本文给出满足[需求分析](requirements-analysis.md)的技术方案，覆盖操作教程（`tutorial`）、工具条目（`tool_card`）、知识科普／对比／速查（`knowledge`）三类语雀文档。现有原文预处理契约见[文档预处理](../preprocessing.md)，公共 DTO 与存储见[首期技术设计](../phase1-technical-design.md)。**阶段 1～2 已实现：MarkdownParser 通用增强、YuqueMarkdownParser、媒体类型注册、教程章节策略与增强步骤、collection_path 校验和 tutorial@1 已接入；其余配置、增强步骤与导入命令仍为方案。**
+本文给出满足[需求分析](requirements-analysis.md)的技术方案，覆盖操作教程（`tutorial`）、工具条目（`tool_card`）、知识科普／对比／速查（`knowledge`）三类语雀文档。现有原文预处理契约见[文档预处理](../preprocessing.md)，公共 DTO 与存储见[首期技术设计](../phase1-technical-design.md)。**阶段 1～3 已实现：Markdown 通用与语雀解析、教程章节策略与增强步骤、collection_path 校验和 tutorial@1、人工清单与快照导入命令已接入；OpenAPI 读取、知识与工具流水线仍为方案。**
 
 ## 1. 设计目标与原则
 
@@ -29,7 +29,7 @@
   → Manifest.classify：单篇条目 → 目录规则；未登记不导入                              [sources/yuque，新增]
   → CATEGORY_PIPELINES：tutorial→tutorial@1，tool_card→tool_card@1，knowledge→knowledge@1   [组合根，新增]
   → build_request：标题清洗，组装 SourceSpec 与 RawDocument                          [sources/yuque，新增]
-  → import_raw / preprocess_raw：权限与来源校验                                      [ingestion.pipeline，已有]
+  → preprocess_raw：权限与来源校验                                                   [ingestion.pipeline，已有]
   → PreprocessorRegistry.process(raw, schema, version)：按 schema 选择流水线          [已有]
       ParseStep(YuqueMarkdownParser)                                                [新解析器]
       → StructureStep(SectionedDocumentStrategy(profile))                           [新策略]
@@ -53,7 +53,7 @@
 | `sources/yuque/manifest.py` | 新增 | 清单读取与校验（标准库 tomllib）、`classify` |
 | `sources/yuque/importer.py` | 新增 | 标题清洗与请求组装函数、YuqueImportService、导入报告 |
 | `sources/management/commands/import_yuque.py` | 新增 | 命令行入口，负责装配依赖 |
-| `sources/yuque/manifests/itxia.toml` | 新增 | itxia 团队导入清单，只含公开文档的标识和类别 |
+| `sources/yuque/manifests/itxia.toml` | 新增 | itxia 团队导入清单，只含文档标识、类别、跳过原因和可见性 |
 
 `sources` 作为无模型的 Django 应用加入 `INSTALLED_APPS`，只为提供管理命令。
 
@@ -62,7 +62,7 @@
 ```text
 sources.management（组合） → sources.yuque → ingestion.pipeline、contracts
 config.components → ingestion.*（解析器、章节策略、增强步骤）
-ingestion 不依赖 sources；sources 不直接访问 ORM 或模型服务，统一经 import_raw
+ingestion 不依赖 sources；sources 导入经 preprocess_raw 与 import_processed，不直接操作 ORM 或模型服务
 ```
 
 语雀方言解析器放在 `ingestion`，因为它是格式适配器，与 HtmlParser 优先读取微信 `js_content` 的做法一致。读取接口、清单和标题清洗是平台知识，留在 `sources/yuque`。
@@ -81,9 +81,8 @@ ingestion 不依赖 sources；sources 不直接访问 ORM 或模型服务，统�
 # 组合根：类别 → 流程。清单只写类别，流程版本由受信任代码决定。
 CATEGORY_PIPELINES = {
     "tutorial": ("tutorial", 1),
-    "tool_card": ("tool_card", 1),
-    "knowledge": ("knowledge", 1),
 }
+# 阶段 5、6 接入对应流水线后，再添加 knowledge、tool_card。
 ```
 
 ### 3.2 类别判定
@@ -118,7 +117,7 @@ class Manifest:
 
 ### 3.3 导入清单
 
-清单是类别判定的唯一权威来源，随仓库版本管理，只含公开文档的路径与类别，不含正文：
+清单是类别判定的唯一权威来源，随仓库版本管理，只含文档的路径、类别、跳过原因和可见性，不含正文：
 
 ```toml
 # sources/yuque/manifests/itxia.toml
@@ -152,11 +151,15 @@ category = "troubleshooting"   # 已分类但第一批未接入
 
 - 文档键用“知识库/slug”，便于人工阅读；来源身份用数字 ID（见 7.2）。slug 改名后清单条目找不到，报告提示更新。
 - 载入时严格校验，出错直接失败：
-  - 未知字段，或同时写 `category` 和 `skip`。
+  - 未知字段，或 `category` 和 `skip` 同时出现或都缺失；`skip` 必须是非空原因。
   - 类别不在已定义集合内：第一批的 `tutorial`、`tool_card`、`knowledge`，以及已分类但暂未接入的 `troubleshooting`、`case`。
-  - `canonical` 指向不存在的条目。
+  - `canonical` 只能用于跳过条目，且必须指向清单中存在的单篇条目。
   - 可见性不是 `public` 或 `internal`。
+  - `version` 不是整数 1，团队／知识库／文档标识非法，文档引用了未登记的知识库。
+  - `path_rules` 必须为表数组，且只能包含 `book`、`path_prefix`、`category`；知识库必须已登记，前缀必须为 1～10 项非空文本、每项最多 100 字；同一知识库的相同前缀不得重复。
 - 单篇 `visibility` 可以覆盖知识库默认值。
+
+仓库清单覆盖附录全部 74 篇（46 个单篇分类条目与 28 篇工具目录规则），另含 3 个重复跳过条目：`article/partition-resize` → `help/partition-resize`、`article/install_win10_from_scratch` → `help/install_win10`、`article/gagpcm` → `help/nju_network_guide`。
 
 ### 3.4 为什么不在服务端自动识别
 
@@ -393,9 +396,13 @@ class YuqueClient(Protocol):
 
 两种实现是必要的：快照让试运行和单测不依赖网络与 Token。
 
+阶段 3 只实现快照客户端。`<dir>/<book>/toc.json` 与 `docs.json` 均采用 OpenAPI 响应结构 `{"data": [...]}`，便于阶段 4 直接保存接口响应。目录项包含 `type`（DOC／TITLE／LINK）、`title`、`uuid`、`parent_uuid`、`url`（文档 slug）、`doc_id`；文档项包含 `id`、`slug`、`title`、`content_updated_at`（带时区的 ISO 8601，如 `2025-11-23T13:23:51.000Z`）。正文为 `<slug>.md` UTF-8 文本。`toc_path` 沿 `parent_uuid` 向上取祖先标题，再按根到叶排序，不包含自身；祖先可以是 TITLE 或 DOC，不在目录中的文档路径为空。缺失或非法的列表／目录文件会启动失败；单篇正文文件读取失败记入该篇报告后继续。
+
 ### 7.2 来源身份与元数据
 
 `build_request(ref, markdown, manifest)` 组装一篇文档的导入请求，其中标题清洗规则为：去掉【推送归档】等方括号前缀、“教程 \|”“Tips \|”等栏目前缀和末尾的 ⭐，原标题存为 `title_raw`。
+
+实现中 schema/version 由组合根映射传入 `build_request(..., schema=..., version=...)`。栏目前缀简化为开头不超过 20 字的“栏目 \|”（兼容全角竖线与空栏目），不会删除标题中间的方括号或星号。请求 dict 经原文 API 同一个 `RawSourceImportSerializer` 与 `import_raw_dtos` 转换为 DTO，复用标题长度、日期与目录路径等字段校验。清洗后为空或超出契约范围会记为单篇 `INVALID_REQUEST`；元数据时间用带时区的 ISO 8601 保留完整更新时间。
 
 ```json
 {
@@ -446,10 +453,14 @@ class YuqueImportService:
 1. `manifest.classify(ref)` 判定类别，按 3.2 的状态表决定是否导入；不导入的直接记录。
 2. 查映射表得到 schema@version。
 3. 读取 Markdown，`build_request` 组装 SourceSpec 与 RawDocument。
-4. 调用注入的 `submit`：正式导入为 `import_raw`，试运行为 `preprocess_raw`，后者只预处理不编码不保存。
+4. 调用注入的 `submit(source, raw, schema, version)`：正式导入依次调用 `preprocess_raw` 与 `import_processed`，试运行提供账号时为 `preprocess_raw`，不提供账号时直接调用 `registry.process`。试运行只预处理不编码不保存。
 5. 记录父段数、子块数、`reused`、警告和错误码。
 
 `submit` 以函数注入，单测可以替换为假实现，不需要数据库或模型。
+
+`submit` 返回 `SubmissionResult(document, result)`，其中 `result` 是现有 `ImportResult`，试运行时为空。正式命令保留 `preprocess_raw` 生成的文档供报告统计，再调用 `import_processed` 编码与保存，只预处理一次、不改变公共导入返回结构。试运行成功状态为 `preprocessed`，汇总中单独计数。报告收集文档、父段与子块 warnings 并去重，每条最多显示前 30 个字符，超长时加“…”；每篇一行，不打印正文。失败行保留完整 DomainError 错误码与消息，边界校验记录 `INVALID_REQUEST`。
+
+`run(refs, only=...)` 支持可选的单篇过滤。未指定 `--only` 时检查所有清单单篇条目是否在列表中；指定后只检查请求的文档，避免对主动排除的知识库／文档产生缺失警告。
 
 报告示例：
 
@@ -470,18 +481,18 @@ summary: imported=… reused=… skipped=… unregistered=… failed=…
 .venv/bin/python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml \
   --snapshot .runtime/yuque-snapshot --dry-run
 
-# 正式导入单篇：OpenAPI 读取，账号需 maintain_source（internal 文档另需 read_internal）
+# 正式导入单篇：阶段 3 使用快照，账号需 maintain_source（internal 文档另需 read_internal）
 .venv/bin/python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml \
-  --username maintainer --only help/install_win10
+  --snapshot .runtime/yuque-snapshot --username maintainer --only help/install_win10
 ```
 
 | 参数 | 说明 |
 | --- | --- |
 | `--manifest` | 必填，导入清单；读取清单中出现的知识库 |
-| `--snapshot DIR` | 使用本地快照；缺省时使用 OpenAPI，需要 `YUQUE_TOKEN` |
-| `--save-snapshot DIR` | OpenAPI 模式下把读取结果写入快照目录，建议放在被忽略的 `.runtime/` 下 |
-| `--only` | 只处理指定文档（知识库/slug），可重复 |
-| `--dry-run` | 只预处理并输出报告 |
+| `--snapshot DIR` | 阶段 3 必填；缺省提示“OpenAPI 读取尚未实现”。阶段 4 再支持缺省读取 OpenAPI |
+| `--save-snapshot DIR` | 阶段 4 计划参数，当前未实现；保存目录应放在被忽略的 `.runtime/` 下 |
+| `--only` | 只处理指定文档（知识库/slug），可重复；只读取涉及的知识库 |
+| `--dry-run` | 只预处理并输出报告，成功状态 `preprocessed`；不提供账号时无需数据库连接，提供账号时校验权限 |
 | `--username` | 非试运行时必填，以该账号的权限执行导入，与 API 权限校验一致 |
 
 ### 7.5 错误处理
@@ -515,7 +526,7 @@ Token 只从环境变量读取，不写入日志、报告或快照文件。
 | ParseStep | 图片警告文案可配置 | 默认文案不变 |
 | 现有三种 schema 的策略 | 无 | — |
 | 存储、检索、标准导入 API | 无 | — |
-| 命令与配置 | 新增 `import_yuque`、`YUQUE_TOKEN`、`YUQUE_API_BASE`；`INSTALLED_APPS` 增加 `sources`（无模型、无迁移） | `.env.example` 只加空示例 |
+| 命令与配置 | 阶段 3 新增 `import_yuque --snapshot`；`INSTALLED_APPS` 增加 `sources`（无模型、无迁移）。`YUQUE_TOKEN`、`YUQUE_API_BASE` 待阶段 4 | 阶段 3 不改 `.env.example` |
 
 ## 9. 扩展点
 
@@ -547,7 +558,7 @@ Token 只从环境变量读取，不写入日志、报告或快照文件。
 
 ### 10.2 集成测试
 
-`tests/integration/test_yuque_ingestion.py`：使用隔离 PostgreSQL、项目账号的 API Token 认证和明确的模型替身，不访问语雀。三类合成样本以 `text/x-yuque-markdown` 经 `/api/v1/sources/raw/` 导入，检查：
+`tests/integration/test_yuque_ingestion.py`：使用隔离 PostgreSQL、项目账号的 API Token 认证和明确的模型替身，不访问语雀。当前覆盖教程原文 API 与合成快照管理命令：命令只导入教程、重复执行全部 reused、未登记／未接入／重复副本不写入、internal 来源权限与批次失败退出。后续阶段再扩充知识与工具 API 用例，检查：
 
 - 检索返回带章节路径的父段标题、warnings、工具 metadata 和命中定位。
 - 重复导入返回 `reused`。

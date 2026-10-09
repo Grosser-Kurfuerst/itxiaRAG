@@ -12,7 +12,7 @@
 | [技术选型与研究参考](docs/technology-selection.md) | 当前选择理由、替代方案、开源与论文依据 |
 | [首期技术设计](docs/phase1/phase1-technical-design.md) | 模块、公共 DTO、存储、检索、API 响应与错误、迁移 |
 | [来源接入说明](docs/phase1/source-ingestion-plan.md) | 资料获取与准备、提交方式选择、更新与后续平台连接器 |
-| [语雀文档导入方案](docs/phase1/yuque-ingestion/overview.md) | 语雀资料分批导入的需求分析、类别选择与技术方案（方案阶段，未实现） |
+| [语雀文档导入方案](docs/phase1/yuque-ingestion/overview.md) | 语雀解析、教程流水线与快照导入已实现；OpenAPI 读取与其他类别待后续阶段 |
 | [文档预处理](docs/phase1/preprocessing.md) | 原文请求、格式适配器、父子段策略、长度预算与步骤扩展 |
 | [Docker 部署与验收](docs/phase1/deployment.md) | Compose 配置、启动、账号、标准／原文导入冒烟检查和日常操作 |
 | [项目测试规则](docs/unit-testing-guidelines.md) | 测试环境、预处理专项、回归命令与完成定义 |
@@ -69,7 +69,7 @@ curl -H "Authorization: Token $(cat .runtime/maintainer.token)" \
 
 返回 `source_id`、`context_ids` 和 `reused`。更新同一来源时保留同 key 段落的 ID；相同内容返回 `reused=true`。Embedding 完成后才开启数据库事务，任意写入失败会回滚。
 
-原文可以提交到 `POST /api/v1/sources/raw/`，选择 `product_review`、`purchase_guide` 或 `experience_case`；请求示例、格式适配、分段策略、预算与扩展方式见[文档预处理](docs/phase1/preprocessing.md)。API 不抓取 URL 或执行 OCR，调用方提供原文。
+原文可以提交到 `POST /api/v1/sources/raw/`，选择 `product_review`、`purchase_guide`、`experience_case` 或 `tutorial`；请求示例、格式适配、分段策略、预算与扩展方式见[文档预处理](docs/phase1/preprocessing.md)。API 不抓取 URL 或执行 OCR，调用方提供原文。
 
 查询接口：
 
@@ -83,6 +83,22 @@ curl -H "Authorization: Token $(cat .runtime/maintainer.token)" \
 普通账号只获得公开来源；`read_internal` 才能检索内部来源。Embedding 故障返回 502，不静默降级为空结果。
 
 关键词路使用 jieba 分词与 Python BM25，向量路继续编码完整查询；两路通过可编排流水线经 RRF 融合、父段聚合后返回。BM25 每次只读取当前可见子块并计算，内容更新立即生效；没有持久关键词索引或缓存，适合小规模验证。可通过 `RETRIEVAL_MIN_COSINE` 和 `RETRIEVAL_MIN_BM25` 配置独立路线门槛。
+
+## 语雀快照导入
+
+阶段 1～3 已实现，本阶段通过本机快照批量处理教程；官方 OpenAPI 读取与保存快照待阶段 4。清单见 [itxia.toml](sources/yuque/manifests/itxia.toml)，快照格式见[技术方案 7.1](docs/phase1/yuque-ingestion/technical-design.md#71-平台读取)，快照与原文放在被忽略的 `.runtime/` 下。
+
+```sh
+# 离线试运行：无需账号、Embedding 或数据库连接，只预处理、不保存
+.venv/bin/python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml \
+  --snapshot .runtime/yuque-snapshot --dry-run
+
+# 正式导入：可重复 --only；去掉 --only 时处理清单中所有知识库
+.venv/bin/python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml \
+  --snapshot .runtime/yuque-snapshot --username maintainer --only help/install_win10
+```
+
+仍需加载本地 Django 配置。正式导入需要 `maintain_source`，内部来源另需 `read_internal`；`textbook` 默认为 internal。试运行若提供 `--username` 也会检查账号权限。报告区分 `preprocessed`（试运行成功）、`imported`、`reused`、`skipped`、`unregistered`、`failed`，列出父段／子块数与警告，不打印正文。知识与工具暂未接入，清单错误或正式导入缺少 Embedding 配置会启动即失败；单篇失败继续处理，批次结束以非零状态退出。重复运行按现有主链更新或返回 `reused`。
 
 ## 验证
 

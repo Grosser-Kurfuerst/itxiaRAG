@@ -161,7 +161,7 @@
 | E0 | 基线 | 否 | 当前默认配置 |
 | E1 | 召回路线 | 否 | 纯关键词／纯向量／RRF |
 | E2 | RRF k 与每路候选数 | 否 | k ∈ {10, 30, 60}；候选数 ∈ {50, 100, 200}（`RETRIEVAL_CANDIDATE_LIMIT`） |
-| E3 | 关键词分词 | 否 | 加入机型名 jieba 词典；调整[停用词](../../../retrieval/tokenization.py)（“多久”“能”“用”当前会被移除） |
+| E3 | 关键词分词 | 否 | 扩充[领域词典](../../../retrieval/keyword-terms.txt)（如从清单 `entity_title` 收集系列名）与简称同义词；调整[停用词](../../../retrieval/tokenization.py)（“多久”“能”“用”当前会被移除） |
 | E4 | 门槛 | 否 | 在 dev 上扫描 `min_cosine`、`min_bm25`，绘制误召回率与召回率曲线 |
 | E5 | 查询指令前缀 | 是 | 留空与按 Embedding 模型说明添加指令（`EMBEDDING_QUERY_PREFIX`） |
 | E6 | 评测分段 | 是 | `ReviewStrategy(target_chars)` 取 200／400／800 |

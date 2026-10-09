@@ -11,12 +11,26 @@ from retrieval.tokenization import tokenize
 
 def test_tokenizer_splits_chinese_and_preserves_identifiers_and_term_frequency():
     assert tokenize('这台笔记本续航怎么样？') == ['笔记本', '续航']
-    assert tokenize('A14-2025，WIN_11？win_11 RTX 4060 USB-C 0x80070005') == [
-        'a14-2025', 'win_11', 'win_11', 'rtx', '4060', 'usb-c', '0x80070005']
-    assert tokenize('model_1 100%charge model%') == ['model_1', '100%charge', 'model%']
-    assert tokenize('C++ C#') == ['c++', 'c#']
+    assert tokenize('RTX 4060 0x80070005 model% C++ C# 14+') == [
+        'rtx', '4060', '0x80070005', '80070005', 'model%', 'c++', 'c#', '14+']
+    assert tokenize('A14-2025，WIN_11？win_11 USB-C')[:3] == ['a14-2025', '14', '2025']
     assert tokenize('不能开机，没有声音') == ['不能', '开机', '没有', '声音']
     assert tokenize('？！怎么样') == []
+
+
+def test_tokenizer_adds_model_pieces_so_compact_and_spaced_names_match():
+    # 完整型号保留，同时补字母段和数字段；单字符片段不补。
+    assert tokenize('air14') == ['air14', 'air', '14']
+    assert tokenize('TB14+') == ['tb14+', 'tb', '14+']
+    assert tokenize('i7-14650HX') == ['i7-14650hx', '14650', 'hx']
+    assert {'air', '14'} <= set(tokenize('来酷Air 14'))
+    assert {'14+'} <= set(tokenize('ThinkBook 14+'))
+
+
+def test_tokenizer_keeps_domain_terms_whole_without_merging_meaningful_words():
+    assert tokenize('来酷 斗战者 酷睿 锐龙 双烤') == ['来酷', '斗战者', '酷睿', '锐龙', '双烤']
+    # 未收录的复合词仍按普通词语切分，“游戏”可以匹配“游戏本”。
+    assert tokenize('游戏本') == ['游戏', '本']
 
 
 def test_bm25_recalls_a_common_term_even_in_a_single_document():

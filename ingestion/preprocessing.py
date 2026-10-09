@@ -127,13 +127,14 @@ class ParseStep:
     input_stage = "raw"
     output_stage = "blocks"
 
-    def __init__(self, parser: Parser):
+    def __init__(self, parser: Parser, image_warning: str = "原文含未提供文字说明的图片，关键参数需人工补录。"):
         self.parser = parser
+        self.image_warning = image_warning
 
     def process(self, context: PreprocessContext) -> PreprocessContext:
         context.blocks = self.parser.parse(context.raw)
         if any("[图片：未提供文字说明]" in block.text for block in context.blocks):
-            context.warnings.append("原文含未提供文字说明的图片，关键参数需人工补录。")
+            context.warnings.append(self.image_warning)
         return _set_stage(context, self.output_stage)
 
 

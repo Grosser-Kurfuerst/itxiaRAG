@@ -1,6 +1,6 @@
 # 分阶段实现方案
 
-本文把[技术方案](technical-design.md)拆成 6 个可以独立合并的阶段。每个阶段完成后，系统都能正常启动和运行，已有功能不受影响，新增功能可以通过现有入口实际使用和验收。**阶段 1 的语雀 Markdown 解析已实现，阶段 2～6 未开始。**
+本文把[技术方案](technical-design.md)拆成 6 个可以独立合并的阶段。每个阶段完成后，系统都能正常启动和运行，已有功能不受影响，新增功能可以通过现有入口实际使用和验收。**阶段 1～2 已实现：语雀 Markdown 解析与教程流水线已接入原文 API，阶段 3～6 未开始。**
 
 ## 1. 总体安排
 
@@ -135,7 +135,7 @@ for c in doc.contexts:
 | `ingestion/enrichment.py` | CalloutWarningStep、TimeExpressionStep、RetrievalPrefixStep |
 | [ingestion/preprocessing.py](../../../ingestion/preprocessing.py) | ParseStep 的图片警告文案可配置，默认不变 |
 | [contracts/serializers.py](../../../contracts/serializers.py) | `raw.metadata.collection_path` 校验 |
-| [config/components.py](../../../config/components.py) | `pipeline()` 增加增强步骤参数；注册 `tutorial@1` |
+| [config/components.py](../../../config/components.py) | `pipeline()` 增加增强步骤和图片警告文案参数；注册 `tutorial@1` 时显式传入教程文案 |
 
 ### 3.2 完成后的系统状态
 
@@ -148,7 +148,7 @@ for c in doc.contexts:
 
 | 用例 | 检查 |
 | --- | --- |
-| `tests/unit/test_sections.py`（新增） | 自适应顶层、包裹标题下降、超长下钻与导语父段、过短父段合并、无标题文档、子块相连规则（引导句、列表、编号、提示块）、key 稳定、标题截断、图片计数 |
+| `tests/unit/test_sections.py`（新增） | 自适应顶层、包裹标题下降、超长下钻与导语父段、过短父段合并、无标题文档、子块相连规则（连续标题、引导句、列表、编号、提示块）、key 稳定、标题截断、图片计数 |
 | `tests/unit/test_enrichment_steps.py`（新增） | 提示块进入父段或文档 warnings；时效表述；检索前缀；增强步骤插入流水线后阶段校验通过 |
 | `tests/unit/test_raw_import.py`（扩充） | `collection_path` 的类型、条数与长度校验 |
 | `tests/integration/test_yuque_ingestion.py`（新增） | 合成教程经原文 API 导入：父段标题带章节路径、warnings 正确、重复导入返回 `reused`、internal 文档对普通账号不可见 |

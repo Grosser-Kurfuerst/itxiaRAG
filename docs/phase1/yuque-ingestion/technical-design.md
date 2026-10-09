@@ -67,7 +67,7 @@ ingestion 不依赖 sources；sources 导入经 preprocess_raw 与 import_proces
 
 语雀方言解析器放在 `ingestion`，因为它是格式适配器，与 HtmlParser 优先读取微信 `js_content` 的做法一致。读取接口、清单和标题清洗是平台知识，留在 `sources/yuque`。
 
-平台读取不实现现有的 [SourceConnector](../../../contracts/types.py) 协议：它的 `fetch(locator)` 只返回 RawDocument，而导入还需要 SourceSpec 和类别。等出现第二个平台、需要统一连接器入口时，再按实际需要调整该协议。
+平台读取不实现现有的 [SourceConnector](../../../contracts/types.py) 协议：它的 `fetch(locator)` 只返回 RawDocument，而导入还需要 SourceSpec 和类别。等出现第二个平台、需要统一连接器入口时，再按实际需要调整该协议，调整方向见[来源连接器改造方案](../source-connector-design.md)。
 
 ## 3. 运行时类别选择
 

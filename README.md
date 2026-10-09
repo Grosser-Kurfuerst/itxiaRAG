@@ -12,6 +12,7 @@
 | [技术选型与研究参考](docs/technology-selection.md) | 当前选择理由、替代方案、开源与论文依据 |
 | [首期技术设计](docs/phase1/phase1-technical-design.md) | 模块、公共 DTO、存储、检索、API 响应与错误、迁移 |
 | [来源接入说明](docs/phase1/source-ingestion-plan.md) | 资料获取与准备、提交方式选择、更新与后续平台连接器 |
+| [来源连接器改造方案](docs/phase1/source-connector-design.md) | 通用连接器协议、清单与导入服务的拆分，平台差异与迁移步骤；未实现 |
 | [语雀文档导入方案](docs/phase1/yuque-ingestion/overview.md) | 语雀解析、教程流水线、快照导入与 OpenAPI 读取已实现；Token 实测与真实教程验收待补，其他类别待后续阶段 |
 | [文档预处理](docs/phase1/preprocessing.md) | 原文请求、格式适配器、父子段策略、长度预算与步骤扩展 |
 | [Docker 部署与验收](docs/phase1/deployment.md) | Compose 配置、启动、账号、标准／原文导入冒烟检查和日常操作 |

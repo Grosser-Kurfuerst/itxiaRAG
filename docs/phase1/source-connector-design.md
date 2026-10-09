@@ -1,6 +1,6 @@
 # 来源连接器改造方案
 
-状态：迁移步骤 1～4 已实现：语雀改为实现 SourceConnector，新增公众号本地采集目录连接器与 `import_wechat`；通用契约测试（步骤 5）待实现。当前资料准备与提交方式见[来源接入说明](source-ingestion-plan.md)，预处理契约见[文档预处理](preprocessing.md)，语雀现有实现见[语雀技术方案](yuque-ingestion/technical-design.md)。
+状态：已实现。语雀改为实现 SourceConnector，新增公众号本地采集目录连接器与 `import_wechat`，两者通过[通用契约测试](../../tests/unit/test_source_connectors.py)。当前资料准备与提交方式见[来源接入说明](source-ingestion-plan.md)，预处理契约见[文档预处理](preprocessing.md)，语雀现有实现见[语雀技术方案](yuque-ingestion/technical-design.md)。
 
 ## 1. 背景
 
@@ -153,7 +153,7 @@ request = {
 2. 将清单、导入服务、报告从 `sources/yuque` 迁到 `sources/` 公共模块；`books` 改名 `collections`，类别集合改为由 `category_pipelines` 决定，并支持单篇 `metadata` 补丁。
 3. 语雀改为实现 SourceConnector：`YuqueDocRef` 映射为 `SourceRef`（doc_id、book、slug 放 `extra`），`build_request` 中身份、链接、标题清洗和平台元数据移入 `fetch`；OpenAPI 与快照仍是两种实现，`--save-snapshot` 保留在语雀命令中。现有语雀单元与集成测试作为回归。
 4. 新增笔吧本地目录 connector 与清单，命令入口只负责参数与装配。
-5. 补充通用 connector 契约测试，所有实现必须通过：
+5. 补充通用 connector 契约测试 [test_source_connectors.py](../../tests/unit/test_source_connectors.py)，新增平台在其中登记合成数据构造函数，所有实现必须通过：
    - `list()` 的 `key` 与 `canonical_locator` 不重复，重复调用结果稳定；
    - `fetch()` 结果组装的请求能通过 `RawSourceImportSerializer`；
    - metadata 含 `title`，`source_date` 格式合法；

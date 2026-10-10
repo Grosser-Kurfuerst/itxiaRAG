@@ -20,7 +20,7 @@
 **通用底线**（各项另有具体条件，见改进方案）：
 - 全部查询 MRR@10 提升至少 0.01；
 - A～F 类的 Hit@5、MRR@10 下降不超过 0.02；
-- D 类 Hit@5 不下降；
+- D 类 Hit@5 不下降、MRR@10 下降不超过 0.02；
 - 按查询编号奇偶分成两半，两半的 MRR@10 都提升。
 
 **运行方式**：
@@ -42,13 +42,13 @@
 | R0 | 2026-10-11 | 基线：查询集 v4、语料 v3，k=60，不加权 | 0.733／0.896／0.816 | 基线 |
 | R1 | 2026-10-11 | jieba 搜索模式（[改进方案 3.2](retrieval-improvement-plan.md#32-jieba-搜索模式)） | 0.756／0.911／0.832 | 保留"只用于文档端"；双端不采纳 |
 | R2 | 2026-10-11 | 查询端同义词表（[改进方案 3.3](retrieval-improvement-plan.md#33-小同义词表)） | 0.756／0.911／0.832 | 保留 |
-| R3 | 待定 | RRF k 与路线加权（[改进方案 3.1](retrieval-improvement-plan.md#31-rrf-k-与路线加权)） | | 待实验 |
+| R3 | 2026-10-11 | RRF k 与路线加权（[改进方案 3.1](retrieval-improvement-plan.md#31-rrf-k-与路线加权)） | 0.763／0.933／0.842 | 采纳 k=20、不加权 |
 
 当前默认配置在 [settings.py](../../config/settings.py) 中：
 
 | 配置项 | 当前值 |
 | --- | --- |
-| `RETRIEVAL_RRF_K` | 60 |
+| `RETRIEVAL_RRF_K` | 20 |
 | `RETRIEVAL_RRF_WEIGHTS` | `{}`（不加权） |
 | `RETRIEVAL_KEYWORD_SEARCH_MODE` | `"document"` |
 | `RETRIEVAL_KEYWORD_SYNONYMS` | `True` |
@@ -163,21 +163,29 @@ R1、R2 采纳后，用默认配置重跑两个范围，结果文件为 `results
 - 召回失败 2 项：X01、X02 的教程。
 - 排序失败 14 项：D 类 10 项，T07 的工具条目，X03 的教程，U12、U14 的工具条目。
 
-## 7. R3 RRF k 与路线加权（待实验）
+## 7. R3 RRF k 与路线加权（2026-10-11）
 
-在当前默认配置上实验，以 v8 为基线：
+**方法**：在 R1、R2 采纳后的 v8 配置上，比较 k∈{10,30,60}、向量权重∈{1,1.5,2} 的 9 组组合；最好的组落在 k=10，补测 k=5、20，两路权重均为 1。每条查询冻结两路候选，再分别运行正式 Pipeline；默认组与独立基线全部字段一致，实验前后语料与模型不变。冻结环境、完整实验表和筛选条件见[评测 9.9](../phase1/yuque-ingestion/retrieval-evaluation.md#99-rrf-参数实验2026-10-11)。
 
-1. 参数组合：k 取 10、30、60，向量路权重取 1、1.5、2，关键词路权重固定为 1，共 9 组，只跑 `all` 范围。k=60、权重 1 的一组应与 v8 逐条一致，用来验证参数确实生效。
-2. 补充组合：最好的组落在 k=10 时补跑 k=5；落在 k=30 时补跑 k=20；落在权重 2 时补跑权重 3。
-3. 用对比脚本对照基线，按第 1 节的底线和改进方案 3.1 的条件筛选。召回失败必须与基线相同，因为融合不影响各路召回。
-4. 在通过的组里选全部 MRR@10 最高的一组；相差不到 0.005 时，选 k 更大、权重更接近 1 的一组。
-5. 复核选中组中跌出前 5 或丢掉第 1 名的查询，以及新进入前 5、但没有标注的父段。补标后重跑基线和排名前几的组。
+**复核与补标**：T11 的答案补入 VNC 父段，T20 补入磁盘占用分析。补标后重跑默认基线及全部 11 组，指标与筛选结论不变。对比脚本现在也会列出答案名次未变化的查询中新进前五的未标注父段，并检查各结果的查询与标注字段一致。
 
-命令如下（先运行 `mkdir -p .runtime/eval/corpus-v3/rrf`）：
+**结论**：采纳 k=20、不加权。
+- k=10 和 k=20 都通过全部条件；二者 MRR 相差 0.000585，选择更温和的 k=20。
+- k=5 虽然总体 MRR 最高，奇数一半退步，未通过；向量权重 1.5、2 的所有组均未通过。
+- 全部 H@5 从 0.911 升到 0.933，MRR@10 从 0.831634 升到 0.841728（+0.010094）。
+- A～F H@5／MRR 从 0.808／0.767 升到 0.865／0.780；D H@5／MRR 从 0.474／0.415 升到 0.632／0.450，P@5 从 0.265 升到 0.328。
+- 奇偶两半 ΔMRR 分别为 +0.001134、+0.019744；召回失败列表不变（X01、X02 的教程），排序失败 14→10。
+- 8 条提升、2 条真实退步：D06（TGX）12→3、D08 8→5、D12 6→4、U06 3→1；X03 的验机教程 7→8、U25 的 Kami 3→4。没有新增跌出前五或丢失第一名。
 
-```sh
-for k in 10 30 60; do for w in 1 1.5 2; do docker compose --env-file .env.docker -p itxia run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/retrieval:/app/retrieval:ro" -v "$PWD/config:/app/config:ro" -v "$PWD/.runtime/eval:/data" -e PYTHONPATH=/app app python eval/recall_eval.py eval/queries.json /data/corpus-v3/rrf/results-k$k-wv$w.json --scope all --rrf-k $k --vector-weight $w > .runtime/eval/corpus-v3/rrf/report-k$k-wv$w.txt; done; done
-.venv/bin/python eval/compare_runs.py .runtime/eval/corpus-v3/results-v8.json .runtime/eval/corpus-v3/rrf/results-k*.json --scope all > .runtime/eval/corpus-v3/rrf/compare.txt
-```
+**配置与结果**：`RETRIEVAL_RRF_K = 20`，`RETRIEVAL_RRF_WEIGHTS = {}`，加权能力保留。复现旧基线需显式传 `--rrf-k 60 --vector-weight 1`，其他配置不变。参数组使用 `rrf/results-k*.json`、`rrf/report-k*.txt`；完整对比在 `rrf/compare.txt`，补标前结果在 `rrf/before-relabel/`。旧 `rrf/results-base.json` 属于 R1 之前，不混用。
 
-R1 之前的 `rrf/results-base.json` 是旧配置下的基线，不要和这批结果混用。
+**两范围独立全量复测**：结果使用 v9，保留原有 v8；`all` 的全部结果字段与参数组 `k20-wv1` 完全一致，默认流水线与显式实验参数一致，最终环境检查通过。
+
+| 范围 | v8（k=60） | v9（k=20） |
+| --- | --- | --- |
+| `all`（135 条） | 0.756／0.911／0.831634 | 0.763／0.933／0.841728 |
+| `reviews`（54 条） | 0.741／0.870／0.799633 | 0.722／0.870／0.795422 |
+
+`reviews` 的 H@5 不变，MRR 略降 0.004211：D03（OCuLink）1→2、D11 7→8；D09、D12、D17 有提升。依照实验预先指定的线上 `all` 范围采纳，不能声称两个范围都提升。两处补标不改变基线汇总指标。
+
+验证：全部单元与隔离 PostgreSQL 集成测试通过，`500 passed`（包含 3 项对比工具回归）；正式语料只读评测，未重新导入或更换模型。完整结果为 `.runtime/eval/corpus-v3/results-v9.json`、`report-v9.txt`。

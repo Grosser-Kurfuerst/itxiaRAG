@@ -24,6 +24,7 @@ CAT_COLUMNS = ("T", "X", "K", "U")
 def load(path, scope):
     rows = [r for r in json.loads(Path(path).read_text(encoding="utf-8")) if r["scope"] == scope]
     assert rows, f"{path} 中没有范围 {scope}"
+    assert len({r["id"] for r in rows}) == len(rows), f"{path} 中存在重复查询编号"
     return {r["id"]: r for r in rows}
 
 
@@ -92,12 +93,32 @@ def changes(base, run):
             flag = " 跌出前5"
         elif rank_key(new) <= 5 < rank_key(old):
             flag = " 进入前5"
-        unlabeled = [label for label in after["top5"] if label not in before["top5"] and label not in after["rel"]]
-        note = f" 新进前5未标注：{unlabeled}" if unlabeled else ""
-        lines.append((rank_key(new) > rank_key(old), f"  {qid} {old} -> {new}{flag} | {after['q']}{note}"))
+        if old == 1 and new != 1:
+            flag += " 丢失第1名"
+        lines.append((rank_key(new) > rank_key(old), f"  {qid} {old} -> {new}{flag} | {after['q']}"))
     worse = sum(is_worse for is_worse, _ in lines)
     body = [text for _, text in sorted(lines, key=lambda item: not item[0])]
     return f"变差 {worse} 条，变好 {len(lines) - worse} 条", body
+
+
+def new_unlabeled(base, run):
+    """答案名次不变也可能出现新父段，不能只从名次变化的查询中补标。"""
+    lines = []
+    for qid, after in run.items():
+        if not after["rel"]:
+            continue
+        labels = [label for label in after["top5"]
+                  if label not in base[qid]["top5"] and label not in after["rel"]]
+        if labels:
+            lines.append(f"  {qid} | {after['q']} | 新进前5未标注：{labels}")
+    return lines
+
+
+def validate_queries(base, run):
+    assert run.keys() == base.keys(), "各结果的查询集不一致"
+    for qid, before in base.items():
+        for key in ("q", "cat", "rel", "facts", "constraints", "pair"):
+            assert before.get(key) == run[qid].get(key), f"{qid} 的 {key} 不一致，需按同一标注重跑"
 
 
 def main():
@@ -109,7 +130,8 @@ def main():
 
     paths = [args.baseline, *args.runs]
     runs = [load(path, args.scope) for path in paths]
-    assert all(run.keys() == runs[0].keys() for run in runs), "各结果的查询集不一致"
+    for run in runs[1:]:
+        validate_queries(runs[0], run)
     names = [run_name(path) for path in paths]
     summaries = [summarize(run) for run in runs]
 
@@ -121,6 +143,9 @@ def main():
         if summary["recall_fail"] != summaries[0]["recall_fail"]:
             print(f"  召回失败与基线不同：{summary['recall_fail']}")
         print("\n".join(body))
+        unlabeled = new_unlabeled(runs[0], run)
+        print(f"-- 新进前5未标注（含答案名次未变化的查询）：{len(unlabeled)} 条")
+        print("\n".join(unlabeled))
 
 
 if __name__ == "__main__":

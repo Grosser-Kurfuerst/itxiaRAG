@@ -74,8 +74,8 @@ Makefile 默认使用 `.venv/bin/python`。已在其他虚拟环境安装依赖�
 | 用例文件 | 重点检查 |
 | --- | --- |
 | [语雀 Markdown](../tests/unit/test_yuque_markdown.py) | 方言规范化、行号保持与代码保真 |
-| [章节策略](../tests/unit/test_sections.py) | 章节父段、子块、表格行组与正文边界 |
-| [增强步骤](../tests/unit/test_enrichment_steps.py) | 风险、时效提示与目录检索前缀 |
+| [章节策略](../tests/unit/test_sections.py) | 章节父段、工具条目父段、子块、表格行组与正文边界 |
+| [增强步骤](../tests/unit/test_enrichment_steps.py) | 风险、时效、来源日期提示，工具身份与目录检索前缀 |
 | [来源清单](../tests/unit/test_source_manifest.py) | 通用清单严格校验、单篇优先与最长目录前缀、元数据补丁；语雀仓库清单覆盖附录 74 篇、28 篇教程 |
 | [快照导入](../tests/unit/test_yuque_importer.py) | OpenAPI 结构快照、语雀连接器身份与元数据、通用导入服务报告状态、逐篇失败继续、整批访问错误终止、命令试运行与启动错误；不访问数据库／模型 |
 | [连接器契约](../tests/unit/test_source_connectors.py) | 所有 SourceConnector 实现：列表稳定、键与身份不重复、读取结果通过原文导入契约、单篇读取失败为 DomainError |

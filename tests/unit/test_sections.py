@@ -5,7 +5,7 @@ import pytest
 from contracts.types import RawDocument
 from ingestion.chunking import BudgetChunker
 from ingestion.parsers import HtmlParser, MarkdownParser
-from ingestion.sections import KNOWLEDGE, SectionedDocumentStrategy, TUTORIAL, build_tree
+from ingestion.sections import KNOWLEDGE, SectionedDocumentStrategy, ToolCardStrategy, TUTORIAL, build_tree
 from ingestion.strategies import _key
 
 
@@ -333,3 +333,27 @@ def test_knowledge_profile_merges_fragmented_term_sections():
     assert parent.metadata["content_type"] == "knowledge"
     child, = parent.children
     assert all(f"术语{i}的一句话解释" in child.body for i in range(4))
+
+
+def build_tool(text, **metadata):
+    raw = RawDocument(text.encode(), "text/markdown", {"title": "文件占用查看：合成工具", **metadata})
+    return ToolCardStrategy().build(MarkdownParser().parse(raw), raw)
+
+
+def test_single_tool_document_is_one_parent_and_subheadings_only_break_children():
+    parent, = build_tool("工具导语。\n\n## 简介\n\n" + "合成工具按文件夹显示磁盘占用。" * 20 +
+                         "\n\n## 使用方法\n\n### 安装\n\n运行安装包。")
+    assert parent.title == "文件占用查看：合成工具" and parent.metadata["content_type"] == "tool_card"
+    assert parent.metadata["section_path"] == ["文件占用查看：合成工具"]
+    assert [child.metadata["section"] for child in parent.children] == ["正文", "简介", "安装"]
+    assert parent.children[2].body.startswith("使用方法\n\n安装\n\n")
+
+
+def test_tool_collection_is_one_parent_per_tool_with_intros_kept_separate():
+    parents = build_tool("合集导语。\n\n## 驱动相关\n\n### DDU\n\n卸载显卡驱动。\n\n### SDI\n\n安装驱动。\n\n"
+                         "## 硬件检查\n\n分类导语。\n\n### Aida64\n\n查看硬件。", tool_collection=True)
+    assert [parent.title for parent in parents] == [
+        "文件占用查看：合成工具", "驱动相关 > DDU", "驱动相关 > SDI", "硬件检查", "硬件检查 > Aida64",
+    ]
+    assert [parent.body for parent in parents[1:3]] == ["DDU\n\n卸载显卡驱动。", "SDI\n\n安装驱动。"]
+    assert parents[3].body == "硬件检查\n\n分类导语。"

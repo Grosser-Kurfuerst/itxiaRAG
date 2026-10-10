@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-**阶段 1～3 已实现；阶段 4 代码已实现，需 Token 的接口实测与真实教程验收待补；阶段 5 代码已实现，真实 Embedding 检索抽查待补；阶段 6 未开始。** 原文 API 已支持 `text/x-yuque-markdown`、`tutorial@1` 与 `knowledge@1`，教程可按章节自适应划分父段，附风险提示、时效提示与目录检索前缀，也可继续搭配原有三种 schema 使用。`import_yuque` 已支持 OpenAPI／快照读取、清单分类、离线试运行与批量导入；`--save-snapshot` 保存清单内全部已分类正文，包括未接入类别，不受 `--only` 导入范围限制。知识类长表格按行组拆成子块，每组检索文本带表头；工具条目仍报告为“未接入”。本目录描述第一批三类文档的需求与技术方案，实现按[分阶段实现方案](implementation-phases.md)推进；每完成一个阶段，按该阶段列出的范围同步文档，并在下表更新状态。
+**阶段 1～3 已实现；阶段 4 代码已实现，需 Token 的接口实测与真实教程验收待补；阶段 5、6 代码已实现，快照试运行与抽查通过，真实 Embedding 检索抽查待补。** 原文 API 已支持 `text/x-yuque-markdown`、`tutorial@1`、`knowledge@1` 与 `tool_card@1`，教程可按章节自适应划分父段，附风险提示、时效提示与目录检索前缀，也可继续搭配原有三种 schema 使用。`import_yuque` 已支持 OpenAPI／快照读取、清单分类、离线试运行与批量导入；`--save-snapshot` 保存清单内全部已分类正文，包括未接入类别，不受 `--only` 导入范围限制。知识类长表格按行组拆成子块，每组检索文本带表头；工具条目一个工具一个父段，父段带工具名、用途与分类，文档警告带最后更新日期。本目录描述第一批三类文档的需求与技术方案，实现按[分阶段实现方案](implementation-phases.md)推进；每完成一个阶段，按该阶段列出的范围同步文档，并在下表更新状态。
 
 | 阶段 | 内容 | 状态 |
 | --- | --- | --- |
@@ -13,15 +13,17 @@
 | 3 | 导入命令（快照） | 已完成 |
 | 4 | 语雀读取与教程验收 | 代码已实现，需 Token 的接口实测与真实教程验收待补 |
 | 5 | 知识流水线 | 代码已实现，快照试运行与抽查通过，真实 Embedding 检索抽查待补 |
-| 6 | 工具条目流水线 | 未开始 |
+| 6 | 工具条目流水线 | 代码已实现，快照试运行与抽查通过，真实 Embedding 检索抽查待补 |
 
-导入清单位于 [sources/yuque/manifests/itxia.toml](../../../sources/yuque/manifests/itxia.toml)。第一批 74 篇由 46 个单篇分类条目与工具目录规则覆盖，另外登记 3 个重复副本跳过条目。新增文档先试运行，按报告补写单篇 `category` 或 `skip`；只有稳定且类别一致的目录才增加 `path_rules`，单篇条目优先于最长目录前缀。可见性由单篇覆盖知识库默认，当前全部为 public，internal 保留备用。清单只保存标识、类别与权限，不保存正文。
+导入清单位于 [sources/yuque/manifests/itxia.toml](../../../sources/yuque/manifests/itxia.toml)。第一批 74 篇由 46 个单篇分类条目与工具目录规则覆盖，另外登记 3 个重复副本跳过条目。新增文档先试运行，按报告补写单篇 `category` 或 `skip`；只有稳定且类别一致的目录才增加 `path_rules`，单篇条目优先于最长目录前缀。可见性由单篇覆盖知识库默认，当前全部为 public，internal 保留备用。清单只保存标识、类别、权限与少量处理标记（如合集的 `tool_collection`），不保存正文。
 
 `article/partition-resize`、`article/install_win10_from_scratch` 与 `article/gagpcm` 分别指向 `help/partition-resize`、`help/install_win10` 与 `help/nju_network_guide`。重复副本始终跳过，不会自动导入或删除 canonical 文档。
 
 试运行成功状态为 `preprocessed`，不调用 Embedding 或数据库保存；无账号时直接运行注册预处理器，提供账号时执行与 API 相同的来源权限校验。`--save-snapshot --dry-run` 仍会保存快照文件。正式导入复用原文请求 Serializer、DTO 转换，依次调用 `preprocess_raw` 与 `import_processed`。操作命令见 [README](../../../README.md#语雀导入)。
 
 2026-10-09：阶段 4 的 OpenAPI 客户端与快照保存已接入命令，并新增本地临时 HTTP 服务测试。官方接口实测、按实测差异调整方言、真实目录 slug 核对、真实快照保存，以及 28 篇教程的真实导入／检索和人工抽查，均待 Token 到位后补测；本次不调整方言规则或清单，不声称阶段 4 已完整验收。
+
+2026-10-10：阶段 5、6 基于 2026-10-09 保存的快照试运行，第一批 74 篇全部 `preprocessed`，0 失败，3 个重复副本跳过，无“未接入”；抽查 `win10_activation`、`windows_short_commands`、`slang`、`sdi-driver`、`giq7z502ohos1d3u`、`recommended_tools` 的父段、行组、工具身份与警告符合方案。导入开发环境后的真实 Embedding 检索抽查待补。
 
 ## 分批范围
 

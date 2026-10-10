@@ -1,4 +1,4 @@
-"""按章节树规划父段，再按自然块合并教程与知识的检索文本。"""
+"""按章节树规划父段，再按自然块合并教程、知识与工具条目的检索文本。"""
 
 from __future__ import annotations
 
@@ -25,6 +25,8 @@ class SectionProfile:
 
 TUTORIAL = SectionProfile("tutorial", 3000, 150, 500, 120)
 KNOWLEDGE = SectionProfile("knowledge", 2500, 150, 400, 120, table_rows_as_children=True)
+# 工具条目按工具成父段而不按长度：父段上限 0 使合集拆到叶子章节，短父段与短子块都不合并。
+TOOL_CARD = SectionProfile("tool_card", 0, 0, 400, 0)
 
 
 def _content_size(blocks: list[ContentBlock]) -> int:
@@ -254,7 +256,7 @@ class SectionedDocumentStrategy:
                 block = replace(block, text=text)
             content.append(block)
         title = str(raw.metadata.get("title") or "未命名文档")
-        sections = plan_parents(build_tree(content), self.profile, title)
+        sections = plan_parents(self._tree(content, raw), self.profile, title)
         contexts = []
         for index, section in enumerate(sections):
             # 过滤的图片仍归属于原文区间；保留序号，不重新编号内容块。
@@ -270,3 +272,19 @@ class SectionedDocumentStrategy:
                 },
             ))
         return contexts
+
+    def _tree(self, blocks: list[ContentBlock], raw: RawDocument) -> SectionNode:
+        return build_tree(blocks)
+
+
+class ToolCardStrategy(SectionedDocumentStrategy):
+    """一个工具一个父段：单工具文档整篇成段；清单标记 tool_collection 的合集按叶子章节成段。"""
+
+    def __init__(self):
+        super().__init__(TOOL_CARD)
+
+    def _tree(self, blocks: list[ContentBlock], raw: RawDocument) -> SectionNode:
+        if raw.metadata.get("tool_collection"):
+            return build_tree(blocks)
+        # 单工具文档不建章节树，全部内容作为虚拟根导语；子标题仍是子块断点。
+        return SectionNode(None, 0, list(blocks))

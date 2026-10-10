@@ -45,7 +45,7 @@ visibility = "internal"
 [[path_rules]]
 collection = "help"
 path_prefix = ["工具"]
-category = "tool_card"
+category = "case"
 [docs."help/install"]
 category = "tutorial"
 [docs."help/second"]
@@ -207,25 +207,31 @@ def test_service_records_all_statuses_counts_warnings_and_continues_after_domain
     assert report.summary == {"imported": 0, "reused": 1, "preprocessed": 0, "skipped": 5, "unregistered": 2, "failed": 1}
     assert any("help/missing" in warning and "标识可能已改名" in warning for warning in report.warnings)
     formatted = report.format()
-    for text in ["category(by)", "parents", "children", "tool_card(path_rule)", "summary:"]:
+    for text in ["category(by)", "parents", "children", "case(path_rule)", "summary:"]:
         assert text in formatted
     assert "先备份数据再安装" not in formatted
 
 
-def test_knowledge_category_is_routed_to_knowledge_pipeline(snapshot):
+@pytest.mark.parametrize("entry,titles", [
+    ('category = "knowledge"', ["合成工具"]),
+    ('category = "tool_card"\nmetadata = { tool_collection = true }', ["分类 > 合成工具"]),
+])
+def test_knowledge_and_tool_categories_are_routed_to_their_pipelines(snapshot, entry, titles):
     directory, path = snapshot
     path.write_text(path.read_text(encoding="utf-8").replace(
-        '[docs."help/case"]\ncategory = "case"', '[docs."help/case"]\ncategory = "knowledge"'), encoding="utf-8")
-    (directory / "help" / "case.md").write_text("## 术语\n\n合成术语解释。", encoding="utf-8")
+        '[docs."help/case"]\ncategory = "case"', f'[docs."help/case"]\n{entry}'), encoding="utf-8")
+    (directory / "help" / "case.md").write_text("## 分类\n\n### 合成工具\n\n合成工具说明。", encoding="utf-8")
     registry = components.preprocessors()
     submitted = []
 
     def submit(source, raw, schema, version):
-        submitted.append((source.canonical_locator, schema, version))
-        return SubmissionResult(registry.process(raw, schema, version), ImportResult(uuid4(), [uuid4()], reused=False))
+        document = registry.process(raw, schema, version)
+        submitted.append((source.canonical_locator, schema, version, [context.title for context in document.contexts]))
+        return SubmissionResult(document, ImportResult(uuid4(), [uuid4()], reused=False))
 
     rows = {row.doc: row for row in service(directory, path, submit).run(help_refs(directory)).rows}
-    assert ("doc:6", "knowledge", 1) in submitted
+    category = entry.split('"')[1]
+    assert ("doc:6", category, 1, titles) in submitted
     assert rows["help/case"].status == "imported"
 
 
@@ -438,7 +444,7 @@ def test_snapshot_fetch_failures_are_reported_even_for_unselected_unimplemented_
     assert [(row.doc, row.status) for row in report.rows] == [
         ("help/second", "preprocessed"), ("help/tool", "failed"),
     ]
-    assert report.rows[-1].classification.category == "tool_card"
+    assert report.rows[-1].classification.category == "case"
     assert report.rows[-1].detail == "YUQUE_RATE_LIMITED: 合成限流"
 
 

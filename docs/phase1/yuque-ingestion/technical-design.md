@@ -1,6 +1,6 @@
 # 第一批技术方案：教程、工具条目与知识的预处理和导入
 
-本文给出满足[需求分析](requirements-analysis.md)的技术方案，覆盖操作教程（`tutorial`）、工具条目（`tool_card`）、知识科普／对比／速查（`knowledge`）三类语雀文档。现有原文预处理契约见[文档预处理](../preprocessing.md)，公共 DTO 与存储见[首期技术设计](../phase1-technical-design.md)。**阶段 1～3 已实现；阶段 4 代码已实现，需 Token 的接口实测与真实教程验收待补；阶段 5、6 已实现，第一批 74 篇已导入开发环境并完成检索抽查。**
+本文给出满足[需求分析](requirements-analysis.md)的技术方案，覆盖操作教程（`tutorial`）、工具条目（`tool_card`）、知识科普／对比／速查（`knowledge`）三类语雀文档。现有原文预处理契约见[文档预处理](../preprocessing.md)，公共 DTO 与存储见[首期技术设计](../phase1-technical-design.md)。**阶段 1～3 已实现；阶段 4 的读取方式已于 2026-10-10 由官方 OpenAPI 改为匿名读取公开网页，无需 Token；阶段 5、6 已实现，第一批 74 篇已导入开发环境并完成检索抽查。**
 
 ## 1. 设计目标与原则
 
@@ -16,7 +16,7 @@
 - **一个策略，三套参数**：三类文档的差异集中在 SectionProfile 参数和少量增强步骤。教程与知识互相误判时只影响参数，不会产生错误结构。
 - **类别以人工清单为准**：只有清单中的单篇条目和目录规则能决定类别，未登记的文档不导入。
 - **只在已确认的变化点上抽象**：
-  - 保留的抽象：读取客户端（OpenAPI／本地快照两种实现）、方言解析器、SectionProfile、增强步骤、schema 注册。
+  - 保留的抽象：读取客户端（公开网页／本地快照两种实现）、方言解析器、SectionProfile、增强步骤、schema 注册。
   - 不做的事：API 侧自动识别类别、可插拔的分类规则链、跨平台的通用分类框架、任务队列、同步状态表、删除流程。第二个平台或第二种需求真正出现时再抽取。
 
 ## 2. 总体架构
@@ -24,7 +24,7 @@
 ### 2.1 数据流
 
 ```text
-语雀（官方 OpenAPI，或本地快照）
+语雀（公开网页，或本地快照）
   → YuqueConnector.list：经 YuqueClient 列出文档，映射为 SourceRef                     [sources/yuque]
   → Manifest.classify：单篇条目 → 目录规则；未登记不导入                              [sources/manifest.py，通用]
   → YUQUE_CATEGORY_PIPELINES：tutorial→tutorial@1，tool_card→tool_card@1，knowledge→knowledge@1   [组合根]
@@ -50,7 +50,7 @@
 | [ingestion/preprocessing.py](../../../ingestion/preprocessing.py) | 修改 | ParseStep 的图片警告文案可配置，默认不变 |
 | [config/components.py](../../../config/components.py) | 修改 | 注册语雀媒体类型、三条流水线与类别映射 |
 | [contracts/serializers.py](../../../contracts/serializers.py) | 修改 | RawMetadataSerializer 增加通用字段 `collection_path` |
-| [sources/yuque/client.py](../../../sources/yuque/client.py) | 新增 | YuqueDocRef、YuqueClient 协议、OpenAPI 与快照两种实现 |
+| [sources/yuque/client.py](../../../sources/yuque/client.py) | 新增 | YuqueDocRef、YuqueClient 协议、公开网页与快照两种实现 |
 | [sources/yuque/connector.py](../../../sources/yuque/connector.py) | 新增 | 语雀类别集合、标题清洗、YuqueConnector（实现通用 SourceConnector） |
 | [sources/manifest.py](../../../sources/manifest.py) | 新增（通用） | 清单读取与校验（标准库 tomllib）、`classify`，各平台共用 |
 | [sources/importing.py](../../../sources/importing.py) | 新增（通用） | `build_request`、SourceImportService、导入报告，各平台共用 |
@@ -409,16 +409,16 @@ class YuqueClient(Protocol):
 
 | 实现 | 用途 | 说明 |
 | --- | --- | --- |
-| YuqueOpenApiClient | 正式导入 | 读取 `GET /api/v2/repos/{group}/{book}/toc`、`/docs`、`/docs/{slug}`（取 `data.body`，不使用草稿）。请求头为 `X-Auth-Token`，Token 来自环境变量 `YUQUE_TOKEN`。用标准库 urllib，与现有 Embedding 适配器一致。前一次请求结束后至少间隔 0.5 秒再请求，测试可设为 0；默认 timeout 为 30 秒。docs 列表按 offset／limit 分页，每页上限 100，读取至不足一页 |
-| YuqueSnapshotClient | 离线试运行与测试 | 读取本地快照目录：`<dir>/<book>/toc.json`、`docs.json`、`<slug>.md`。OpenAPI 模式可用 `--save-snapshot` 生成快照 |
+| YuqueWebClient | 正式导入 | 匿名读取语雀网页端接口，只能读公开知识库中已发布的文档：知识库页面 `GET /{group}/{book}` 内嵌的 `window.appData` 提供知识库 ID 与目录；`GET /api/docs?book_id=&offset=&limit=` 返回文档列表，每页上限 100，读取至不足一页；`GET /{group}/{book}/{slug}/markdown?attachment=true&latexcode=false&anchor=false&linebreak=false` 返回网页 Markdown 导出。三者分别要求响应类型为 `text/html`、`application/json`、`text/markdown`，类型不符（通常是验证码或登录页）按格式错误处理。用标准库 urllib，前一次请求结束后至少间隔 1 秒，测试可设为 0；默认 timeout 为 30 秒 |
+| YuqueSnapshotClient | 离线试运行与测试 | 读取本地快照目录：`<dir>/<book>/toc.json`、`docs.json`、`<slug>.md`。网页模式可用 `--save-snapshot` 生成快照 |
 
-两种实现是必要的：快照让试运行和单测不依赖网络与 Token。
+两种实现是必要的：快照让试运行和单测不依赖网络。网页接口不是语雀公开承诺的 API，路径或 `appData` 结构可能变化；变化时只需调整 YuqueWebClient。今后取得团队 Token、需要读取非公开知识库时，可新增官方 OpenAPI 实现（2026-10-10 删除前的版本见提交 `077f7e1`），其余模块不变。
 
 [YuqueConnector](../../../sources/yuque/connector.py) 把客户端适配为通用 SourceConnector：`list()` 遍历构造时传入的知识库，把 YuqueDocRef 映射为 SourceRef（`collection=book`、`key="book/slug"`、`canonical_locator="doc:<id>"`、清洗后的标题、`collection_path=toc_path`，doc_id、slug、原标题放 `extra`）；`fetch(ref)` 读取 Markdown，返回原文、原文链接与平台元数据。
 
-两种客户端复用同一目录路径计算。`<dir>/<book>/toc.json` 与 `docs.json` 均采用 OpenAPI 响应结构 `{"data": [...]}`，docs 保存合并后的完整分页列表，不保存响应头或认证信息。目录项包含 `type`（DOC／TITLE／LINK）、`title`、`uuid`、`parent_uuid`、`url`（文档 slug）、`doc_id`；文档项包含 `id`、`slug`、`title`、`content_updated_at`（带时区的 ISO 8601，如 `2025-11-23T13:23:51.000Z`）。正文为 `<slug>.md` UTF-8 文本。`toc_path` 沿 `parent_uuid` 向上取祖先标题，再按根到叶排序，不包含自身；祖先可以是 TITLE 或 DOC，不在目录中的文档路径为空。缺失或非法的列表／目录文件会启动失败；单篇正文文件读取失败记入该篇报告后继续。
+`<dir>/<book>/toc.json` 与 `docs.json` 均为 `{"data": [...]}`：toc 是页面 `appData` 中的目录，docs 保存合并后的完整分页列表，不保存响应头。目录项包含 `type`（DOC／TITLE／LINK）、`title`、`uuid`、`parent_uuid`、`url`（文档 slug）、`doc_id`；文档项包含 `id`、`slug`、`title`、`content_updated_at`（带时区的 ISO 8601，如 `2025-11-23T13:23:51.000Z`）。正文为 `<slug>.md` UTF-8 文本。`toc_path` 沿 `parent_uuid` 向上取祖先标题，再按根到叶排序，不包含自身；祖先可以是 TITLE 或 DOC，不在目录中的文档路径为空。缺失或非法的列表／目录文件会启动失败；单篇正文文件读取失败记入该篇报告后继续。
 
-`YUQUE_TOKEN` 默认空，OpenAPI 模式启动时校验；`YUQUE_API_BASE` 默认 `https://www.yuque.com/api/v2`，留空也使用默认地址。真实接口格式与账号权限待 Token 到位后补测。
+2026-10-10 实测：匿名读取清单中 5 个知识库，第一批 74 篇的网页导出正文与 2026-10-08 分析快照逐字节一致，试运行的父段与子块数相同。
 
 ### 7.2 来源身份与元数据
 
@@ -501,15 +501,15 @@ summary: imported=… reused=… skipped=… unregistered=… failed=…
 ### 7.4 命令行
 
 ```sh
-# 离线试运行：读取本地快照，不需要 Token、Embedding 和数据库写入
+# 离线试运行：读取本地快照，不需要网络、Embedding 和数据库写入
 .venv/bin/python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml \
   --snapshot .runtime/yuque-snapshot --dry-run
 
-# OpenAPI 试运行并保存快照：先配置并加载 YUQUE_TOKEN
+# 读取公开网页试运行并保存快照
 .venv/bin/python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml \
-  --save-snapshot .runtime/yuque-openapi-snapshot --dry-run
+  --save-snapshot .runtime/yuque-web-snapshot --dry-run
 
-# OpenAPI 正式导入单篇：账号需 maintain_source（internal 文档另需 read_internal）
+# 读取公开网页正式导入单篇：账号需 maintain_source（internal 文档另需 read_internal）
 .venv/bin/python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml \
   --username maintainer --only help/install_win10
 ```
@@ -517,8 +517,8 @@ summary: imported=… reused=… skipped=… unregistered=… failed=…
 | 参数 | 说明 |
 | --- | --- |
 | `--manifest` | 必填，导入清单；读取清单中出现的知识库 |
-| `--snapshot DIR` | 从本地快照读取，不需要语雀 Token；缺省使用 OpenAPI |
-| `--save-snapshot DIR` | 仅 OpenAPI 模式，与 `--snapshot` 互斥；先保存后导入，可与 `--dry-run` 同时使用。保存目录应放在被忽略的 `.runtime/` 下 |
+| `--snapshot DIR` | 从本地快照读取，不访问网络；缺省读取公开网页 |
+| `--save-snapshot DIR` | 仅网页模式，与 `--snapshot` 互斥；先保存后导入，可与 `--dry-run` 同时使用。保存目录应放在被忽略的 `.runtime/` 下 |
 | `--only` | 只导入指定文档（知识库/slug），可重复；通常只读取涉及的知识库。保存快照时始终读取清单全部知识库及已分类正文 |
 | `--dry-run` | 只预处理并输出报告，成功状态 `preprocessed`；不提供账号时无需数据库连接，提供账号时校验权限 |
 | `--username` | 非试运行时必填，以该账号的权限执行导入，与 API 权限校验一致 |
@@ -534,15 +534,12 @@ summary: imported=… reused=… skipped=… unregistered=… failed=…
 | 清单条目在语雀中找不到 | 报告警告，提示标识可能已改名 |
 | 单篇预处理或导入失败（DomainError） | 记录错误码，继续下一篇；整批结束后命令以非零状态退出 |
 | 非试运行但 Embedding 未配置 | 启动时失败 |
-| OpenAPI 模式缺少 Token | `YUQUE_NOT_CONFIGURED`，启动即失败，提示配置环境变量 `YUQUE_TOKEN` |
-| 语雀 401／403 | `YuqueAuthenticationError`（通用 `SourceAccessError` 的子类），不会被导入服务当作单篇失败；命令转为 CommandError 终止整批，提示检查 `YUQUE_TOKEN` 与知识库权限。不会回滚之前已导入的文档 |
+| 语雀 401／403 | `YuqueAccessDeniedError`（通用 `SourceAccessError` 的子类），不会被导入服务当作单篇失败；命令转为 CommandError 终止整批，提示确认知识库公开或稍后重跑。不会回滚之前已导入的文档 |
 | 单篇详情 429 | `YUQUE_RATE_LIMITED`，当前篇记为失败并继续；修正后用 `--only` 重跑或整批重跑。不实现重试队列 |
 | 单篇详情其他 HTTP、网络错误或超时 | `YUQUE_UNAVAILABLE`，当前篇失败并继续；不输出服务错误正文或底层异常详情 |
-| 单篇详情 JSON、响应结构或 body 类型异常 | `INVALID_YUQUE_RESPONSE`，当前篇失败并继续 |
-| 目录或文档列表读取失败 | 没有可归属的单篇，整批终止并输出相应错误码；命令先列完本次涉及的知识库，再处理正文，因此列表失败时不导入任何文档 |
+| 单篇正文响应类型不是 `text/markdown`（如验证码页）或不是 UTF-8 | `INVALID_YUQUE_RESPONSE`，当前篇失败并继续 |
+| 知识库页面缺少 `appData`、目录或文档列表读取失败 | 没有可归属的单篇，整批终止并输出相应错误码；命令先列完本次涉及的知识库，再处理正文，因此列表失败时不导入任何文档 |
 | 保存快照写入失败 | `SNAPSHOT_WRITE_FAILED`，终止整批，提示检查目录与文件权限 |
-
-Token 只从环境变量读取，不写入日志、报告或快照文件。
 
 ### 7.6 更新与同步
 
@@ -561,7 +558,7 @@ Token 只从环境变量读取，不写入日志、报告或快照文件。
 | ParseStep | 图片警告文案可配置 | 默认文案不变 |
 | 现有三种 schema 的策略 | 无 | — |
 | 存储、检索、标准导入 API | 无 | — |
-| 命令与配置 | `import_yuque` 支持 OpenAPI、`--snapshot` 与 `--save-snapshot`；`INSTALLED_APPS` 包含 `sources`（无模型、无迁移）。阶段 4 增加 `YUQUE_TOKEN`、`YUQUE_API_BASE` 与容器透传 | 快照模式无需 Token，原有参数语义保留 |
+| 命令与配置 | `import_yuque` 支持公开网页读取、`--snapshot` 与 `--save-snapshot`；`INSTALLED_APPS` 包含 `sources`（无模型、无迁移）。不需要语雀相关环境变量 | 原有参数语义保留 |
 
 ## 9. 扩展点
 
@@ -590,11 +587,11 @@ Token 只从环境变量读取，不写入日志、报告或快照文件。
 | `tests/unit/test_enrichment_steps.py` | 提示块进入父段或文档 warnings、时效表述、来源日期提示（含日期缺失）、工具身份、检索前缀与表头组合 |
 | `tests/unit/test_source_manifest.py` | 通用清单：单篇条目优先于目录规则、目录规则命中、未登记、跳过、未接入类别、元数据补丁、清单校验 |
 | `tests/unit/test_yuque_importer.py` | 快照连接器和假提交函数：试运行不编码、单篇失败不中断、整批访问错误终止、报告状态、标题清洗与元数据、可见性来自清单 |
-| `tests/unit/test_yuque_client.py`、`tests/unit/test_yuque_openapi.py` | mock HTTP 边界，不开 socket；固定间隔与 timeout、网络与响应格式错误、认证独立异常、快照读写失败、错误消息不泄露 Token |
+| `tests/unit/test_yuque_client.py` | mock HTTP 边界，不开 socket；固定间隔与 timeout、网络错误、响应类型与 `appData` 格式错误、访问拒绝独立异常、快照读写失败、错误消息不泄露底层异常 |
 
 ### 10.2 集成测试
 
-`tests/integration/test_yuque_openapi.py`：本地临时 HTTP 服务模拟目录、分页文档列表与详情，验证请求路径与认证头、祖先路径、401／403 终止、429 与其他详情错误单篇失败后继续、列表失败、缺少 Token 启动失败、74 篇合成快照覆盖未接入类别并兼容离线模式、日志／报告／快照不含 Token。正式导入用例使用隔离 PostgreSQL 与模型替身；不访问真实语雀。沙箱不支持 socket 时至少执行 collect-only，集成与全量测试由隔离环境复核。
+`tests/integration/test_yuque_web.py`：本地临时 HTTP 服务模拟知识库页面、分页文档列表与 Markdown 导出，验证请求路径与 Accept 头、祖先路径、401／403 终止、429、验证码页与其他正文错误单篇失败后继续、列表失败、74 篇合成快照覆盖未接入类别并兼容离线模式。正式导入用例使用隔离 PostgreSQL 与模型替身；不访问真实语雀。沙箱不支持 socket 时至少执行 collect-only，集成与全量测试由隔离环境复核。
 
 `tests/integration/test_yuque_ingestion.py`：使用隔离 PostgreSQL、项目账号的 API Token 认证和明确的模型替身，不访问语雀。当前覆盖教程原文 API、合成速查表的知识原文 API（行组命中与表头检索文本）、工具条目原文 API（工具 metadata 与日期提示）与合成快照管理命令：命令只导入已接入类别、重复执行全部 reused、未登记／未接入／重复副本不写入、internal 来源权限与批次失败退出。工具与教程用例共同检查：
 
@@ -606,7 +603,7 @@ Token 只从环境变量读取，不写入日志、报告或快照文件。
 
 人工执行，结果注明日期，不提交快照。以下是第一批全部完成时的验收内容，实际按类别分摊到阶段 4～6 执行：
 
-1. **OpenAPI 实测**：用团队 Token 读取三个知识库的目录和 5 篇文档，对比 `body` 与网页导出的差异，必要时调整方言规则。
+1. **网页读取实测**：读取清单中全部知识库，对比正文与分析快照的差异，必要时调整方言规则。
 2. **74 篇试运行**：
    - 0 失败。
    - 父段、子块规模与 5.2 的估算同量级。
@@ -632,12 +629,12 @@ Token 只从环境变量读取，不写入日志、报告或快照文件。
 
 分 6 个阶段实现，每个阶段完成后系统都可运行，新增功能可经原文 API 或导入命令实际验收。先只用操作教程打通从语雀读取到检索的完整链路，确认可用后再扩充知识和工具条目。各阶段的实现内容、系统状态、验收方法和文档同步见[分阶段实现方案](implementation-phases.md)。
 
-| 阶段 | 内容 | 需要 Token |
+| 阶段 | 内容 | 需要网络 |
 | --- | --- | --- |
 | 1. 语雀 Markdown 解析 | MarkdownParser 通用增强、YuqueMarkdownParser、注册媒体类型 | 否 |
 | 2. 教程流水线 | 章节策略、风险提示、时效提示、检索前缀、`collection_path`，注册 `tutorial@1` | 否 |
 | 3. 导入命令（快照） | 快照客户端、清单、导入服务、`import_yuque`；映射表只有教程 | 否 |
-| 4. 语雀读取与教程验收 | OpenAPI 客户端、保存快照、28 篇教程真实导入与检索抽查 | 是 |
+| 4. 语雀读取与教程验收 | 网页读取客户端（原为 OpenAPI）、保存快照、28 篇教程真实导入与检索抽查 | 是 |
 | 5. 知识流水线 | 表格行组、知识参数，注册 `knowledge@1` 并加入映射 | 否 |
 | 6. 工具条目流水线 | 工具身份、来源日期提示，注册 `tool_card@1` 并加入映射；74 篇整体验收 | 否 |
 
@@ -645,10 +642,10 @@ Token 只从环境变量读取，不写入日志、报告或快照文件。
 
 | 项 | 影响 | 应对 |
 | --- | --- | --- |
-| OpenAPI `body` 与网页导出方言不一致 | 规范化规则可能需要增删 | 阶段 4 先实测；规则是独立的行函数，可以单独调整 |
+| 网页接口不是公开承诺的 API | 路径、`appData` 结构变化，或触发限流、验证码 | 改动集中在 YuqueWebClient；验证码返回 HTML 时单篇失败，403 终止整批，稍后重跑；需要稳定接口或非公开库时改回官方 OpenAPI |
 | 参数基于快照估算 | 父段过大或过碎 | 试运行与检索抽查后校准，必要时注册新版本 |
 | 截图中的关键信息无法检索 | 例如校园网收费标准主要在截图中 | warnings 提示查看原文；建议维护者在语雀补文字说明；OCR 不在本批 |
 | 子块 key 按小节加序号 | 同一小节正文增删可能移动该小节后续子块的 key | 与评测检索块的取舍一致，父段 key 不受影响 |
 | 通用解析增强改变图片与引用的文本形式 | 已导入的 Markdown 资料重新导入时内容哈希变化 | 当前只有测试数据；实现时回归并在文档预处理中记录 |
 | 子块合并逻辑与评测策略各有一份 | 两处规则可能逐渐分叉 | 共用相连判断函数；第一批稳定后评估是否统一 |
-| 语雀 Token 尚未到位 | 阶段 4 代码已实现，真实接口与教程验收无法完成 | 本次离线单测通过，本地 HTTP 集成测试已新增且可收集，运行由隔离环境复核；接口实测、方言差异调整、真实目录 slug 核对、真实快照保存及教程验收待 Token 到位后补测；其余待确认项已于 2026-10-09 确认，见[需求分析第 7 节](requirements-analysis.md#7-范围外与待确认) |
+| 只能读取公开且已发布的文档 | timdoc 等非公开库与未发布文档读不到 | 第一批范围均为公开文档；其余待确认项已于 2026-10-09 确认，见[需求分析第 7 节](requirements-analysis.md#7-范围外与待确认) |

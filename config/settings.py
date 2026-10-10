@@ -47,5 +47,3 @@ RETRIEVAL_RRF_K = 60
 RETRIEVAL_MIN_COSINE = bounded_float("RETRIEVAL_MIN_COSINE", None, -1, 1)
 RETRIEVAL_MIN_BM25 = bounded_float("RETRIEVAL_MIN_BM25", 0.0, 0)
 PREPROCESS_MAX_INPUT_BYTES = positive_integer("PREPROCESS_MAX_INPUT_BYTES", 2400)
-YUQUE_TOKEN = os.environ.get("YUQUE_TOKEN", "")
-YUQUE_API_BASE = os.environ.get("YUQUE_API_BASE", "") or "https://www.yuque.com/api/v2"

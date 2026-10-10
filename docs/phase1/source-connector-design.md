@@ -32,7 +32,7 @@
 | 清单 Manifest | 导入范围、类别、可见性、逐篇元数据补丁 | 代码通用；每个平台一份 TOML | [sources/manifest.py](../../sources/manifest.py)，TOML 在 `sources/<平台>/manifests/` |
 | 导入服务 SourceImportService | 清单分流、组装原文导入请求、校验提交、汇总报告 | 通用 | [sources/importing.py](../../sources/importing.py) |
 | 错误约定 | 整批失败与单篇失败分级 | 通用约定，各 connector 按约定抛出 | [contracts/errors.py](../../contracts/errors.py) 与各 connector |
-| 命令入口 | 解析参数（Token、目录、清单）、装配依赖、打印报告 | 基类 [SourceImportCommand](../../sources/commands.py) 负责清单、账号、试运行、提交与报告；平台命令只写参数与装配 | `sources/management/commands/` |
+| 命令入口 | 解析参数（目录、清单等）、装配依赖、打印报告 | 基类 [SourceImportCommand](../../sources/commands.py) 负责清单、账号、试运行、提交与报告；平台命令只写参数与装配 | `sources/management/commands/` |
 | 预处理链 | 格式解析 → 结构策略 → 增强 → 切分 → 校验 → 入库 | 通用，按 media_type 与 schema 选择 | `ingestion/`、[组合根](../../config/components.py) |
 | 　方言解析器 | 平台特有的格式写法 | 可选，按平台提供（如 YuqueMarkdownParser） | `ingestion/` |
 | 　结构策略 | 父段与子块组织 | 按内容类型区分，与平台无关 | `ingestion/` |
@@ -129,7 +129,7 @@ request = {
 
 | 维度 | 语雀 | 笔吧公众号 |
 | --- | --- | --- |
-| 获取方式 | OpenAPI 或快照 | `fetch_wechat` 下载或人工采集的本地目录 `<dir>/<账号目录>/<条目>.html`，加同名 `.json` 旁注：`title`（必填）、`url`、`date`（YYYY-MM-DD）、`author`、`account`（显示名，缺省用目录名），不允许其他字段 |
+| 获取方式 | 匿名读取公开网页或快照 | `fetch_wechat` 下载或人工采集的本地目录 `<dir>/<账号目录>/<条目>.html`，加同名 `.json` 旁注：`title`（必填）、`url`、`date`（YYYY-MM-DD）、`author`、`account`（显示名，缺省用目录名），不允许其他字段 |
 | `list()` 范围 | 清单登记的知识库 | 清单登记的账号目录 |
 | `canonical_locator` | `doc:<doc_id>` | 永久链接为 `mp:<__biz>:<mid>:<idx>`，短链接为 `mp:s:<id>`，两者不互通，采集应统一使用永久链接；旁注没有 `url` 时为 `wechat-capture:<账号目录>/<条目>`，此时采集文件不能改名。同一身份在本次列出的账号中出现两次时报错，要求人工去重 |
 | `source_url` | `https://www.yuque.com/<group>/<book>/<slug>` | 规范化后的永久链接（只保留 `__biz`、`mid`、`idx`、`sn`，`&amp;` 转义会先还原）或短链接；带 `timestamp`／`signature` 的临时链接或其他无法识别的链接在列出阶段报错，需换成永久链接或删除 `url` |
@@ -138,7 +138,7 @@ request = {
 | 平台元数据 | `metadata["yuque"]`：doc_id、book、slug 等 | `metadata["wechat"]`：账号、作者；发布日期写入公共键 `source_date` |
 | 类别与流水线 | `tutorial` 等五类，已接入 `tutorial@1`、`knowledge@1`、`tool_card@1` | `product_review`、`purchase_guide`，分别接入 `product_review@1`、`purchase_guide@1` |
 | 清单写法 | 目录规则为主，单篇覆盖为辅 | 逐篇登记为主：类别、`entity_title`、`entity_headings` |
-| 凭据 | `YUQUE_TOKEN` | 无 |
+| 凭据 | 无 | 无 |
 | 实现 | [YuqueConnector](../../sources/yuque/connector.py)、[import_yuque](../../sources/management/commands/import_yuque.py) | [WechatCaptureConnector](../../sources/wechat/connector.py)、[import_wechat](../../sources/management/commands/import_wechat.py)；下载见 [fetch_wechat](../../sources/management/commands/fetch_wechat.py) |
 
 笔吧推文的额外注意事项：

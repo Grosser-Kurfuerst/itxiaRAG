@@ -1,6 +1,6 @@
 # 分阶段实现方案
 
-本文把[技术方案](technical-design.md)拆成 6 个可以独立合并的阶段。每个阶段完成后，系统都能正常启动和运行，已有功能不受影响，新增功能可以通过现有入口实际使用和验收。**阶段 1～3 已实现；阶段 4 代码已实现，需 Token 的接口实测与真实教程验收待补；阶段 5、6 已实现，第一批 74 篇已从快照导入开发环境并完成检索抽查。** 下文各阶段的文件表是实施时的记录；清单与导入服务后来迁到 `sources/manifest.py`、`sources/importing.py`，类别映射改名 `YUQUE_CATEGORY_PIPELINES`，清单测试改名 `test_source_manifest.py`，见[来源连接器改造方案](../source-connector-design.md)。
+本文把[技术方案](technical-design.md)拆成 6 个可以独立合并的阶段。每个阶段完成后，系统都能正常启动和运行，已有功能不受影响，新增功能可以通过现有入口实际使用和验收。**阶段 1～3 已实现；阶段 4 的读取已于 2026-10-10 由官方 OpenAPI 改为匿名读取公开网页并实测，教程检索与人工抽查待补；阶段 5、6 已实现，第一批 74 篇已导入开发环境并完成检索抽查。** 下文阶段 4 关于 OpenAPI 与 Token 的内容是原计划记录，现行读取方式见[技术方案 7.1](technical-design.md#71-平台读取)。 下文各阶段的文件表是实施时的记录；清单与导入服务后来迁到 `sources/manifest.py`、`sources/importing.py`，类别映射改名 `YUQUE_CATEGORY_PIPELINES`，清单测试改名 `test_source_manifest.py`，见[来源连接器改造方案](../source-connector-design.md)。
 
 ## 1. 总体安排
 
@@ -245,7 +245,7 @@ for c in doc.contexts:
 
 ## 5. 阶段 4：语雀读取与教程验收
 
-当前状态：代码已实现，需 Token 的接口实测、实测方言差异修正、真实目录 slug 核对、真实快照保存与教程验收待 Token 到位后补测。下文中的真实数据完成标准仍需后续执行。
+当前状态：2026-10-10 起改为匿名读取公开网页（`YuqueWebClient`），OpenAPI 客户端与 `YUQUE_TOKEN`、`YUQUE_API_BASE` 已删除，测试改为 `tests/unit/test_yuque_client.py` 与 `tests/integration/test_yuque_web.py`。网页读取与快照保存已实测，74 篇 0 失败、正文与分析快照一致，28 篇教程已导入开发环境；教程检索与人工抽查待补。下文 5.1～5.4 保留原 OpenAPI 方案的实施记录。
 
 ### 5.1 实现内容
 

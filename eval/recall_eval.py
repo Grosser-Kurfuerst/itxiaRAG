@@ -4,14 +4,15 @@ D 类按属性条件生成分级标注，另报 P@5、nDCG@5、R@10。
 答案按来源类别分别报三路名次，区分召回失败（两路候选中都没有）与排序失败（已召回但未进入混合前 5）。
 查询集的 scopes 定义若干检索范围（范围名 -> document_schema 列表），每个范围各跑一遍；
 答案按范围过滤，范围内没有答案的查询在该范围按负例统计。
-别名可指向评测标题（字符串），或指向语雀文档的父段 {"doc": "book/slug", "titles": [...]}，省略 titles 表示整篇。
+别名可指向评测标题（字符串），或指向语雀文档（教程、知识、工具条目）的父段
+{"doc": "book/slug", "titles": [...]}，省略 titles 表示整篇。
 
 查询集 queries.json 与属性表 attributes.json 在本目录；语料原文与评测结果放在被忽略的 .runtime/eval/。
-镜像不含本目录，运行时挂载：
+评测只读正式库，镜像不含本目录，运行时挂载：
 
-    docker compose --env-file .env.docker -p itxia run --rm --no-deps [-e POSTGRES_DB=itxia_eval] \
+    docker compose --env-file .env.docker -p itxia run --rm --no-deps \
       -v "$PWD/eval:/app/eval:ro" -v "$PWD/.runtime/eval:/data" -e PYTHONPATH=/app \
-      app python eval/recall_eval.py eval/queries.json /data/corpus-v2/results-v4.json
+      app python eval/recall_eval.py eval/queries.json /data/corpus-v3/results-v6.json
 """
 import json
 import math
@@ -37,7 +38,9 @@ TOP_PARENTS = 20
 RICH_PORTS = ("usb_a", "usb_c", "video_out")  # 视频输出含 HDMI、DP 与支持 DP 的 USB-C；网口不作要求
 THIN_LIGHT_MAX_KG = 1.5
 DEFAULT_SCOPES = {"reviews": ["product_review"]}
-SCHEMA_NAMES = {"product_review": "评测", "tutorial": "教程", "purchase_guide": "指南"}
+SCHEMA_NAMES = {"product_review": "评测", "tutorial": "教程", "knowledge": "知识", "tool_card": "工具",
+                "purchase_guide": "指南"}
+LABEL_PREFIXES = {"purchase_guide": "指南:", "tutorial": "教程:", "knowledge": "知识:", "tool_card": "工具:"}
 
 
 @dataclass
@@ -53,8 +56,7 @@ class Corpus:
             if context_id in ids:
                 return alias
         c = self.contexts[context_id]
-        prefix = {"purchase_guide": "指南:", "tutorial": "语雀:"}.get(c.source.document_schema, "")
-        return prefix + c.title.split(" > ")[-1][:16]
+        return LABEL_PREFIXES.get(c.source.document_schema, "") + c.title.split(" > ")[-1][:16]
 
     def schema_of(self, context_id):
         return self.contexts[context_id].source.document_schema
@@ -65,12 +67,12 @@ def yuque_doc(context):
     return f"{meta['book']}/{meta['slug']}" if meta else None
 
 
-def resolve_alias(target, reviews, tutorials):
+def resolve_alias(target, reviews, yuque):
     if isinstance(target, str):
         ids = [c.id for c in reviews if c.title == target]
         assert len(ids) == 1, (target, len(ids))
         return tuple(ids)
-    doc = [c for c in tutorials if yuque_doc(c) == target["doc"]]
+    doc = [c for c in yuque if yuque_doc(c) == target["doc"]]
     assert doc, target
     if "titles" not in target:
         return tuple(c.id for c in doc)
@@ -85,8 +87,8 @@ def resolve_alias(target, reviews, tutorials):
 def load_corpus(spec, spec_dir):
     contexts = {c.id: c for c in ContextUnit.objects.select_related("source")}
     reviews = [c for c in contexts.values() if c.source.document_schema == "product_review"]
-    tutorials = [c for c in contexts.values() if c.source.document_schema == "tutorial"]
-    alias_ctx = {alias: resolve_alias(target, reviews, tutorials) for alias, target in spec["aliases"].items()}
+    yuque = [c for c in contexts.values() if c.source.source_type == "yuque"]
+    alias_ctx = {alias: resolve_alias(target, reviews, yuque) for alias, target in spec["aliases"].items()}
     title_ctx = {c.title: c.id for c in reviews}
     attributes = json.loads((spec_dir / spec["attributes"]).read_text(encoding="utf-8")) if "attributes" in spec else {}
     assert set(attributes) <= set(title_ctx), set(attributes) - set(title_ctx)

@@ -12,12 +12,17 @@ D 类按属性条件生成分级标注，另报 P@5、nDCG@5、R@10。
 
     docker compose --env-file .env.docker -p itxia run --rm --no-deps \
       -v "$PWD/eval:/app/eval:ro" -v "$PWD/.runtime/eval:/data" -e PYTHONPATH=/app \
-      app python eval/recall_eval.py eval/queries.json /data/corpus-v3/results-v6.json
+      app python eval/recall_eval.py eval/queries.json /data/corpus-v3/results-v7.json
+
+可选参数临时覆盖检索配置（不改 settings），用于参数实验：--scope 只跑指定范围（可重复），
+--rrf-k、--vector-weight 调整 RRF，--search-mode {off,document,both} 选择关键词路搜索模式的使用范围，
+--synonyms／--no-synonyms 切换查询端同义扩展。镜像中的代码未重新构建时，可另挂载 retrieval、config 目录。
+多次运行的结果用 compare_runs.py 对比。
 """
+import argparse
 import json
 import math
 import os
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 from statistics import mean
@@ -27,19 +32,18 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
+from django.conf import settings  # noqa: E402
+
 from catalog.models import ContextUnit, EvidenceUnit, KnowledgeSource  # noqa: E402
 from config import components  # noqa: E402
 from contracts.types import SearchRequest, SearchScope  # noqa: E402
+from metrics import METHODS, SCHEMA_NAMES, SET_METRICS, failures, hit_metrics  # noqa: E402
 
-METHODS = ("hybrid", "keyword", "vector")
-SET_METRICS = ("p@5", "ndcg@5", "r@10")
 CANDIDATES_PER_ROUTE = 100
 TOP_PARENTS = 20
 RICH_PORTS = ("usb_a", "usb_c", "video_out")  # 视频输出含 HDMI、DP 与支持 DP 的 USB-C；网口不作要求
 THIN_LIGHT_MAX_KG = 1.5
 DEFAULT_SCOPES = {"reviews": ["product_review"]}
-SCHEMA_NAMES = {"product_review": "评测", "tutorial": "教程", "knowledge": "知识", "tool_card": "工具",
-                "purchase_guide": "指南"}
 LABEL_PREFIXES = {"purchase_guide": "指南:", "tutorial": "教程:", "knowledge": "知识:", "tool_card": "工具:"}
 
 
@@ -157,12 +161,6 @@ def set_metrics(order, grades):
             "r@10": sum(cid in relevant for cid in top10) / min(len(relevant), 10)}
 
 
-def hit_metrics(ranks):
-    return {"H@1": mean(r == 1 for r in ranks),
-            "H@5": mean(r is not None and r <= 5 for r in ranks),
-            "MRR@10": mean(1 / r if r is not None and r <= 10 else 0 for r in ranks)}
-
-
 def parent_order(candidates):
     return list(dict.fromkeys(c.context_id for c in candidates))
 
@@ -180,6 +178,7 @@ def has_facts(body, facts):
 def evaluate_query(item, scope, schemas, corpus, collector, pipeline):
     """跑一条查询，返回一行结果；答案只保留 schemas 范围内的父段。"""
     routes = collector.collect(item["q"], scope, CANDIDATES_PER_ROUTE)
+    keyword_route = next(r for r in collector.retrievers if r.name == "keyword")
     fused = pipeline.run(SearchRequest(item["q"], scope, TOP_PARENTS), routes)
     keyword, vector = routes.routes.get("keyword", []), routes.routes.get("vector", [])
     orders = {"hybrid": [c.context_id for c in fused.contexts],
@@ -197,7 +196,8 @@ def evaluate_query(item, scope, schemas, corpus, collector, pipeline):
            "top5": [corpus.label(cid) for cid in orders["hybrid"][:5]],
            "ranks": {m: first_rank(o, rel_ids) for m, o in orders.items()},
            "top1_cos": vector[0].score if vector else None,
-           "top1_bm25": keyword[0].score if keyword else None}
+           "top1_bm25": keyword[0].score if keyword else None,
+           "keyword_terms": keyword_route.query_terms(item["q"])}
     by_schema = {}
     for cid in rel_ids:
         by_schema.setdefault(corpus.schema_of(cid), set()).add(cid)
@@ -223,19 +223,6 @@ def evaluate_query(item, scope, schemas, corpus, collector, pipeline):
 def score_stats(rows, key):
     values = [r[key] or 0 for r in rows]
     return {"min": min(values), "max": max(values), "mean": mean(values)}
-
-
-def failures(rows):
-    """按（查询, 来源类别）分类：两路候选都没有答案为召回失败，召回到但未进入混合前 5 为排序失败。"""
-    recall, ranking = [], []
-    for r in rows:
-        for schema, ranks in r.get("source_ranks", {}).items():
-            tag = f"{r['id']}[{SCHEMA_NAMES.get(schema, schema)}]"
-            if ranks["keyword"] is None and ranks["vector"] is None:
-                recall.append(tag)
-            elif ranks["hybrid"] is None or ranks["hybrid"] > 5:
-                ranking.append(tag)
-    return {"recall": recall, "ranking": ranking}
 
 
 def summarize(rows):
@@ -290,21 +277,53 @@ def print_report(scope_name, rows, summary):
     print(f"-- top1 BM25：正例 min={bm25['pos']['min']:.2f}；负例 max={bm25['neg']['max']:.2f}")
 
 
-def main(spec_path, out_path):
-    spec_path = Path(spec_path)
-    spec = json.loads(spec_path.read_text(encoding="utf-8"))
-    corpus = load_corpus(spec, spec_path.parent)
+def parse_args():
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("spec", type=Path, help="查询集 JSON")
+    parser.add_argument("out", type=Path, help="结果 JSON 输出路径")
+    parser.add_argument("--scope", action="append", help="只跑指定范围，可重复；默认跑查询集中的全部范围")
+    parser.add_argument("--rrf-k", type=int)
+    parser.add_argument("--vector-weight", type=float, help="向量路 RRF 权重，关键词路保持 settings 中的值")
+    parser.add_argument("--search-mode", choices=("off", "document", "both"), help="关键词路 jieba 搜索模式的使用范围")
+    parser.add_argument("--synonyms", action=argparse.BooleanOptionalAction, help="关键词路查询端同义扩展")
+    return parser.parse_args()
+
+
+def retrieval_config(args):
+    """参数与 settings 合并后的实际检索配置，写入报告开头。"""
+    weights = dict(settings.RETRIEVAL_RRF_WEIGHTS)
+    if args.vector_weight is not None:
+        weights["vector"] = args.vector_weight
+    return {
+        "rrf_k": settings.RETRIEVAL_RRF_K if args.rrf_k is None else args.rrf_k,
+        "rrf_weights": weights,
+        "search_mode": settings.RETRIEVAL_KEYWORD_SEARCH_MODE if args.search_mode is None else args.search_mode,
+        "synonyms": settings.RETRIEVAL_KEYWORD_SYNONYMS if args.synonyms is None else args.synonyms,
+    }
+
+
+def main(args):
+    spec = json.loads(args.spec.read_text(encoding="utf-8"))
+    corpus = load_corpus(spec, args.spec.parent)
+    config = retrieval_config(args)
     embedder = components.embedding_provider()
-    collector = components.recall_collector(embedder)
-    pipeline = components.post_recall_pipeline()
+    collector = components.recall_collector(embedder, search_mode=config["search_mode"], synonyms=config["synonyms"])
+    pipeline = components.post_recall_pipeline(rrf_k=config["rrf_k"], rrf_weights=config["rrf_weights"])
     scope_schemas = spec.get("scopes", DEFAULT_SCOPES)
+    if args.scope:
+        unknown = set(args.scope) - set(scope_schemas)
+        assert not unknown, f"查询集未定义范围：{unknown}"
+        scope_schemas = {name: scope_schemas[name] for name in args.scope}
+    print(f"检索配置 {json.dumps(config, ensure_ascii=False)}；查询集 {spec.get('version', args.spec.name)}，"
+          f"{len(spec['queries'])} 条；语料 {KnowledgeSource.objects.count()} 个来源、"
+          f"{len(corpus.contexts)} 个父段、{len(corpus.evidence)} 个子块")
 
     rows = []
     for name, schemas in scope_schemas.items():
         scope = build_scope(schemas, embedder.space_id)
         rows += [{"scope": name, **evaluate_query(item, scope, schemas, corpus, collector, pipeline)}
                  for item in spec["queries"]]
-    Path(out_path).write_text(json.dumps(rows, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
+    args.out.write_text(json.dumps(rows, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
     for name in scope_schemas:
         scope_rows = [r for r in rows if r["scope"] == name]
         print_report(name, scope_rows, summarize(scope_rows))
@@ -325,4 +344,4 @@ def print_scope_changes(rows, scope_names):
 
 
 if __name__ == "__main__":
-    main(*sys.argv[1:3])
+    main(parse_args())

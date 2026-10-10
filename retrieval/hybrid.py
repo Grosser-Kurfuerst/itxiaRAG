@@ -1,3 +1,5 @@
+import math
+
 from contracts.types import Candidate, Retriever, RouteBatch
 
 
@@ -16,10 +18,18 @@ class MultiRouteRecall:
 
 
 class RRFRanker:
-    def __init__(self, k=60):
+    """加权 RRF：得分为各路线 weight / (k + 名次) 之和；未配置权重的路线按 1 计。"""
+
+    def __init__(self, k=60, weights=None):
         if k < 1:
             raise ValueError("RRF k 必须为正数")
+        self.weights = dict(weights or {})
+        if any(not math.isfinite(w) or w <= 0 for w in self.weights.values()):
+            raise ValueError("RRF 路线权重必须为正的有限数值")
         self.k = k
+
+    def weight(self, route):
+        return self.weights.get(route, 1.0)
 
     def rank(self, query, lists):
         merged = {}
@@ -33,8 +43,8 @@ class RRFRanker:
                     if name not in ranks or rank < ranks[name]:
                         ranks[name] = rank
                         scores[name] = candidate.route_scores.get(name, candidate.score)
+                score = sum(self.weight(name) / (self.k + rank) for name, rank in ranks.items())
                 merged[candidate.evidence_id] = Candidate(
-                    candidate.evidence_id, candidate.context_id,
-                    sum(1.0 / (self.k + rank) for rank in ranks.values()), ranks, scores, "rrf",
+                    candidate.evidence_id, candidate.context_id, score, ranks, scores, "rrf",
                     candidate.stable_key)
         return sorted(merged.values(), key=Candidate.sort_key)

@@ -118,6 +118,7 @@ category = "tool_card"
 
 [docs."textbook/recommended_tools"]
 category = "tool_card"
+metadata = { tool_collection = true }
 
 [docs."help/download_win10"]
 category = "knowledge"

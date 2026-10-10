@@ -6,11 +6,13 @@ from catalog.storage import DjangoDocumentStore
 from embeddings.openai_compatible import OpenAICompatibleEmbedding
 from ingestion.registry import PreprocessorRegistry
 from ingestion.chunking import BudgetChunker
-from ingestion.enrichment import CalloutWarningStep, RetrievalPrefixStep, TimeExpressionStep
+from ingestion.enrichment import (
+    CalloutWarningStep, RetrievalPrefixStep, SourceDateNoticeStep, TimeExpressionStep, ToolIdentityStep,
+)
 from ingestion.parsers import ParserRegistry
 from ingestion.preprocessing import BuildDocumentStep, ChunkStep, ParseStep, PreprocessPipeline, StructureStep, ValidateStep
 from ingestion.strategies import ExperienceCaseStrategy, PurchaseGuideStrategy, ReviewStrategy
-from ingestion.sections import KNOWLEDGE, SectionedDocumentStrategy, TUTORIAL
+from ingestion.sections import KNOWLEDGE, SectionedDocumentStrategy, ToolCardStrategy, TUTORIAL
 from ingestion.yuque_markdown import YuqueMarkdownParser
 from retrieval.hybrid import MultiRouteRecall
 from retrieval.keyword import KeywordRetriever
@@ -19,7 +21,7 @@ from retrieval.steps import GroupParentsStep, RRFFusionStep, TopKParentsStep
 from retrieval.vector import VectorRetriever
 
 
-YUQUE_CATEGORY_PIPELINES = {"tutorial": ("tutorial", 1), "knowledge": ("knowledge", 1)}
+YUQUE_CATEGORY_PIPELINES = {"tutorial": ("tutorial", 1), "knowledge": ("knowledge", 1), "tool_card": ("tool_card", 1)}
 WECHAT_CATEGORY_PIPELINES = {"product_review": ("product_review", 1), "purchase_guide": ("purchase_guide", 1)}
 
 
@@ -77,4 +79,7 @@ def preprocessors(*, counter=None, max_input_units=None):
         registry.register(schema, 1, pipeline(schema, SectionedDocumentStrategy(profile),
                                               [CalloutWarningStep(), TimeExpressionStep(), RetrievalPrefixStep()],
                                               image_warning=screenshot_warning))
+    registry.register("tool_card", 1, pipeline("tool_card", ToolCardStrategy(), [
+        ToolIdentityStep(), CalloutWarningStep(), SourceDateNoticeStep(), RetrievalPrefixStep(),
+    ], image_warning=screenshot_warning))
     return registry

@@ -97,7 +97,7 @@ visibility = "internal"
 [[path_rules]]
 collection = "help"
 path_prefix = ["工具"]
-category = "tool_card"
+category = "case"
 [docs."help/install"]
 category = "tutorial"
 [docs."help/second"]

@@ -136,7 +136,7 @@ request = {
 | `media_type` | `text/x-yuque-markdown` | `text/html` |
 | 方言解析器 | YuqueMarkdownParser（已有） | 视预处理质量决定是否增加微信 HTML 方言解析 |
 | 平台元数据 | `metadata["yuque"]`：doc_id、book、slug 等 | `metadata["wechat"]`：账号、作者；发布日期写入公共键 `source_date` |
-| 类别与流水线 | `tutorial` 等五类，已接入 `tutorial@1`、`knowledge@1` | `product_review`、`purchase_guide`，分别接入 `product_review@1`、`purchase_guide@1` |
+| 类别与流水线 | `tutorial` 等五类，已接入 `tutorial@1`、`knowledge@1`、`tool_card@1` | `product_review`、`purchase_guide`，分别接入 `product_review@1`、`purchase_guide@1` |
 | 清单写法 | 目录规则为主，单篇覆盖为辅 | 逐篇登记为主：类别、`entity_title`、`entity_headings` |
 | 凭据 | `YUQUE_TOKEN` | 无 |
 | 实现 | [YuqueConnector](../../sources/yuque/connector.py)、[import_yuque](../../sources/management/commands/import_yuque.py) | [WechatCaptureConnector](../../sources/wechat/connector.py)、[import_wechat](../../sources/management/commands/import_wechat.py)；下载见 [fetch_wechat](../../sources/management/commands/fetch_wechat.py) |

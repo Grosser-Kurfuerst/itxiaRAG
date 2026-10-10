@@ -183,7 +183,7 @@ JSON
 
 ```sh
 dc up -d --build app
-# OpenAPI 试运行：仅预处理教程与知识，不编码或写入数据库
+# OpenAPI 试运行：仅预处理第一批三类文档，不编码或写入数据库
 dc exec app python manage.py import_yuque \
   --manifest sources/yuque/manifests/itxia.toml --dry-run
 
@@ -193,7 +193,7 @@ dc exec app python manage.py import_yuque \
   --save-snapshot /tmp/yuque-openapi-snapshot --dry-run
 dc cp app:/tmp/yuque-openapi-snapshot .runtime/yuque-openapi-snapshot
 
-# 从刚保存的快照正式导入教程与知识；需先创建具有 maintain_source、read_internal 的账号
+# 从刚保存的快照正式导入第一批三类文档；需先创建具有 maintain_source、read_internal 的账号
 dc exec app python manage.py import_yuque \
   --manifest sources/yuque/manifests/itxia.toml \
   --snapshot /tmp/yuque-openapi-snapshot --username maintainer
@@ -206,7 +206,7 @@ dc exec app python manage.py import_yuque \
 
 复制快照时使用新的宿主机目标目录，避免 `dc cp` 将目录嵌套到已存在的同名目录内。容器重建会丢失 `/tmp` 快照，后续离线运行可在宿主机按 README 的 `--snapshot` 命令读取，或把已保存的目录复制回 app。正式导入去掉 `--snapshot` 就使用 OpenAPI；单篇重跑可加 `--only help/install_win10`，参数可以重复。
 
-`--snapshot` 与 `--save-snapshot` 互斥，保存可与 `--dry-run` 同用。保存读取清单内所有知识库，写出 `toc.json`、合并所有分页的 `docs.json`（均为 `{"data": [...]}`）以及已分类正文；工具、排障和案例虽未接入，仍保存正文，跳过和未登记只保留列表元数据。`--only` 只限制导入，不限制保存范围。检查报告中保存失败和缺失 slug；完整快照预期覆盖第一批 74 篇，实际目录与正文完整性待 Token 到位后补测。
+`--snapshot` 与 `--save-snapshot` 互斥，保存可与 `--dry-run` 同用。保存读取清单内所有知识库，写出 `toc.json`、合并所有分页的 `docs.json`（均为 `{"data": [...]}`）以及已分类正文；排障和案例虽未接入，仍保存正文，跳过和未登记只保留列表元数据。`--only` 只限制导入，不限制保存范围。检查报告中保存失败和缺失 slug；完整快照预期覆盖第一批 74 篇，实际目录与正文完整性待 Token 到位后补测。
 
 未接入类别报告为 `skipped`，不写入数据库；快照正文读取失败无论类别或 `--only` 都记为 `failed`，继续保存其余文档，结束后非零退出。详情的 429、其他 HTTP／网络错误、超时或格式错误同样按单篇处理；401／403 终止整批并提示检查 `YUQUE_TOKEN` 与知识库权限。目录／列表失败在任何正文处理前终止整批；写盘错误也终止整批。没有重试队列，修正后重跑；保存失败的正文旧文件会删除，不能把不完整快照当作完整数据。
 

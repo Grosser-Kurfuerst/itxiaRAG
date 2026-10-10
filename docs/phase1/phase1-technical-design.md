@@ -69,7 +69,7 @@ api → retrieval.service → MultiRouteRecall
 
 - 已实现的预处理器遵循 `DocumentPreprocessor.process(raw) → ProcessedDocument`；[PreprocessorRegistry](../../ingestion/registry.py) 按 schema/version 显式注册和选择处理器，并校验产物。空注册表拒绝处理，重复注册报错。
 - 原文 API 与 Python import_raw 均复用 `import_processed`。处理器输出必须通过公共 Serializer，不能通过 metadata 改变来源权限，也不直接操作 ORM 或模型供应商协议。
-- [组合根](../../config/components.py) 注册 `product_review@1`、`purchase_guide@1`、`experience_case@1`、`tutorial@1`、`knowledge@1` 的顺序流水线；步骤、解析器、结构策略与预算计数器由受信任应用代码注入，请求不能指定 Python 路径或加载代码。
+- [组合根](../../config/components.py) 注册 `product_review@1`、`purchase_guide@1`、`experience_case@1`、`tutorial@1`、`knowledge@1`、`tool_card@1` 的顺序流水线；步骤、解析器、结构策略与预算计数器由受信任应用代码注入，请求不能指定 Python 路径或加载代码。
 - 平台接入协议为 `SourceConnector.list() → SourceRef`、`fetch(ref) → FetchedSource`，由 `sources` 中的通用清单与导入服务编排，语雀与公众号本地采集目录已实现；见[来源连接器改造方案](source-connector-design.md)。
 
 格式适配、父子边界、不可拆单元、模型输入预算、步骤增删／调序及原文请求示例统一维护在[文档预处理](preprocessing.md)，本节只定义公共接入边界。

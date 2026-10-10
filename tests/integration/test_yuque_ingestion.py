@@ -143,6 +143,32 @@ def test_cheat_sheet_row_term_hits_its_row_group_with_header_in_retrieval_text(e
     assert_matches_locate_original_text(response)
 
 
+def test_tool_card_search_returns_tool_metadata_and_source_date_notice(embedder):
+    client = client_for("maintain_source")
+    data = tutorial_payload("## 简介\n\n合成工具按文件夹大小直观显示磁盘占用。\n\n官网：https://example.com")
+    data["source"]["canonical_locator"] = "synthetic:yuque-tool"
+    data["preprocess"]["schema"] = "tool_card"
+    data["raw"]["metadata"].update(title="文件占用查看：合成工具", source_date="2020-03-27",
+                                   collection_path=["常用工具大全", "文件占用和系统清理"])
+    with patch("config.components.embedding_provider", return_value=embedder):
+        imported = client.post("/api/v1/sources/raw/", data, format="json")
+        assert imported.status_code == 200, imported.data
+        response = client.post("/api/v1/search/", {"query": "文件夹大小磁盘占用", "top_k": 5}, format="json")
+        assert response.status_code == 200, response.data
+        context, = response.data["contexts"]
+        assert context["title"] == "文件占用查看：合成工具"
+        assert {key: context["metadata"][key] for key in ["tool_name", "tool_purpose", "tool_category"]} == {
+            "tool_name": "合成工具", "tool_purpose": "文件占用查看", "tool_category": "文件占用和系统清理",
+        }
+        assert context["warnings"] == ["本条目内容最后更新于 2020-03-27，软件版本、下载地址和界面可能已变化，请以官网为准"]
+        assert_matches_locate_original_text(response)
+        del data["raw"]["metadata"]["source_date"]
+        assert client.post("/api/v1/sources/raw/", data, format="json").status_code == 200
+    assert KnowledgeSource.objects.get().warnings == [
+        "本条目内容更新日期未知，软件版本、下载地址和界面可能已变化，请以官网为准",
+    ]
+
+
 def test_internal_tutorial_is_only_visible_to_authorized_token_accounts(embedder):
     maintainer = client_for("maintain_source", "read_internal")
     reader = client_for()
@@ -170,7 +196,7 @@ visibility = "internal"
 [[path_rules]]
 collection = "help"
 path_prefix = ["工具"]
-category = "tool_card"
+category = "case"
 [docs."help/install"]
 category = "tutorial"
 [docs."help/copy"]
@@ -221,7 +247,7 @@ def test_snapshot_command_imports_only_tutorials_and_reimport_reuses_all_sources
         call_command("import_yuque", manifest=str(manifest), snapshot=str(snapshot), username=actor.username, stdout=repeated)
     assert "imported=2" in first.getvalue() and "reused=2" in repeated.getvalue()
     assert "skipped=3" in first.getvalue() and "unregistered=1" in first.getvalue()
-    assert "tool_card(path_rule)" in first.getvalue() and "未接入" in first.getvalue()
+    assert "case(path_rule)" in first.getvalue() and "未接入" in first.getvalue()
     assert list(EvidenceUnit.objects.order_by("id").values_list("id", flat=True)) == ids
 
 

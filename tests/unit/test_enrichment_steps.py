@@ -5,7 +5,7 @@ import pytest
 from config import components
 from contracts.types import RawDocument, evidence_input
 from ingestion.chunking import BudgetChunker
-from ingestion.enrichment import CalloutWarningStep, RetrievalPrefixStep, TimeExpressionStep
+from ingestion.enrichment import CalloutWarningStep, RetrievalPrefixStep, TimeExpressionStep, ToolIdentityStep
 from ingestion.parsers import MarkdownParser, ParserRegistry
 from ingestion.preprocessing import (
     BuildDocumentStep, ChunkStep, ParseStep, PreprocessContext, PreprocessPipeline,
@@ -141,6 +141,48 @@ def test_registered_knowledge_combines_collection_prefix_with_table_header():
     parent, = document.contexts
     assert len(parent.children) > 1
     assert all(child.retrieval_prefix == "合成目录\n| 功能 | 命令 |" for child in parent.children)
+
+
+def tool_card(text, **metadata):
+    return components.preprocessors().process(RawDocument(text.encode(), "text/x-yuque-markdown", {
+        "title": "文件占用查看：合成工具", "collection_path": ["常用工具大全", "文件占用和系统清理"], **metadata,
+    }), "tool_card", 1)
+
+
+def test_single_tool_identity_comes_from_title_and_collection_path_with_date_notice():
+    document = tool_card("## 简介\n\n合成工具按文件夹大小显示磁盘占用。", source_date="2020-03-27")
+    parent, = document.contexts
+    assert {key: parent.metadata[key] for key in ["tool_name", "tool_purpose", "tool_category"]} == {
+        "tool_name": "合成工具", "tool_purpose": "文件占用查看", "tool_category": "文件占用和系统清理",
+    }
+    assert document.warnings == ["本条目内容最后更新于 2020-03-27，软件版本、下载地址和界面可能已变化，请以官网为准"]
+    assert parent.children[0].retrieval_prefix == "常用工具大全 > 文件占用和系统清理"
+
+
+def test_tool_title_without_purpose_and_missing_date_or_collection():
+    document = tool_card("合成工具说明。", title="合成工具", collection_path=[])
+    parent, = document.contexts
+    assert parent.metadata["tool_name"] == "合成工具"
+    assert "tool_purpose" not in parent.metadata and "tool_category" not in parent.metadata
+    assert document.warnings == ["本条目内容更新日期未知，软件版本、下载地址和界面可能已变化，请以官网为准"]
+
+
+def test_tool_collection_identity_uses_section_path_and_intros_have_none():
+    document = tool_card("合集导语。\n\n## 驱动相关\n\n分类导语。\n\n### SDI\n\n:::warning\n取消勾选 Alps 驱动。\n:::\n\n"
+                         "安装驱动。", title="常用软件", collection_path=["软件安装与维护"], tool_collection=True)
+    intro, category, tool = document.contexts
+    assert not any(key.startswith("tool_") for key in [*intro.metadata, *category.metadata])
+    assert tool.title == "驱动相关 > SDI" and tool.metadata["tool_name"] == "SDI"
+    assert tool.metadata["tool_category"] == "驱动相关" and "tool_purpose" not in tool.metadata
+    assert tool.warnings == ["【警告】\n取消勾选 Alps 驱动。"]
+    assert tool.children[0].retrieval_prefix == "软件安装与维护 > 常用软件"
+
+
+def test_tool_identity_step_is_idempotent():
+    context = structured("正文。", title="用途：工具", collection_path=["分类"])
+    ToolIdentityStep().process(context)
+    ToolIdentityStep().process(context)
+    assert context.units[0].metadata["tool_name"] == "工具" and context.units[0].metadata["tool_category"] == "分类"
 
 
 @pytest.mark.parametrize("media_type,content", [

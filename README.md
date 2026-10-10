@@ -13,7 +13,7 @@
 | [首期技术设计](docs/phase1/phase1-technical-design.md) | 模块、公共 DTO、存储、检索、API 响应与错误、迁移 |
 | [来源接入说明](docs/phase1/source-ingestion-plan.md) | 资料获取与准备、提交方式选择、更新与后续平台连接器 |
 | [来源连接器改造方案](docs/phase1/source-connector-design.md) | 通用连接器协议、清单与导入服务的拆分，平台差异与迁移步骤；未实现 |
-| [语雀文档导入方案](docs/phase1/yuque-ingestion/overview.md) | 语雀解析、教程／知识／工具条目流水线、快照导入与 OpenAPI 读取已实现；Token 实测与真实 Embedding 检索抽查待补 |
+| [语雀文档导入方案](docs/phase1/yuque-ingestion/overview.md) | 语雀解析、教程／知识／工具条目流水线、快照导入与 OpenAPI 读取已实现；第一批 74 篇已导入开发环境；Token 实测待补 |
 | [文档预处理](docs/phase1/preprocessing.md) | 原文请求、格式适配器、父子段策略、长度预算与步骤扩展 |
 | [Docker 部署与验收](docs/phase1/deployment.md) | Compose 配置、启动、账号、标准／原文导入冒烟检查和日常操作 |
 | [项目测试规则](docs/unit-testing-guidelines.md) | 测试环境、预处理专项、回归命令与完成定义 |
@@ -87,7 +87,7 @@ curl -H "Authorization: Token $(cat .runtime/maintainer.token)" \
 
 ## 语雀导入
 
-阶段 1～3 与阶段 4 的代码已实现，可从官方 OpenAPI 或本机快照批量处理教程、知识与工具条目。需 Token 的接口实测与真实教程验收待 Token 到位后补测；阶段 5、6 代码已实现，第一批 74 篇快照试运行 0 失败，真实 Embedding 检索抽查待补。清单见 [itxia.toml](sources/yuque/manifests/itxia.toml)，快照格式见[技术方案 7.1](docs/phase1/yuque-ingestion/technical-design.md#71-平台读取)，快照与原文放在被忽略的 `.runtime/` 下。
+阶段 1～3 与阶段 4 的代码已实现，可从官方 OpenAPI 或本机快照批量处理教程、知识与工具条目。需 Token 的接口实测与真实教程验收待 Token 到位后补测；阶段 5、6 已实现，第一批 74 篇已从快照导入开发环境，检索抽查结果见[概览](docs/phase1/yuque-ingestion/overview.md)。清单见 [itxia.toml](sources/yuque/manifests/itxia.toml)，快照格式见[技术方案 7.1](docs/phase1/yuque-ingestion/technical-design.md#71-平台读取)，快照与原文放在被忽略的 `.runtime/` 下。
 
 OpenAPI 模式从环境变量 `YUQUE_TOKEN` 读取获授权的语雀 Token，空值会启动失败；`YUQUE_API_BASE` 默认 `https://www.yuque.com/api/v2`，空值也使用默认地址。实际 Token 只填入被忽略的本地环境文件并加载，不作为命令参数，也不写入报告或快照。离线模式无需这两项配置。
 

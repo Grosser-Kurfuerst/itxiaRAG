@@ -35,5 +35,6 @@ class RRFRanker:
                         scores[name] = candidate.route_scores.get(name, candidate.score)
                 merged[candidate.evidence_id] = Candidate(
                     candidate.evidence_id, candidate.context_id,
-                    sum(1.0 / (self.k + rank) for rank in ranks.values()), ranks, scores, "rrf")
-        return sorted(merged.values(), key=lambda item: (-item.score, str(item.evidence_id)))
+                    sum(1.0 / (self.k + rank) for rank in ranks.values()), ranks, scores, "rrf",
+                    candidate.stable_key)
+        return sorted(merged.values(), key=Candidate.sort_key)

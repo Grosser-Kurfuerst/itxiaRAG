@@ -129,13 +129,19 @@ class SearchScope:
 
 @dataclass(frozen=True)
 class Candidate:
-    """ranks 从 1 起算；route_scores 保留原分数，score 表示当前排序分数。"""
+    """ranks 从 1 起算；route_scores 保留原分数，score 表示当前排序分数。
+    stable_key 由来源与父段、子块 key 组成，重新导入后不变，用于同分排序。"""
     evidence_id: UUID
     context_id: UUID
     score: float
     ranks: dict[str, int] = field(default_factory=dict)
     route_scores: dict[str, float] = field(default_factory=dict)
     score_kind: str = "raw"
+    stable_key: str = ""
+
+    def sort_key(self):
+        # 分数降序；同分按 stable_key，缺省时退回子块 id。
+        return -self.score, self.stable_key, str(self.evidence_id)
 
 
 class Retriever(Protocol):

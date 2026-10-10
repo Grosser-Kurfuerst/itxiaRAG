@@ -22,12 +22,12 @@ class KeywordRetriever:
         words = self.tokenize(query)
         if not words:
             return []
-        rows = list(scoped_evidence(scope).values_list("id", "context_id", "retrieval_text"))
-        scores = bm25_scores([self.tokenize(text) for _, _, text in rows], words)
+        rows = list(scoped_evidence(scope).values_list("id", "context_id", "retrieval_text", "stable_key"))
+        scores = bm25_scores([self.tokenize(text) for _, _, text, _ in rows], words)
         candidates = [Candidate(evidence_id, context_id, score,
-                                route_scores={self.name: score}, score_kind="bm25")
-                      for (evidence_id, context_id, _), score in zip(rows, scores)
+                                route_scores={self.name: score}, score_kind="bm25", stable_key=stable_key)
+                      for (evidence_id, context_id, _, stable_key), score in zip(rows, scores)
                       if score > 0 and score >= self.min_bm25]
-        best = heapq.nsmallest(limit, candidates, key=lambda item: (-item.score, str(item.evidence_id)))
+        best = heapq.nsmallest(limit, candidates, key=Candidate.sort_key)
         return [replace(item, ranks={self.name: rank})
                 for rank, item in enumerate(best, 1)]

@@ -16,5 +16,13 @@ fixtures/*
 !fixtures/iteration1/
 fixtures/iteration1/*
 !fixtures/iteration1/basic.json
+# 清单测试核对需求文档附录中的第一批文档清单
+!docs/
+docs/*
+!docs/phase1/
+docs/phase1/*
+!docs/phase1/yuque-ingestion/
+docs/phase1/yuque-ingestion/*
+!docs/phase1/yuque-ingestion/requirements-analysis.md
 __pycache__
 *.py[cod]

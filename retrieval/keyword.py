@@ -12,14 +12,22 @@ from retrieval.tokenization import tokenize
 class KeywordRetriever:
     name = "keyword"
 
-    def __init__(self, tokenizer=tokenize, min_bm25=0.0):
+    def __init__(self, tokenizer=tokenize, min_bm25=0.0, *, query_tokenizer=None, query_expander=None):
         if not math.isfinite(min_bm25) or min_bm25 < 0:
             raise ValueError("min_bm25 必须为非负有限数值")
         self.tokenize = tokenizer
+        self.tokenize_query = query_tokenizer or tokenizer
         self.min_bm25 = min_bm25
+        self.query_expander = query_expander
+
+    def query_terms(self, query):
+        """查询端先做可选的同义扩展再分词；文档端只分词。两端可用不同粒度的分词器。"""
+        if self.query_expander:
+            query = self.query_expander(query)
+        return self.tokenize_query(query)
 
     def search(self, query, scope, limit=100):
-        words = self.tokenize(query)
+        words = self.query_terms(query)
         if not words:
             return []
         rows = list(scoped_evidence(scope).values_list("id", "context_id", "retrieval_text", "stable_key"))

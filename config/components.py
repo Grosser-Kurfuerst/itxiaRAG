@@ -37,6 +37,11 @@ def context_reader():
     return DjangoContextReader()
 
 
+def _setting(value, name):
+    # 评测可临时覆盖检索参数；不传时使用 settings。
+    return getattr(settings, name) if value is None else value
+
+
 def recall_collector(embedder):
     return MultiRouteRecall([
         KeywordRetriever(min_bm25=settings.RETRIEVAL_MIN_BM25),
@@ -44,10 +49,10 @@ def recall_collector(embedder):
     ])
 
 
-def post_recall_pipeline():
+def post_recall_pipeline(*, rrf_k=None, rrf_weights=None):
     # 插入、移除或调序兼容步骤只修改这里；默认不启用模型重排。
     return PostRecallPipeline([
-        RRFFusionStep(settings.RETRIEVAL_RRF_K),
+        RRFFusionStep(_setting(rrf_k, "RETRIEVAL_RRF_K"), _setting(rrf_weights, "RETRIEVAL_RRF_WEIGHTS")),
         GroupParentsStep(),
         TopKParentsStep(),
     ])

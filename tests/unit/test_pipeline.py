@@ -42,6 +42,14 @@ def run(request, routes, *extra):
     ]).run(request, routes)
 
 
+def test_composition_root_uses_settings_unless_overridden(request_data, routes, settings):
+    from config import components
+    settings.RETRIEVAL_RRF_K, settings.RETRIEVAL_RRF_WEIGHTS = 60, {}
+    assert components.post_recall_pipeline().run(request_data, routes).contexts[0].score == pytest.approx(1/61)
+    custom = components.post_recall_pipeline(rrf_k=10, rrf_weights={'vector': 2})
+    assert custom.run(request_data, routes).contexts[0].score == pytest.approx(2/11)
+
+
 def test_default_pipeline_groups_without_summing_scores_and_limits_parents(request_data, routes):
     result = run(request_data, routes)
     assert [parent.context_id.int for parent in result.contexts] == [10, 20]

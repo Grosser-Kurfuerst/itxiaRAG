@@ -13,8 +13,8 @@ class RRFFusionStep:
     input_stage = "routes"
     output_stage = "evidence"
 
-    def __init__(self, k=60):
-        self.ranker = RRFRanker(k)
+    def __init__(self, k=60, weights=None):
+        self.ranker = RRFRanker(k, weights)
 
     def process(self, request, batch):
         if not isinstance(batch, RouteBatch):

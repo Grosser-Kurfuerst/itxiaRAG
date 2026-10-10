@@ -63,6 +63,22 @@ def test_rrf_preserves_scores_for_the_best_rank_of_each_route():
     assert result.score == pytest.approx(1/61 + 1/62)
 
 
+def test_weighted_rrf_lets_a_trusted_route_lead_and_defaults_other_routes_to_one():
+    a, b, parent = UUID(int=1), UUID(int=2), UUID(int=10)
+    keyword = [Candidate(a, parent, 9, {'keyword': 1})]
+    vector = [Candidate(b, parent, .9, {'vector': 2})]
+    assert [row.evidence_id for row in RRFRanker(10).rank('q', [keyword, vector])] == [a, b]
+    result = RRFRanker(10, {'vector': 2}).rank('q', [keyword, vector])
+    assert [row.evidence_id for row in result] == [b, a]
+    assert [row.score for row in result] == pytest.approx([2/12, 1/11])
+
+
+@pytest.mark.parametrize('weight', [0, -1, float('nan'), float('inf')])
+def test_rrf_rejects_invalid_weights(weight):
+    with pytest.raises(ValueError, match='权重'):
+        RRFRanker(weights={'vector': weight})
+
+
 @pytest.mark.parametrize('threshold, expected', [
     (None, [1, 2, 3, 4]), (-1, [1, 2, 3, 4]),
     (0, [1, 2, 3]), (.6, [1, 2]), (1, [1]),

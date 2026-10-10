@@ -114,7 +114,7 @@ RRF 的 k 与路线权重、关键词路分词模式与同义扩展开关、每�
 2. 根据当前账号生成不可由请求扩大权限的 `SearchScope`。来源 ID 过滤只缩小召回范围；两路使用同一 Scope。
 3. 关键词路先按 Scope 从 PostgreSQL 读取全部可见子块，再对 `retrieval_text` 和查询使用同一套规则分词：jieba 中文分词（加载 [领域词典](../../retrieval/keyword-terms.txt)，品牌和术语不切成单字；`RETRIEVAL_KEYWORD_SEARCH_MODE` 默认 `document`，文档端用搜索模式另补复合词中的两字、三字词，查询端保持精确模式，使问题中的“恢复”能命中原文的“数据恢复”）、英文大小写统一、保留完整型号／错误码并补充字母段与数字段（`air14` 另产生 `air`、`14`，与正文“Air 14”对齐）、移除少量问句停用词。`RETRIEVAL_KEYWORD_SYNONYMS` 开启时，查询先按 [同义词表](../../retrieval/keyword-synonyms.txt) 追加同组词组再分词，文档端与向量路不扩展。Python BM25 根据词频、文档频率和长度评分，按本路线门槛过滤后取 top-N；同分按子块稳定键排序（见 5.2 节 Candidate）。
 4. 向量路调用 `embed_query`，过滤同一向量空间，计算余弦并应用可选门槛。`MultiRouteRecall` 依次收集两路结果，每路最多 100 个子块，保留原始分数与从 1 起算的名次。
-5. `PostRecallPipeline` 按组合根的步骤列表处理候选。默认 RRF 按子块 ID 合并：`score = Σ w/(k + rank)`，k 默认 60，路线权重 w 由 `RETRIEVAL_RRF_WEIGHTS` 配置、默认为 1，同一路重复候选只计最佳名次；再按最终子块顺序聚合父段，以最佳子块的位置确定父段排序；最后取 top_k 个父段。
+5. `PostRecallPipeline` 按组合根的步骤列表处理候选。默认 RRF 按子块 ID 合并：`score = Σ w/(k + rank)`，k 默认 20，路线权重 w 由 `RETRIEVAL_RRF_WEIGHTS` 配置、默认为 1，同一路重复候选只计最佳名次；再按最终子块顺序聚合父段，以最佳子块的位置确定父段排序；最后取 top_k 个父段。
 6. `ContextReader` 按选定父段顺序批量读取全文、来源和命中子块定位，读取时再次应用 Scope。它不再负责融合、父段聚合或排序，也不读取未命中的子块列表。
 
 召回不依赖预处理器或调用方提供的主题分类；正文相关性和来源／向量空间范围决定候选。可见范围在来源层控制。
@@ -178,7 +178,7 @@ RRF 合并路线原始分数与名次，仅将当前 `score` 改为 RRF 分数�
 | 自定义子块过滤／重排步骤 | evidence → evidence | 预留协议接入，不内置特定过滤策略或模型 |
 | 自定义父段处理步骤 | contexts → contexts | 未来可加入父段级过滤或重排，本次不实现 |
 
-默认步骤在 [config/components.py](../../config/components.py) 构造；未来扩展步骤仍通过同一个列表接入：
+默认步骤在 [config/components.py](../../config/components.py) 构造，RRF 参数读取 settings，当前采用 k=20、两路权重均为 1（[参数评测](yuque-ingestion/retrieval-evaluation.md#99-rrf-参数实验2026-10-11)）；未来扩展步骤仍通过同一个列表接入：
 
 ```text
 默认：

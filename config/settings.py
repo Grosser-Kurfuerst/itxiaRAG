@@ -43,7 +43,7 @@ EMBEDDING = {
     "query_prefix": os.environ.get("EMBEDDING_QUERY_PREFIX", ""),
 }
 RETRIEVAL_CANDIDATE_LIMIT = 100
-RETRIEVAL_RRF_K = 60
+RETRIEVAL_RRF_K = 20
 RETRIEVAL_RRF_WEIGHTS = {}  # 路线名 -> 权重，未列出的路线按 1 计
 # 关键词路 jieba 搜索模式（另补复合词的子词）的使用范围：off、document（只用于文档）、both
 RETRIEVAL_KEYWORD_SEARCH_MODE = "document"

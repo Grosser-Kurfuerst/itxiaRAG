@@ -94,7 +94,7 @@ category = "tutorial"
     return directory, manifest_path
 
 
-def test_snapshot_uses_openapi_envelope_and_doc_ancestors_without_self(snapshot):
+def test_snapshot_uses_data_envelope_and_doc_ancestors_without_self(snapshot):
     directory, _ = snapshot
     client = YuqueSnapshotClient(directory)
     refs = {ref.slug: ref for ref in client.list_docs("help")}
@@ -407,11 +407,9 @@ def test_command_bad_manifest_fails_before_listing_or_submitting(snapshot):
     embedder.assert_not_called()
 
 
-def test_command_missing_token_or_username_and_invalid_only_fail_at_startup(snapshot, settings):
+def test_command_missing_username_and_invalid_only_fail_at_startup(snapshot):
     directory, path = snapshot
-    settings.YUQUE_TOKEN = ""
     for options, message in [
-        ({"dry_run": True}, "YUQUE_TOKEN"),
         ({"snapshot": str(directory)}, "--username"),
         ({"snapshot": str(directory), "dry_run": True, "only": ["unknown/doc"]}, "--only"),
     ]:

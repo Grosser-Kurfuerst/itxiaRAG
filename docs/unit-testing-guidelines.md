@@ -77,22 +77,22 @@ Makefile 默认使用 `.venv/bin/python`。已在其他虚拟环境安装依赖�
 | [章节策略](../tests/unit/test_sections.py) | 章节父段、工具条目父段、子块、表格行组与正文边界 |
 | [增强步骤](../tests/unit/test_enrichment_steps.py) | 风险、时效、来源日期提示，工具身份与目录检索前缀 |
 | [来源清单](../tests/unit/test_source_manifest.py) | 通用清单严格校验、单篇优先与最长目录前缀、元数据补丁；语雀仓库清单覆盖附录 74 篇、28 篇教程 |
-| [快照导入](../tests/unit/test_yuque_importer.py) | OpenAPI 结构快照、语雀连接器身份与元数据、通用导入服务报告状态、逐篇失败继续、整批访问错误终止、命令试运行与启动错误；不访问数据库／模型 |
+| [快照导入](../tests/unit/test_yuque_importer.py) | `{"data": [...]}` 结构快照、语雀连接器身份与元数据、通用导入服务报告状态、逐篇失败继续、整批访问错误终止、命令试运行与启动错误；不访问数据库／模型 |
 | [连接器契约](../tests/unit/test_source_connectors.py) | 所有 SourceConnector 实现：列表稳定、键与身份不重复、读取结果通过原文导入契约、单篇读取失败为 DomainError |
 | [公众号文章下载](../tests/unit/test_wechat_fetch.py) | 合成搜狗页面替代网络：搜索解析、跳转拼接、文章身份与精简、账号／标题／日期匹配、验证码整批终止、已下载跳过、下载结果可被 `import_wechat` 读取；不访问网络 |
 | [公众号采集连接器](../tests/unit/test_wechat_connector.py) | 永久链接、短链接与临时链接的身份规则，旁注校验，元数据，`import_wechat` 试运行、清单错误与整批终止；不访问数据库／模型 |
-| [语雀 HTTP 边界](../tests/unit/test_yuque_openapi.py)、[语雀客户端](../tests/unit/test_yuque_client.py) | 不开 socket，替换 HTTP 边界验证网络／超时、响应格式、默认间隔、认证独立异常、快照失败与 Token 不进入错误消息 |
+| [语雀客户端](../tests/unit/test_yuque_client.py) | 不开 socket，替换 HTTP 边界验证网络／超时、响应类型与 `appData` 格式、默认间隔、访问拒绝独立异常、快照失败与底层异常不进入错误消息 |
 | [语雀集成](../tests/integration/test_yuque_ingestion.py) | 原文 API 与 `call_command` 快照导入、数据库保存与 reused、internal 权限、未登记／未接入不导入；隔离 PostgreSQL 与模型替身 |
-| [语雀 OpenAPI](../tests/integration/test_yuque_openapi.py) | 本地 HTTP 服务模拟路径与认证头、分页、祖先路径、401／403 终止、单篇失败继续、列表失败、快照覆盖未接入类别并可离线读取、无 Token 启动失败与输出不泄露 Token；正式导入使用隔离 PostgreSQL 与模型替身 |
+| [语雀网页读取](../tests/integration/test_yuque_web.py) | 本地 HTTP 服务模拟知识库页面、分页列表与 Markdown 导出：路径与 Accept 头、祖先路径、401／403 终止、限流与验证码页单篇失败后继续、列表失败、快照覆盖未接入类别并可离线读取；正式导入使用隔离 PostgreSQL 与模型替身 |
 | [公众号采集集成](../tests/integration/test_wechat_ingestion.py) | `call_command` 导入评测与选购指南、可见性、身份与链接、reused；隔离 PostgreSQL 与模型替身 |
 
 ```sh
-.venv/bin/python -m pytest tests/unit/test_source_manifest.py tests/unit/test_yuque_importer.py tests/unit/test_wechat_connector.py tests/unit/test_wechat_fetch.py tests/unit/test_source_connectors.py tests/unit/test_yuque_client.py tests/unit/test_yuque_openapi.py -q
+.venv/bin/python -m pytest tests/unit/test_source_manifest.py tests/unit/test_yuque_importer.py tests/unit/test_wechat_connector.py tests/unit/test_wechat_fetch.py tests/unit/test_source_connectors.py tests/unit/test_yuque_client.py -q
 # 需要上节配置的隔离 PostgreSQL
-.venv/bin/python -m pytest tests/integration/test_yuque_ingestion.py tests/integration/test_yuque_openapi.py tests/integration/test_wechat_ingestion.py -q
+.venv/bin/python -m pytest tests/integration/test_yuque_ingestion.py tests/integration/test_yuque_web.py tests/integration/test_wechat_ingestion.py -q
 ```
 
-沙箱禁止 socket 时，HTTP 集成与 PostgreSQL 全量测试由编排者在隔离环境运行，可先用 `--collect-only` 确认可收集。需真实语雀 Token 的接口实测、方言差异修正、目录 slug 核对、快照保存与教程验收待 Token 到位后补测，本地服务与模型替身不代表真实接口或语料质量验收通过。
+沙箱禁止 socket 时，HTTP 集成与 PostgreSQL 全量测试由编排者在隔离环境运行，可先用 `--collect-only` 确认可收集。本地服务与模型替身不代表真实接口或语料质量验收通过；语雀网页读取的实测结果记录在[语雀导入概览](phase1/yuque-ingestion/overview.md)。
 
 3. 验证部署服务与真实模型时，按 [Docker 原文导入验收](phase1/deployment.md#35-验收原文预处理导入) 操作，检查返回完整父段与命中定位。真实文章还需人工检查标题识别、父子边界、测试条件／结果和图片补录；自动测试的通过不能证明真实语料划分与检索质量。
 

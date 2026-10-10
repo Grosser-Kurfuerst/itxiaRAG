@@ -1,15 +1,14 @@
-from django.conf import settings
 from django.core.management.base import CommandError
 
 from config import components
 from sources.commands import SourceImportCommand
 from sources.manifest import valid_component
-from sources.yuque.client import YuqueOpenApiClient, YuqueSnapshotClient
+from sources.yuque.client import YuqueSnapshotClient, YuqueWebClient
 from sources.yuque.connector import CATEGORIES, YuqueConnector, to_doc_ref
 
 
 class Command(SourceImportCommand):
-    help = "按人工清单读取语雀 OpenAPI 或 Markdown 快照，导入或只预处理并输出报告"
+    help = "按人工清单读取语雀公开网页或 Markdown 快照，导入或只预处理并输出报告"
     source_type = "yuque"
     categories = CATEGORIES
     category_pipelines = components.YUQUE_CATEGORY_PIPELINES
@@ -26,7 +25,7 @@ class Command(SourceImportCommand):
         if options["snapshot"] and options["save_snapshot"]:
             raise CommandError("--snapshot 与 --save-snapshot 互斥")
         return (YuqueSnapshotClient(options["snapshot"]) if options["snapshot"] else
-                YuqueOpenApiClient(settings.YUQUE_API_BASE, settings.YUQUE_TOKEN, group))
+                YuqueWebClient(group))
 
     def collect(self, client, manifest, options, collections):
         group = manifest.connector["group"]

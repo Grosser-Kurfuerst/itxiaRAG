@@ -346,13 +346,13 @@ for c in doc.contexts:
 | 文件 | 内容 |
 | --- | --- |
 | `ingestion/enrichment.py` | ToolIdentityStep、SourceDateNoticeStep |
-| `ingestion/sections.py` | TOOL_CARD 参数 |
+| `ingestion/sections.py` | ToolCardStrategy（单工具整篇一个父段，合集每个工具一个父段）与 TOOL_CARD 参数 |
 | [config/components.py](../../../config/components.py) | 注册 `tool_card@1`，映射表加入 `tool_card` |
-| `sources/yuque/manifests/itxia.toml` | 工具部分与整份清单定稿 |
+| `sources/yuque/manifests/itxia.toml` | 工具部分与整份清单定稿；“常用软件”标记 `tool_collection = true` |
 
 ### 7.2 完成后的系统状态
 
-- 原文 API 和导入命令都能处理工具条目：单工具文档一个父段，工具合集按分类成父段、每个工具一个子块。
+- 原文 API 和导入命令都能处理工具条目：一个工具一个父段：单工具文档整篇一个父段，合集中每个工具单独成父段，标题为“分类 > 工具名”。
 - 检索结果的父段 metadata 带 `tool_name`、`tool_purpose`、`tool_category`，文档警告带最后更新日期。
 - 第一批三类共 74 篇全部可导入，第一批完成。
 
@@ -362,8 +362,8 @@ for c in doc.contexts:
 
 | 用例 | 检查 |
 | --- | --- |
-| `tests/unit/test_enrichment_steps.py`（扩充） | “用途：工具名”标题解析；合集文档取章节末段为工具名；目录末段为工具分类；来源日期提示的文案与日期缺失时的提示 |
-| `tests/unit/test_sections.py`（扩充） | TOOL_CARD 参数下工具小节不合并、每个工具单独成子块 |
+| `tests/unit/test_enrichment_steps.py`（扩充） | “用途：工具名”标题解析与目录末段为工具分类；合集工具父段取路径末段为工具名、前一段为分类，导语父段不带工具身份；来源日期提示的文案与日期缺失时的提示 |
+| `tests/unit/test_sections.py`（扩充） | 单工具文档含子标题仍为一个父段；合集每个工具一个父段、标题为“分类 > 工具名”，分类导语单独成父段 |
 | `tests/integration/test_yuque_ingestion.py`（扩充） | 工具条目经原文 API 导入，检索结果带工具 metadata 和日期提示 |
 
 手动验收：
@@ -373,7 +373,7 @@ for c in doc.contexts:
    - 文档警告为“本条目内容最后更新于 2020-03-27，软件版本、下载地址和界面可能已变化，请以官网为准”。
    - 去掉 `source_date` 重新提交，警告变为“更新日期未知”。
 2. 基于快照对 74 篇整体试运行：0 失败，跳过和未登记与清单一致，没有“未接入”的第一批文档。
-3. 人工抽查 `sdi-driver`、`giq7z502ohos1d3u`、`recommended_tools`：工具名、用途、分类正确，合集中每个工具单独成子块，SDI 的 Alps 警告和官网地址保留。
+3. 人工抽查 `sdi-driver`、`giq7z502ohos1d3u`、`recommended_tools`：工具名、用途、分类正确，合集中每个工具单独成父段，SDI 的 Alps 警告和官网地址保留。
 4. 导入开发环境，执行工具相关查询：
 
    | 查询 | 期望命中 |

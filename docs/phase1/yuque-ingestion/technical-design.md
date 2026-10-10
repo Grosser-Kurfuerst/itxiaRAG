@@ -45,7 +45,7 @@
 | --- | --- | --- |
 | [ingestion/parsers.py](../../../ingestion/parsers.py) | 修改 | MarkdownParser 通用增强：图片块、引用与提示块、空标题、伪标题参数（默认行为不变） |
 | `ingestion/yuque_markdown.py` | 新增 | 语雀方言行规则与 YuqueMarkdownParser |
-| `ingestion/sections.py` | 新增 | SectionProfile、SectionNode，建树、父段规划、子块合并函数，SectionedDocumentStrategy |
+| `ingestion/sections.py` | 新增 | SectionProfile、SectionNode，建树、父段规划、子块合并函数，SectionedDocumentStrategy、ToolCardStrategy |
 | `ingestion/enrichment.py` | 新增 | CalloutWarningStep、TimeExpressionStep、ToolIdentityStep、SourceDateNoticeStep、RetrievalPrefixStep |
 | [ingestion/preprocessing.py](../../../ingestion/preprocessing.py) | 修改 | ParseStep 的图片警告文案可配置，默认不变 |
 | [config/components.py](../../../config/components.py) | 修改 | 注册语雀媒体类型、三条流水线与类别映射 |
@@ -146,6 +146,7 @@ category = "tutorial"
 
 [docs."textbook/recommended_tools"]
 category = "tool_card"         # 目录外的工具合集
+metadata = { tool_collection = true }   # 合集：每个工具一个父段，见 6.2
 
 [docs."article/install_win10_from_scratch"]
 skip = "duplicate"
@@ -322,7 +323,7 @@ class SectionedDocumentStrategy:   # 实现 StructureStrategy
 ```text
 tutorial@1  : Parse → Structure(Sectioned[TUTORIAL])  → CalloutWarning → TimeExpression → RetrievalPrefix → Chunk → Build → Validate
 knowledge@1 : Parse → Structure(Sectioned[KNOWLEDGE]) → CalloutWarning → TimeExpression → RetrievalPrefix → Chunk → Build → Validate
-tool_card@1 : Parse → Structure(Sectioned[TOOL_CARD]) → ToolIdentity   → CalloutWarning → SourceDateNotice → RetrievalPrefix → Chunk → Build → Validate
+tool_card@1 : Parse → Structure(ToolCard[TOOL_CARD])  → ToolIdentity   → CalloutWarning → SourceDateNotice → RetrievalPrefix → Chunk → Build → Validate
 ```
 
 ```python
@@ -346,11 +347,19 @@ registry.register("tutorial", 1, pipeline("tutorial", SectionedDocumentStrategy(
 
 | 参数 | tutorial | knowledge | tool_card | 依据 |
 | --- | --- | --- | --- | --- |
-| max_parent_chars | 3000 | 2500 | 1500 | 顶层章节 p90 约 2900～3000 字；工具合集按分类成父段 |
+| max_parent_chars | 3000 | 2500 | 不适用 | 顶层章节 p90 约 2900～3000 字；工具条目按工具成父段，不按长度，见下文 |
 | min_parent_chars | 150 | 150 | 0 | 并入“6.0、确定没问题了？”“引用”等短章节；工具条目不合并 |
 | chunk_target_chars | 500 | 400 | 400 | 叶子小节中位数为 213／159／163 字，段落中位数约 50 字 |
 | chunk_min_chars | 120 | 120 | 0 | 与评测检索块一致；工具小节不并入相邻工具 |
 | table_rows_as_children | 否 | 是 | 否 | 知识类有 11 张比较表和速查表 |
+
+工具条目不按长度规划父段，而是一个工具一个父段，由 ToolCardStrategy 实现：
+
+- **单工具文档**：整篇一个父段，标题为文档标题；正文中的“简介／使用方法”等子标题只作为子块断点。最长约 3500 字（Markdown Here 插件），由子块合并控制模型输入。
+- **合集文档**：清单在该文档的 `metadata` 中标记 `tool_collection = true`，第一批只有培训手册“常用软件”。按章节树拆到叶子章节，每个叶子章节（不再含子标题）即一个工具，成一个父段，标题为“分类 > 工具名”；文档导语和分类导语有正文时单独成父段，不带工具身份。这等价于复用 `plan_parents` 并取父段上限 0。
+- **为什么由清单标记**：单工具文档也常有“简介／使用方法”子标题，微 PE、Markdown Here 等还有两级标题，按结构自动判断会把单工具误拆；合集只有一篇，人工标记最可靠。
+
+按分类成父段会让一个父段含多个工具，无法写入单一工具名；按快照估算，“常用软件”4 个分类中有 3 个超过 1500 字，按长度规划也会使同一合集里有的分类成段、有的工具成段，因此统一按工具成父段。
 
 参数是基于快照的初值，在真实样本试运行和检索抽查后校准。若参数变化影响已导入数据，按新 schema 版本注册（见第 9 节）。
 
@@ -360,7 +369,7 @@ registry.register("tutorial", 1, pipeline("tutorial", SectionedDocumentStrategy(
 | --- | --- | --- |
 | CalloutWarningStep | `context.blocks` 中 `level=warning/caution` 的 callout 块，以及父段 locator 的 `block_start/end` | 落在父段内的写入该父段 warnings；落在第一个标题前的写入文档 warnings。单条截断到 300 字，并去重 |
 | TimeExpressionStep | 父段正文；匹配“目前（2022年初）”“截至 2023 年”“（2025.11 更新）”等带明确年份的表述 | 父段 warning：“含时间限定表述‘…’，请结合来源日期判断是否仍适用”。每个父段只报第一处 |
-| ToolIdentityStep | 文档标题、父段章节路径、`collection_path` | 单工具文档从“用途：工具名”解析 `tool_name`、`tool_purpose`；合集文档取父段路径末段为工具名。`tool_category` 取目录末段。写入父段 metadata，随检索结果返回 |
+| ToolIdentityStep | 文档标题、父段章节路径、`collection_path` | 单工具文档从“用途：工具名”解析 `tool_name`、`tool_purpose`，`tool_category` 取目录末段；合集文档的工具父段取路径末段为 `tool_name`、前一段为 `tool_category`，导语父段不写工具身份。写入父段 metadata，随检索结果返回 |
 | SourceDateNoticeStep | 文档 `source_date` | 文档 warning：“本条目内容最后更新于 YYYY-MM-DD，软件版本、下载地址和界面可能已变化，请以官网为准”。只写入日期本身，不计算“距今多久”，避免提示随时间失真；没有日期时提示“更新日期未知”。第一批只用于工具条目 |
 | RetrievalPrefixStep | `collection_path`、文档标题 | 每个子块的 `retrieval_prefix` 前置“目录路径 > 文档标题”，略去与父段标题重复的部分；与已有表头前缀以换行组合。BudgetChunker 拆分子块时保留该前缀 |
 
@@ -376,7 +385,7 @@ ParseStep 的图片警告文案改为构造参数。三类流水线使用“原�
 | Windows 10/11 的版本与激活详解 | 知识 | 包裹 H1 下降后：0、什么是Business/Consumer Editions？；1、自行安装Windows 10时版本的选择；2、数字权利激活问题…… |
 | Windows系统功能快速查阅表 | 知识 | 一个父段（无标题，标题为文档标题），表格按行组成为子块，每个子块检索文本带“功能 \| 命令／快捷键”表头 |
 | 文件占用查看：WizTree | 工具 | 一个父段；`tool_name=WizTree`、`tool_purpose=文件占用查看`、`tool_category=文件占用和系统清理`；子块前缀“IT侠常用工具大全 > 文件占用和系统清理” |
-| 常用软件（培训手册） | 工具 | 按分类成父段：驱动相关；硬件检查和测试；软件工具；工具盘维护。每个工具小节单独成子块 |
+| 常用软件（培训手册） | 工具 | 每个工具一个父段：驱动相关 > Display Driver Uninstaller（DDU）；驱动相关 > Snappy Driver Installer（SDI）；硬件检查和测试 > Aida64……；文档开头的两段说明成为导语父段。`tool_name`、`tool_category` 分别取工具名与分类 |
 
 ## 7. 导入工具
 

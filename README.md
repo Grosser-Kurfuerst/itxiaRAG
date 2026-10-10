@@ -16,6 +16,8 @@
 | [语雀文档导入方案](docs/phase1/yuque-ingestion/overview.md) | 语雀解析、教程／知识／工具条目流水线、公开网页读取与快照导入已实现；第一批 74 篇已导入开发环境 |
 | [文档预处理](docs/phase1/preprocessing.md) | 原文请求、格式适配器、父子段策略、长度预算与步骤扩展 |
 | [Docker 部署与验收](docs/phase1/deployment.md) | Compose 配置、启动、账号、标准／原文导入冒烟检查和日常操作 |
+| [第二阶段需求](docs/phase2/requirements.md) | 第二阶段目标、范围、功能点与里程碑：检索质量与维修类内容；未实现 |
+| [召回改进方案](docs/phase2/retrieval-improvement-plan.md) | 依据评测结果的召回改进项、采纳条件与实施顺序；未实现 |
 | [项目测试规则](docs/unit-testing-guidelines.md) | 测试环境、预处理专项、回归命令与完成定义 |
 
 建议按任务阅读：

@@ -31,8 +31,8 @@ def doc(doc_id, slug):
 def yuque_server():
     state = SimpleNamespace(requests=[], responses={}, docs={
         "help": [doc(index, slug) for index, slug in enumerate(
-            ["install", "second", "parent", "tool", "knowledge", "trouble", "copy", "new"], 1)],
-        "textbook": [doc(20, "knowledge"), doc(21, "install")],
+            ["install", "second", "parent", "tool", "case", "trouble", "copy", "new"], 1)],
+        "textbook": [doc(20, "case"), doc(21, "install")],
     }, toc={
         "help": [
             {"type": "TITLE", "title": "教程", "uuid": "root", "parent_uuid": "", "url": "", "doc_id": None},
@@ -102,15 +102,15 @@ category = "tool_card"
 category = "tutorial"
 [docs."help/second"]
 category = "tutorial"
-[docs."help/knowledge"]
-category = "knowledge"
+[docs."help/case"]
+category = "case"
 [docs."help/trouble"]
 category = "troubleshooting"
 [docs."help/copy"]
 skip = "duplicate"
 canonical = "help/install"
-[docs."textbook/knowledge"]
-category = "knowledge"
+[docs."textbook/case"]
+category = "case"
 [docs."textbook/install"]
 category = "tutorial"
 ''', encoding="utf-8")
@@ -197,19 +197,19 @@ def test_list_failure_terminates_before_any_document_processing(openapi_command)
 def test_snapshot_covers_all_classified_books_despite_only_and_can_be_imported_offline(
         openapi_command, tmp_path, settings, caplog):
     manifest, state = openapi_command
-    additional = [doc(200 + index, f"knowledge-{index}") for index in range(67)]
+    additional = [doc(200 + index, f"case-{index}") for index in range(67)]
     state.docs["help"].extend(additional)
     with manifest.open("a", encoding="utf-8") as stream:
         for item in additional:
-            stream.write(f'\n[docs."help/{item["slug"]}"]\ncategory = "knowledge"\n')
+            stream.write(f'\n[docs."help/{item["slug"]}"]\ncategory = "case"\n')
     directory, output = tmp_path / "saved", StringIO()
     call_command("import_yuque", manifest=str(manifest), dry_run=True, only=["help/install"],
                  save_snapshot=str(directory), stdout=output)
     assert "preprocessed=1" in output.getvalue()
     assert len(list(directory.rglob("*.md"))) == 74
     snapshot = YuqueSnapshotClient(directory)
-    for book, slugs in [("help", {"install", "second", "tool", "knowledge", "trouble"}),
-                        ("textbook", {"install", "knowledge"})]:
+    for book, slugs in [("help", {"install", "second", "tool", "case", "trouble"}),
+                        ("textbook", {"install", "case"})]:
         if book == "help":
             slugs |= {item["slug"] for item in additional}
         refs = snapshot.list_docs(book)
@@ -232,12 +232,12 @@ def test_snapshot_covers_all_classified_books_despite_only_and_can_be_imported_o
 
 def test_snapshot_failure_for_unselected_unimplemented_category_is_reported(openapi_command, tmp_path):
     manifest, state = openapi_command
-    state.responses["/api/v2/repos/synthetic/textbook/docs/knowledge"] = (500, {"message": TEST_TOKEN})
+    state.responses["/api/v2/repos/synthetic/textbook/docs/case"] = (500, {"message": TEST_TOKEN})
     output = StringIO()
     with pytest.raises(CommandError, match="1 篇失败"):
         call_command("import_yuque", manifest=str(manifest), dry_run=True, only=["help/install"],
                      save_snapshot=str(tmp_path / "saved"), stdout=output)
-    assert "textbook/knowledge" in output.getvalue() and "YUQUE_UNAVAILABLE" in output.getvalue()
+    assert "textbook/case" in output.getvalue() and "YUQUE_UNAVAILABLE" in output.getvalue()
     assert "failed=1" in output.getvalue() and "preprocessed=1" in output.getvalue()
 
 

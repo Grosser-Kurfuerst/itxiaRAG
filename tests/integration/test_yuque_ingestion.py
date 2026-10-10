@@ -120,6 +120,29 @@ def test_long_tutorial_returns_section_paths_global_and_parent_warnings_and_pref
     assert_matches_locate_original_text(response)
 
 
+def test_cheat_sheet_row_term_hits_its_row_group_with_header_in_retrieval_text(embedder):
+    client = client_for("maintain_source")
+    rows = "".join(f"| 合成功能{i} | `synthetic-cmd-{i}` |\n" for i in range(40))
+    rows = rows.replace("| 合成功能25 | `synthetic-cmd-25` |", "| 重置网络协议栈 | `netsh winsock reset` |")
+    data = tutorial_payload(f"| **功能** | **命令/快捷键** |\n| :---: | :---: |\n{rows}")
+    data["source"]["canonical_locator"] = "synthetic:yuque-knowledge"
+    data["preprocess"]["schema"] = "knowledge"
+    data["raw"]["metadata"]["title"] = "合成速查表"
+    with patch("config.components.embedding_provider", return_value=embedder):
+        imported = client.post("/api/v1/sources/raw/", data, format="json")
+        assert imported.status_code == 200, imported.data
+        assert KnowledgeSource.objects.get().document_schema == "knowledge"
+        assert EvidenceUnit.objects.count() > 1
+        response = client.post("/api/v1/search/", {"query": "netsh winsock reset", "top_k": 5}, format="json")
+    assert response.status_code == 200, response.data
+    context, = response.data["contexts"]
+    assert context["title"] == "合成速查表"
+    best = EvidenceUnit.objects.get(pk=context["matches"][0]["evidence_id"])
+    assert "netsh winsock reset" in best.body and "合成功能0" not in best.body
+    assert "合成目录\n| **功能** | **命令/快捷键** |\n" in best.retrieval_text
+    assert_matches_locate_original_text(response)
+
+
 def test_internal_tutorial_is_only_visible_to_authorized_token_accounts(embedder):
     maintainer = client_for("maintain_source", "read_internal")
     reader = client_for()
@@ -153,13 +176,13 @@ category = "tutorial"
 [docs."help/copy"]
 skip = "duplicate"
 canonical = "help/install"
-[docs."help/knowledge"]
-category = "knowledge"
+[docs."help/case"]
+category = "case"
 [docs."textbook/install"]
 category = "tutorial"
 ''', encoding="utf-8")
     snapshot = tmp_path / "snapshot"
-    for book, slugs in [("help", ["install", "tool", "copy", "knowledge", "new"]), ("textbook", ["install"])]:
+    for book, slugs in [("help", ["install", "tool", "copy", "case", "new"]), ("textbook", ["install"])]:
         directory = snapshot / book
         directory.mkdir(parents=True)
         docs = [{"id": index + (100 if book == "textbook" else 1), "slug": slug,

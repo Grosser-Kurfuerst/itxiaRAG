@@ -1,6 +1,6 @@
 # 第一批技术方案：教程、工具条目与知识的预处理和导入
 
-本文给出满足[需求分析](requirements-analysis.md)的技术方案，覆盖操作教程（`tutorial`）、工具条目（`tool_card`）、知识科普／对比／速查（`knowledge`）三类语雀文档。现有原文预处理契约见[文档预处理](../preprocessing.md)，公共 DTO 与存储见[首期技术设计](../phase1-technical-design.md)。**阶段 1～3 已实现；阶段 4 代码已实现，需 Token 的接口实测与真实教程验收待补；知识与工具流水线仍为方案，阶段 5、6 未开始。**
+本文给出满足[需求分析](requirements-analysis.md)的技术方案，覆盖操作教程（`tutorial`）、工具条目（`tool_card`）、知识科普／对比／速查（`knowledge`）三类语雀文档。现有原文预处理契约见[文档预处理](../preprocessing.md)，公共 DTO 与存储见[首期技术设计](../phase1-technical-design.md)。**阶段 1～3 已实现；阶段 4 代码已实现，需 Token 的接口实测与真实教程验收待补；阶段 5 代码已实现，真实 Embedding 检索抽查待补；工具条目流水线仍为方案，阶段 6 未开始。**
 
 ## 1. 设计目标与原则
 
@@ -84,8 +84,9 @@ ingestion 不依赖 sources；sources 导入经 preprocess_raw 与 import_proces
 # 组合根：类别 → 流程。清单只写类别，流程版本由受信任代码决定。
 YUQUE_CATEGORY_PIPELINES = {
     "tutorial": ("tutorial", 1),
+    "knowledge": ("knowledge", 1),
 }
-# 阶段 5、6 接入对应流水线后，再添加 knowledge、tool_card。
+# 阶段 6 接入工具条目流水线后，再添加 tool_card。
 ```
 
 ### 3.2 类别判定
@@ -595,7 +596,7 @@ Token 只从环境变量读取，不写入日志、报告或快照文件。
 
 `tests/integration/test_yuque_openapi.py`：本地临时 HTTP 服务模拟目录、分页文档列表与详情，验证请求路径与认证头、祖先路径、401／403 终止、429 与其他详情错误单篇失败后继续、列表失败、缺少 Token 启动失败、74 篇合成快照覆盖未接入类别并兼容离线模式、日志／报告／快照不含 Token。正式导入用例使用隔离 PostgreSQL 与模型替身；不访问真实语雀。沙箱不支持 socket 时至少执行 collect-only，集成与全量测试由隔离环境复核。
 
-`tests/integration/test_yuque_ingestion.py`：使用隔离 PostgreSQL、项目账号的 API Token 认证和明确的模型替身，不访问语雀。当前覆盖教程原文 API 与合成快照管理命令：命令只导入教程、重复执行全部 reused、未登记／未接入／重复副本不写入、internal 来源权限与批次失败退出。后续阶段再扩充知识与工具 API 用例，检查：
+`tests/integration/test_yuque_ingestion.py`：使用隔离 PostgreSQL、项目账号的 API Token 认证和明确的模型替身，不访问语雀。当前覆盖教程原文 API、合成速查表的知识原文 API（行组命中与表头检索文本）与合成快照管理命令：命令只导入已接入类别、重复执行全部 reused、未登记／未接入／重复副本不写入、internal 来源权限与批次失败退出。阶段 6 再扩充工具 API 用例，检查：
 
 - 检索返回带章节路径的父段标题、warnings、工具 metadata 和命中定位。
 - 重复导入返回 `reused`。

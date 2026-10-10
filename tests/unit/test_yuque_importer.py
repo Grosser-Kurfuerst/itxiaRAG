@@ -55,8 +55,8 @@ skip = "duplicate"
 canonical = "help/install"
 [docs."help/old"]
 skip = "deprecated"
-[docs."help/knowledge"]
-category = "knowledge"
+[docs."help/case"]
+category = "case"
 [docs."help/trouble"]
 category = "troubleshooting"
 [docs."help/missing"]
@@ -75,7 +75,7 @@ category = "tutorial"
         {"type": "DOC", "title": "合成工具", "uuid": "tool", "parent_uuid": "tools", "url": "tool", "doc_id": 3},
         {"type": "LINK", "title": "外链", "uuid": "link", "parent_uuid": "root", "url": "https://example.com", "doc_id": None},
     ]
-    slugs = ["install", "second", "tool", "copy", "new", "knowledge", "old", "trouble", "parent"]
+    slugs = ["install", "second", "tool", "copy", "new", "case", "old", "trouble", "parent"]
     docs = [{"id": i, "slug": slug, "title": "【推送归档】教程 | 合成安装 ⭐⭐",
              "content_updated_at": "2025-11-23T18:23:51.000Z"} for i, slug in enumerate(slugs, 1)]
     docs[-1]["id"] = 100
@@ -202,7 +202,7 @@ def test_service_records_all_statuses_counts_warnings_and_continues_after_domain
     assert rows["help/new"].status == "unregistered"
     assert rows["help/copy"].detail == "duplicate → help/install"
     assert rows["help/old"].detail == "deprecated"
-    for key in ["help/tool", "help/knowledge", "help/trouble"]:
+    for key in ["help/tool", "help/case", "help/trouble"]:
         assert rows[key].status == "skipped" and rows[key].detail == "未接入"
     assert report.summary == {"imported": 0, "reused": 1, "preprocessed": 0, "skipped": 5, "unregistered": 2, "failed": 1}
     assert any("help/missing" in warning and "标识可能已改名" in warning for warning in report.warnings)
@@ -210,6 +210,23 @@ def test_service_records_all_statuses_counts_warnings_and_continues_after_domain
     for text in ["category(by)", "parents", "children", "tool_card(path_rule)", "summary:"]:
         assert text in formatted
     assert "先备份数据再安装" not in formatted
+
+
+def test_knowledge_category_is_routed_to_knowledge_pipeline(snapshot):
+    directory, path = snapshot
+    path.write_text(path.read_text(encoding="utf-8").replace(
+        '[docs."help/case"]\ncategory = "case"', '[docs."help/case"]\ncategory = "knowledge"'), encoding="utf-8")
+    (directory / "help" / "case.md").write_text("## 术语\n\n合成术语解释。", encoding="utf-8")
+    registry = components.preprocessors()
+    submitted = []
+
+    def submit(source, raw, schema, version):
+        submitted.append((source.canonical_locator, schema, version))
+        return SubmissionResult(registry.process(raw, schema, version), ImportResult(uuid4(), [uuid4()], reused=False))
+
+    rows = {row.doc: row for row in service(directory, path, submit).run(help_refs(directory)).rows}
+    assert ("doc:6", "knowledge", 1) in submitted
+    assert rows["help/case"].status == "imported"
 
 
 def test_successful_submit_records_imported_and_only_suppresses_unrelated_missing_warnings(snapshot):

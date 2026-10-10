@@ -5,7 +5,7 @@ import pytest
 from contracts.types import RawDocument
 from ingestion.chunking import BudgetChunker
 from ingestion.parsers import HtmlParser, MarkdownParser
-from ingestion.sections import SectionedDocumentStrategy, TUTORIAL, build_tree
+from ingestion.sections import KNOWLEDGE, SectionedDocumentStrategy, TUTORIAL, build_tree
 from ingestion.strategies import _key
 
 
@@ -271,3 +271,65 @@ def test_table_and_code_are_merged_whole_and_can_be_split_by_budget():
     chunked, = BudgetChunker(max_input_units=180).chunk([parent])
     assert any("| 项目 | 值 |" in child.retrieval_prefix for child in chunked.children)
     assert len(chunked.children) > len(parent.children)
+
+
+def cheat_sheet(rows):
+    return "## 速查\n\n| 功能 | 命令 |\n| :---: | :---: |\n" + "".join(f"| 第{i}项功能 | cmd{i} |\n" for i in range(rows))
+
+
+def test_long_tables_split_into_contiguous_row_groups_with_header_prefix():
+    parent, = build(cheat_sheet(30), profile=replace(KNOWLEDGE, min_parent_chars=0))
+    assert len(parent.children) > 1
+    assert all(child.retrieval_prefix == "| 功能 | 命令 |" for child in parent.children)
+    # 标题与表头随第一组，其余各组只含数据行；各组按原文顺序拼回整张表。
+    assert parent.children[0].body.startswith("速查\n\n| 功能 | 命令 |\n| :---: | :---: |\n| 第0项功能")
+    assert all(child.body.startswith("| 第") for child in parent.children[1:])
+    assert "\n".join(child.body for child in parent.children) == parent.body
+    assert all(len(child.body) <= KNOWLEDGE.chunk_target_chars for child in parent.children)
+    second = parent.children[1]
+    first_row = int(second.body.split("项功能")[0].removeprefix("| 第"))
+    assert second.locator["line_start"] == 5 + first_row and second.locator["block_start"] == 2
+    chunked, = BudgetChunker().chunk([parent])
+    assert [child.body for child in chunked.children] == [child.body for child in parent.children]
+
+
+def test_short_tables_and_tutorial_tables_stay_whole():
+    parent, = build("## 速查\n\n说明：\n\n" + cheat_sheet(3).removeprefix("## 速查\n\n"), profile=KNOWLEDGE)
+    child, = parent.children
+    assert child.retrieval_prefix == "" and "说明：" in child.body
+    parent, = build(cheat_sheet(30), profile=replace(TUTORIAL, min_parent_chars=0))
+    assert all("| 第" not in child.retrieval_prefix for child in parent.children)
+    assert any("| 第0项功能" in child.body and "| 第29项功能" in child.body for child in parent.children)
+
+
+def test_html_table_rows_are_grouped_and_text_around_table_stays_separate():
+    rows = "".join(f"<tr><td>第{i}项功能</td><td>cmd{i}</td></tr>" for i in range(30))
+    raw = RawDocument((f"<h2>速查</h2><p>常用命令。</p><table><tr><th>功能</th><th>命令</th></tr>{rows}</table>"
+                       "<p>表后说明。</p>").encode(), "text/html", {"title": "速查表"})
+    parent, = SectionedDocumentStrategy(KNOWLEDGE).build(HtmlParser().parse(raw), raw)
+    intro, *groups, outro = parent.children
+    assert intro.body == "速查\n\n常用命令。" and intro.retrieval_prefix == ""
+    assert outro.body == "表后说明。" and outro.retrieval_prefix == ""
+    assert len(groups) > 1 and all(child.retrieval_prefix == "| 功能 | 命令 |" for child in groups)
+    chunked, = BudgetChunker().chunk([parent])
+    assert [child.body for child in chunked.children] == [child.body for child in parent.children]
+
+
+def test_html_row_with_line_break_stays_in_one_row_group():
+    rows = "".join(f"<tr><td>第{i}项<br>功能</td><td>cmd{i}</td></tr>" for i in range(30))
+    raw = RawDocument(f"<table><tr><th>功能<br>说明</th><th>命令</th></tr>{rows}</table>".encode(),
+                      "text/html", {"title": "速查表"})
+    parent, = SectionedDocumentStrategy(replace(KNOWLEDGE, min_parent_chars=0)).build(HtmlParser().parse(raw), raw)
+    assert len(parent.children) > 1
+    header = parent.children[0].retrieval_prefix
+    assert header.startswith("| 功能") and header.endswith("| 命令 |")
+    assert all(child.retrieval_prefix == header and child.body.count("项") == child.body.count("cmd")
+               for child in parent.children)
+
+
+def test_knowledge_profile_merges_fragmented_term_sections():
+    text = "## 黑话\n\n" + "".join(f"### 术语{i}\n\n术语{i}的一句话解释。\n\n" for i in range(4))
+    parent, = build(text, profile=KNOWLEDGE, title="黑话指南")
+    assert parent.metadata["content_type"] == "knowledge"
+    child, = parent.children
+    assert all(f"术语{i}的一句话解释" in child.body for i in range(4))

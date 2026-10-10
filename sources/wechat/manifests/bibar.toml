@@ -11,7 +11,7 @@ bibar = "笔吧评测室"
 "bibar/2026-09-28-laiku-gt16" = { title = "未来已来！聊一款新上市的主流游戏本", date = "2026-09-28" }
 
 [collections.bibar]
-visibility = "internal"
+visibility = "public"
 
 [docs."bibar/2026-09-28-laiku-gt16"]
 category = "product_review"

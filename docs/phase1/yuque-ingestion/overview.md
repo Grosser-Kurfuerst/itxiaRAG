@@ -15,7 +15,7 @@
 | 5 | 知识流水线 | 未开始 |
 | 6 | 工具条目流水线 | 未开始 |
 
-导入清单位于 [sources/yuque/manifests/itxia.toml](../../../sources/yuque/manifests/itxia.toml)。第一批 74 篇由 46 个单篇分类条目与工具目录规则覆盖，另外登记 3 个重复副本跳过条目。新增文档先试运行，按报告补写单篇 `category` 或 `skip`；只有稳定且类别一致的目录才增加 `path_rules`，单篇条目优先于最长目录前缀。可见性由单篇覆盖知识库默认，`textbook` 为 internal。清单只保存标识、类别与权限，不保存正文。
+导入清单位于 [sources/yuque/manifests/itxia.toml](../../../sources/yuque/manifests/itxia.toml)。第一批 74 篇由 46 个单篇分类条目与工具目录规则覆盖，另外登记 3 个重复副本跳过条目。新增文档先试运行，按报告补写单篇 `category` 或 `skip`；只有稳定且类别一致的目录才增加 `path_rules`，单篇条目优先于最长目录前缀。可见性由单篇覆盖知识库默认，当前全部为 public，internal 保留备用。清单只保存标识、类别与权限，不保存正文。
 
 `article/partition-resize`、`article/install_win10_from_scratch` 与 `article/gagpcm` 分别指向 `help/partition-resize`、`help/install_win10` 与 `help/nju_network_guide`。重复副本始终跳过，不会自动导入或删除 canonical 文档。
 

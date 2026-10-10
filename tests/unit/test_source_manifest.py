@@ -170,7 +170,7 @@ def test_repository_manifest_classifies_all_74_appendix_docs():
     assert counts == {"tutorial": 28, "tool_card": 31, "knowledge": 15}
     assert len(manifest.docs) == 49  # 46 个单篇分类 + 3 个重复副本。
     assert manifest.collections == ["help", "article", "textbook", "basic-computer", "dygh8t"]
-    assert manifest.visibility_for(ref("textbook/make_pe")) == "internal"
+    assert manifest.visibility_for(ref("textbook/make_pe")) == "public"
     for slug in ["partition-resize", "install_win10_from_scratch", "gagpcm"]:
         duplicate = ref(f"article/{slug}")
         assert manifest.classify(duplicate).skip == "duplicate"

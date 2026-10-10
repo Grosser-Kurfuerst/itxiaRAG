@@ -10,7 +10,7 @@
 
 当前输入可以是标准化 JSON，也可以通过原文 API 提交 HTML、Markdown 或纯文本。维护者或外部程序负责获取获准资料、脱敏并选择文档类型；原文入口执行格式解析、类型分段与输入预算控制。系统不抓取公众号 URL、不执行 OCR，也不使用 LLM 识别文档类型或改写查询。
 
-保留 Token 认证、`maintain_source` 维护权限、`read_internal` 内部资料权限；文档范围仅为 `visibility=public/internal`。公开指对已认证普通调用方可见，不开放匿名接口。Embedding 可连接本地或获准的外部服务。
+保留 Token 认证、`maintain_source` 维护权限、`read_internal` 内部资料权限；文档范围仅为 `visibility=public/internal`；当前所有来源均为 public，internal 只作保留值。公开指对已认证普通调用方可见，不开放匿名接口。Embedding 可连接本地或获准的外部服务。
 
 不实现审核、自动放行、系统发布账号、构建切换、撤回、审计、任务队列、retry/resume、健康探针、维护模式、生成模型、反馈或知识图谱。失败直接返回错误，修正后重新提交。
 

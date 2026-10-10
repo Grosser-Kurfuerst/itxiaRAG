@@ -17,7 +17,8 @@
 | [文档预处理](docs/phase1/preprocessing.md) | 原文请求、格式适配器、父子段策略、长度预算与步骤扩展 |
 | [Docker 部署与验收](docs/phase1/deployment.md) | Compose 配置、启动、账号、标准／原文导入冒烟检查和日常操作 |
 | [第二阶段需求](docs/phase2/requirements.md) | 第二阶段目标、范围、功能点与里程碑：检索质量与维修类内容；未实现 |
-| [召回改进方案](docs/phase2/retrieval-improvement-plan.md) | 依据评测结果的召回改进项、采纳条件与实施顺序；未实现 |
+| [召回改进方案](docs/phase2/retrieval-improvement-plan.md) | 依据评测结果的召回改进项、采纳条件与实施顺序；分词模式与同义词表已采纳 |
+| [召回改进记录](docs/phase2/retrieval-improvement-log.md) | 每项召回改进的方法、实验结果与是否保留 |
 | [项目测试规则](docs/unit-testing-guidelines.md) | 测试环境、预处理专项、回归命令与完成定义 |
 
 建议按任务阅读：
@@ -85,7 +86,7 @@ curl -H "Authorization: Token $(cat .runtime/maintainer.token)" \
 
 普通账号只获得公开来源；`read_internal` 才能检索内部来源。Embedding 故障返回 502，不静默降级为空结果。
 
-关键词路使用 jieba 分词（含 [领域词典](retrieval/keyword-terms.txt)）与 Python BM25，向量路继续编码完整查询；两路通过可编排流水线经 RRF 融合、父段聚合后返回。BM25 每次只读取当前可见子块并计算，内容更新立即生效；没有持久关键词索引或缓存，适合小规模验证。可通过 `RETRIEVAL_MIN_COSINE` 和 `RETRIEVAL_MIN_BM25` 配置独立路线门槛。
+关键词路使用 jieba 分词（含 [领域词典](retrieval/keyword-terms.txt)；子块另用搜索模式补复合词的子词，查询按[同义词表](retrieval/keyword-synonyms.txt)扩展）与 Python BM25，向量路继续编码完整查询；两路通过可编排流水线经 RRF 融合、父段聚合后返回。BM25 每次只读取当前可见子块并计算，内容更新立即生效；没有持久关键词索引或缓存，适合小规模验证。可通过 `RETRIEVAL_MIN_COSINE` 和 `RETRIEVAL_MIN_BM25` 配置独立路线门槛。
 
 ## 语雀导入
 

@@ -69,3 +69,4 @@
 - 来源准备与后续连接器：[来源接入说明](phase1/source-ingestion-plan.md)。
 - 原文解析、父子分段、长度控制与扩展：[文档预处理](phase1/preprocessing.md)。
 - 测试与完成定义：[项目测试规则](unit-testing-guidelines.md)。
+- 第二阶段选取的 P1 范围、功能点与里程碑：[第二阶段需求](phase2/requirements.md)。

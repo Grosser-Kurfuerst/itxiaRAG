@@ -1,6 +1,6 @@
 # 召回改进方案
 
-状态：方案，未实现，属于[第二阶段需求](requirements.md)的检索质量部分。依据为[召回效果评测](../phase1/yuque-ingestion/retrieval-evaluation.md)第 9 节：查询集 v4（142 条）在语料 v3（评测 + 教程 + 知识 + 工具条目）上的结果，2026-10-10 在正式库运行。每项改进都要先在评测上达到采纳条件才合入。
+状态：2.2、3.2、3.3 已实现并采纳，其余未实现；每项的实验结果与取舍见[召回改进记录](retrieval-improvement-log.md)。本方案属于[第二阶段需求](requirements.md)的检索质量部分。依据为[召回效果评测](../phase1/yuque-ingestion/retrieval-evaluation.md)第 9 节：查询集 v4（142 条）在语料 v3（评测 + 教程 + 知识 + 工具条目）上的结果，2026-10-10 在正式库运行。每项改进都要先在评测上达到采纳条件才合入。
 
 ## 1. 现状与问题
 
@@ -27,7 +27,7 @@
 
 ### 2.2 评测器支持参数覆盖
 
-RRF 的 k 现在读取 [settings.py:46](../../config/settings.py:46) 的 `RETRIEVAL_RRF_K`，由 [components.py](../../config/components.py) 的 `post_recall_pipeline()` 组装。评测脚本增加可选参数（如 `--rrf-k 10`），在脚本内直接构造 `PostRecallPipeline([RRFFusionStep(k), GroupParentsStep(), TopKParentsStep()])`，不改线上配置；结果文件名带上参数，便于对比。
+已实现（2026-10-11）。[components.py](../../config/components.py) 的 `recall_collector()` 与 `post_recall_pipeline()` 接受可选覆盖参数，不传时读取 settings；评测脚本通过 `--rrf-k`、`--vector-weight`、`--search-mode`、`--synonyms` 传入，不改线上配置。多组结果用 [compare_runs.py](../../eval/compare_runs.py) 对比汇总指标与逐条名次变化。用法见[召回改进记录](retrieval-improvement-log.md#1-记录规则)。
 
 ### 2.3 真实提问
 
@@ -40,14 +40,16 @@ RRF 的 k 现在读取 [settings.py:46](../../config/settings.py:46) 的 `RETRIE
 对应实验矩阵 E2（评测第 5 节），代价最低。
 
 - **方案**：先比较 k ∈ {10, 30, 60}；再试加权 RRF，得分为各路 `w / (k + 名次)` 之和，向量路权重取 1、1.5、2。k=10 时单路第 1 名得 1/11≈0.091，高于两路都排第 30 名的 2/40=0.050。
-- **改动**：k 只需 2.2 的评测参数；加权需要 [RRFRanker](../../retrieval/hybrid.py:18) 接受各路权重，`RRFFusionStep` 与配置相应增加一项。
+- **改动**：已实现。[RRFRanker](../../retrieval/hybrid.py:18) 接受各路权重，配置项为 `RETRIEVAL_RRF_WEIGHTS`；参数实验待做。
 - **代价**：低，不用重新导入。
 - **风险**：k 变小会放大单路误判。D 类部分查询向量路很弱（OCuLink、TGX 两条的向量路名次为 10 和 23，评测第 9.6 节），加大向量权重会拉低它们。
 - **采纳条件**：全部查询 MRR@10 提升，A～F 类 Hit@5、MRR@10 下降不超过约 0.02。
 
 ### 3.2 jieba 搜索模式
 
-- **方案**：[tokenization.py](../../retrieval/tokenization.py) 中中文部分由 `lcut` 改为 `lcut_for_search`，文档与查询两端一致（两端都要改：原文是复合词时需要文档端切出子词，问题是复合词时需要查询端切出子词）。本地实测：
+已采纳“只用于文档端”（`RETRIEVAL_KEYWORD_SEARCH_MODE = "document"`）：全部查询 MRR@10 由 0.816 升到 0.832。下文“两端都改”的原设计经评测不采纳，查询端补出的“理器”“定性”等片段命中大量无关子块，见[改进记录 R1](retrieval-improvement-log.md#4-r1-jieba-搜索模式2026-10-11)。
+
+- **原方案**：[tokenization.py](../../retrieval/tokenization.py) 中中文部分由 `lcut` 改为 `lcut_for_search`，文档与查询两端一致（两端都要改：原文是复合词时需要文档端切出子词，问题是复合词时需要查询端切出子词）。本地实测：
 
   | 文本 | 精确模式 | 搜索模式 |
   | --- | --- | --- |
@@ -62,8 +64,10 @@ RRF 的 k 现在读取 [settings.py:46](../../config/settings.py:46) 的 `RETRIE
 
 ### 3.3 小同义词表
 
-- **方案**：只在查询端扩展：问题包含词表左侧的词组时，把右侧词组追加到问题后再分词。词表与[领域词典](../../retrieval/keyword-terms.txt)放在一起，每行一组，只收评测和真实提问中实际遇到的错配，如“流氓软件”与“垃圾软件”、“加内存”与“加装内存”、“换硬盘”与“更换硬盘”。不建通用同义词库。
-- **改动**：[KeywordRetriever.search](../../retrieval/keyword.py) 的查询分词处；文档端不变，不用重新导入。
+已采纳（`RETRIEVAL_KEYWORD_SYNONYMS = True`），见[改进记录 R2](retrieval-improvement-log.md#5-r2-查询端同义词表2026-10-11)。
+
+- **方案**：只在查询端扩展：问题包含某组中的词组时，把同组其他词组追加到问题后再分词。词表 [keyword-synonyms.txt](../../retrieval/keyword-synonyms.txt) 与[领域词典](../../retrieval/keyword-terms.txt)放在一起，每行一组并注明来源查询，只收评测和真实提问中实际遇到的错配，目前只有“流氓软件”与“垃圾软件”。原先举的“加内存”“换硬盘”不成立：分词后“内存”“硬盘”已能匹配，差别只在单字动词。不建通用同义词库。
+- **改动**：[KeywordRetriever](../../retrieval/keyword.py) 通过注入的 `query_expander` 扩展查询，由组合根按配置注入；文档端不变，不用重新导入。
 - **代价**：低，词表需要随真实提问维护。
 - **风险**：扩展词会抬高无关子块的分数，所以词表只收已验证的错配，规模控制在几十条。
 - **采纳条件**：对应查询的关键词路召回到答案，其余查询名次基本不变。
@@ -110,15 +114,15 @@ D 类提升最大的一项，同时解决知识文档挤占推荐类结果。分
 
 | 顺序 | 内容 | 重新导入 | 依赖 |
 | --- | --- | --- | --- |
-| 1 | 池化补标、评测器参数覆盖（2.1、2.2） | 否 | 无 |
-| 2 | RRF k 与路线加权（3.1） | 否 | 2.2 |
-| 3 | jieba 搜索模式（3.2），再加同义词表（3.3），分开评测 | 否 | 2.1 |
+| 1 | 池化补标、评测器参数覆盖（2.1、2.2） | 否 | 无；2.2 已完成 |
+| 2 | jieba 搜索模式（3.2），再加同义词表（3.3），分开评测 | 否 | 已完成，先于 3.1 实施，3.1 在采纳后的配置上实验 |
+| 3 | RRF k 与路线加权（3.1） | 否 | 2.2 |
 | 4 | 条件解析与来源偏好（3.4） | 第 1 步否，第 2 步是 | 无 |
 | 5 | 按来源分别召回（3.5） | 否 | 3.4 第 1 步 |
 | 6 | 重排（3.6） | 否 | 新模型服务 |
 | 7 | 型号不符标记（3.7） | 否 | 无 |
 
-每次只改一个变量，单独评测、单独提交。评测报告记录参数、语料版本与查询集版本，结果写回评测第 9 节。
+每次只改一个变量，单独评测、单独提交。评测报告记录参数、语料版本与查询集版本，结果写入[召回改进记录](retrieval-improvement-log.md)。
 
 ## 5. 暂不做
 

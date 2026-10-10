@@ -150,7 +150,7 @@
 
 结果文件：`tokenize/results-document-syn.json`。
 
-## 6. 当前默认配置的全量结果（v8，2026-10-11）
+## 6. R1、R2 采纳后的全量结果（v8，2026-10-11）
 
 R1、R2 采纳后，用默认配置重跑两个范围，结果文件为 `results-v8.json` 和 `report-v8.txt`。
 
@@ -177,7 +177,7 @@ R1、R2 采纳后，用默认配置重跑两个范围，结果文件为 `results
 - 奇偶两半 ΔMRR 分别为 +0.001134、+0.019744；召回失败列表不变（X01、X02 的教程），排序失败 14→10。
 - 8 条提升、2 条真实退步：D06（TGX）12→3、D08 8→5、D12 6→4、U06 3→1；X03 的验机教程 7→8、U25 的 Kami 3→4。没有新增跌出前五或丢失第一名。
 
-**配置与结果**：`RETRIEVAL_RRF_K = 20`，`RETRIEVAL_RRF_WEIGHTS = {}`，加权能力保留。复现旧基线需显式传 `--rrf-k 60 --vector-weight 1`，其他配置不变。参数组使用 `rrf/results-k*.json`、`rrf/report-k*.txt`；完整对比在 `rrf/compare.txt`，补标前结果在 `rrf/before-relabel/`。旧 `rrf/results-base.json` 属于 R1 之前，不混用。
+**配置与结果**：`RETRIEVAL_RRF_K = 20`，`RETRIEVAL_RRF_WEIGHTS = {}`，加权能力保留。复现旧基线需显式传 `--rrf-k 60`，其他配置不变。参数组使用 `rrf/results-k*.json`、`rrf/report-k*.txt`；完整对比在 `rrf/compare.txt`，补标前结果在 `rrf/before-relabel/`。旧 `rrf/results-base.json` 属于 R1 之前，不混用。
 
 **两范围独立全量复测**：结果使用 v9，保留原有 v8；`all` 的全部结果字段与参数组 `k20-wv1` 完全一致，默认流水线与显式实验参数一致，最终环境检查通过。
 

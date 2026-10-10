@@ -175,7 +175,7 @@ JSON
 
 ### 3.7 语雀 OpenAPI 与快照导入
 
-`.dockerignore` 白名单包含 `sources/`，镜像内提供语雀导入命令及 `sources/yuque/manifests/itxia.toml` 清单，同时继续排除 `__pycache__` 和 `*.py[cod]`。
+`.dockerignore` 白名单包含 `sources/`，镜像内提供语雀导入命令及 `sources/yuque/manifests/itxia.toml` 清单，另放行 `docs/phase1/yuque-ingestion/requirements-analysis.md`，供清单测试核对第一批文档清单；同时继续排除 `__pycache__` 和 `*.py[cod]`。
 
 阶段 4 的读取与保存快照代码已实现；本节需要真实语雀 Token 的操作均待 Token 到位后补测，不代表已经完成接口实测、真实快照保存或 28 篇教程导入与检索验收。语雀 Token 与 3.1 的知识库 API Token 是两种凭据。
 

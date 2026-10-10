@@ -32,10 +32,19 @@ def _ascii_tokens(part: str) -> list[str]:
     return [part, *(piece for piece in pieces if len(piece) > 1)]
 
 
-def tokenize(text: str) -> list[str]:
-    """文档和查询复用；保留重复词供 BM25 统计词频，不做查询改写。"""
+def tokenize(text: str, *, search_mode: bool = False) -> list[str]:
+    """文档和查询复用；保留重复词供 BM25 统计词频，不做查询改写。
+
+    search_mode 使用 jieba 搜索模式：长词之外再补其中的两字、三字词，
+    如“数据恢复”另产生“数据”“恢复”，使问题与原文的复合词能互相匹配。
+    """
+    cut = _segmenter().lcut_for_search if search_mode else _segmenter().lcut
     tokens = []
     for part in _PARTS.findall(text.casefold()):
-        words = _ascii_tokens(part) if part.isascii() else _segmenter().lcut(part, HMM=False)
+        words = _ascii_tokens(part) if part.isascii() else cut(part, HMM=False)
         tokens.extend(word for word in words if word not in _STOPWORDS)
     return tokens
+
+
+def tokenize_for_search(text: str) -> list[str]:
+    return tokenize(text, search_mode=True)

@@ -45,6 +45,9 @@ EMBEDDING = {
 RETRIEVAL_CANDIDATE_LIMIT = 100
 RETRIEVAL_RRF_K = 60
 RETRIEVAL_RRF_WEIGHTS = {}  # 路线名 -> 权重，未列出的路线按 1 计
+# 关键词路 jieba 搜索模式（另补复合词的子词）的使用范围：off、document（只用于文档）、both
+RETRIEVAL_KEYWORD_SEARCH_MODE = "document"
+RETRIEVAL_KEYWORD_SYNONYMS = True  # 关键词路按 retrieval/keyword-synonyms.txt 做查询端同义扩展
 RETRIEVAL_MIN_COSINE = bounded_float("RETRIEVAL_MIN_COSINE", None, -1, 1)
 RETRIEVAL_MIN_BM25 = bounded_float("RETRIEVAL_MIN_BM25", 0.0, 0)
 PREPROCESS_MAX_INPUT_BYTES = positive_integer("PREPROCESS_MAX_INPUT_BYTES", 2400)

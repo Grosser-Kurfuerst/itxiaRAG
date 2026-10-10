@@ -18,6 +18,8 @@ from retrieval.hybrid import MultiRouteRecall
 from retrieval.keyword import KeywordRetriever
 from retrieval.pipeline import PostRecallPipeline
 from retrieval.steps import GroupParentsStep, RRFFusionStep, TopKParentsStep
+from retrieval.synonyms import default_expander
+from retrieval.tokenization import tokenize, tokenize_for_search
 from retrieval.vector import VectorRetriever
 
 
@@ -42,9 +44,21 @@ def _setting(value, name):
     return getattr(settings, name) if value is None else value
 
 
-def recall_collector(embedder):
+# 关键词路搜索模式的使用范围 -> (文档分词器, 查询分词器)
+KEYWORD_TOKENIZERS = {
+    "off": (tokenize, tokenize),
+    "document": (tokenize_for_search, tokenize),
+    "both": (tokenize_for_search, tokenize_for_search),
+}
+
+
+def recall_collector(embedder, *, search_mode=None, synonyms=None):
+    document_tokenizer, query_tokenizer = KEYWORD_TOKENIZERS[_setting(search_mode, "RETRIEVAL_KEYWORD_SEARCH_MODE")]
+    synonyms = _setting(synonyms, "RETRIEVAL_KEYWORD_SYNONYMS")
     return MultiRouteRecall([
-        KeywordRetriever(min_bm25=settings.RETRIEVAL_MIN_BM25),
+        KeywordRetriever(document_tokenizer, min_bm25=settings.RETRIEVAL_MIN_BM25,
+                         query_tokenizer=query_tokenizer,
+                         query_expander=default_expander() if synonyms else None),
         VectorRetriever(embedder, min_cosine=settings.RETRIEVAL_MIN_COSINE),
     ])
 

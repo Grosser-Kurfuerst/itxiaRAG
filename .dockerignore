@@ -26,5 +26,5 @@ docs/phase1/*
 !docs/phase1/yuque-ingestion/
 docs/phase1/yuque-ingestion/*
 !docs/phase1/yuque-ingestion/requirements-analysis.md
-__pycache__
-*.py[cod]
+**/__pycache__
+**/*.py[cod]

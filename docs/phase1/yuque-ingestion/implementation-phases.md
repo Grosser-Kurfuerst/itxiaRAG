@@ -51,7 +51,7 @@
    .venv/bin/python manage.py makemigrations --check --dry-run
    ```
 
-3. **已有功能不变**：按[原文导入验收](../deployment.md#35-验收原文预处理导入)提交原有合成评测并检索，结果与改动前一致；`product_review`、`purchase_guide`、`experience_case` 的已有用例不改断言即通过。从阶段 4 起，已导入的教程重新运行导入命令应全部为 `reused`，确认后续阶段没有改变教程的处理结果。
+3. **已有功能不变**：按[原文导入验收](../../deployment.md#35-验收原文预处理导入)提交原有合成评测并检索，结果与改动前一致；`product_review`、`purchase_guide`、`experience_case` 的已有用例不改断言即通过。从阶段 4 起，已导入的教程重新运行导入命令应全部为 `reused`，确认后续阶段没有改变教程的处理结果。
 4. **本阶段新功能经实际入口验收**：按各阶段“验收”一节操作，通过原文 API 或导入命令，而不是只跑单测。
 5. **文档同步**：更新各阶段列出的文档，并在[概览](overview.md)中更新阶段状态。
 6. **提交**：每个阶段单独提交，使用 Conventional Commits，例如 `feat(ingestion): 增加语雀 Markdown 方言解析`。快照、真实原文和 Token 不提交。
@@ -83,7 +83,7 @@ for c in doc.contexts:
 - 这种方式绕过 API 的请求校验，只用于查看分段效果；字段校验以原文 API 为准。
 - 阶段 3 起改用导入命令的 `--dry-run`，效果相同且能批量查看。
 
-端到端验收使用原文 API 和检索 API，账号与 Token 文件的准备见[部署与验收第 3.1 节](../deployment.md#31-创建维护者和普通调用账号)。
+端到端验收使用原文 API 和检索 API，账号与 Token 文件的准备见[部署与验收第 3.1 节](../../deployment.md#31-创建维护者和普通调用账号)。
 
 ## 2. 阶段 1：语雀 Markdown 解析
 
@@ -292,7 +292,7 @@ for c in doc.contexts:
 
 - [概览](overview.md)：教程链路已可用，记录真实样本验收的日期与结果。
 - [来源接入说明](../source-ingestion-plan.md)：语雀读取已实现，Token 与权限的实际情况。
-- [部署与验收](../deployment.md)：语雀导入的操作步骤。
+- [部署与验收](../../deployment.md)：语雀导入的操作步骤。
 - [README](../../../README.md)：`YUQUE_TOKEN` 配置说明。
 
 ## 6. 阶段 5：知识流水线

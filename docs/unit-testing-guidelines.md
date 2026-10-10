@@ -36,7 +36,7 @@ make test-integration
 make test
 ```
 
-集成测试使用模型替身，不需要下载或配置真实 Embedding。若本地没有 PostgreSQL，按 [Docker 自动测试](phase1/deployment.md#4-在-docker-中运行自动测试) 使用独立 itxia-tests 项目运行全量或指定测试；不使用运行服务的数据库和卷。
+集成测试使用模型替身，不需要下载或配置真实 Embedding。若本地没有 PostgreSQL，按 [Docker 自动测试](deployment.md#4-在-docker-中运行自动测试) 使用独立 itxia-tests 项目运行全量或指定测试；不使用运行服务的数据库和卷。
 
 Makefile 默认使用 `.venv/bin/python`。已在其他虚拟环境安装依赖时，可通过 `make test-unit PYTHON=python` 指定解释器。退出码 0、所有用例通过才表示相应范围验收通过。
 
@@ -94,7 +94,7 @@ Makefile 默认使用 `.venv/bin/python`。已在其他虚拟环境安装依赖�
 
 沙箱禁止 socket 时，HTTP 集成与 PostgreSQL 全量测试由编排者在隔离环境运行，可先用 `--collect-only` 确认可收集。本地服务与模型替身不代表真实接口或语料质量验收通过；语雀网页读取的实测结果记录在[语雀导入概览](phase1/yuque-ingestion/overview.md)。
 
-3. 验证部署服务与真实模型时，按 [Docker 原文导入验收](phase1/deployment.md#35-验收原文预处理导入) 操作，检查返回完整父段与命中定位。真实文章还需人工检查标题识别、父子边界、测试条件／结果和图片补录；自动测试的通过不能证明真实语料划分与检索质量。
+3. 验证部署服务与真实模型时，按 [Docker 原文导入验收](deployment.md#35-验收原文预处理导入) 操作，检查返回完整父段与命中定位。真实文章还需人工检查标题识别、父子边界、测试条件／结果和图片补录；自动测试的通过不能证明真实语料划分与检索质量。
 
 ## 完成定义
 

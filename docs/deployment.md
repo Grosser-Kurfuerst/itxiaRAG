@@ -1,6 +1,6 @@
 # Docker 部署与运行验收
 
-从仓库根目录执行本文命令。Compose 提供 Django + Gunicorn、PostgreSQL，以及可选的 Ollama Embedding 服务。当前支持标准化 JSON 导入，以及 HTML／Markdown／文本经预处理后导入；文章抓取、OCR 和回答生成尚未实现。预处理策略与请求契约见[文档预处理](preprocessing.md)，测试规则见[项目测试规则](../unit-testing-guidelines.md)。
+从仓库根目录执行本文命令。Compose 提供 Django + Gunicorn、PostgreSQL，以及可选的 Ollama Embedding 服务。当前支持标准化 JSON 导入、HTML／Markdown／文本经预处理后导入，以及按清单批量导入语雀公开文档和公众号采集文章；OCR 和回答生成尚未实现。预处理策略与请求契约见[文档预处理](phase1/preprocessing.md)，测试规则见[项目测试规则](unit-testing-guidelines.md)，部署后的资料、词表与评测维护见[维护手册](maintenance.md)。
 
 ## 1. 准备配置
 
@@ -43,7 +43,9 @@ PREPROCESS_MAX_INPUT_BYTES=2400
 
 默认不额外过滤向量，关键词保留 BM25 大于零的结果。设置最低 cosine 时范围为 `[-1, 1]`，最低 BM25 须非负；两路分别过滤。具体值应按实际问题集校准，改动门槛不需重新导入，只需重建应用容器。结果的 `matches[].route_scores` 保留原始 cosine／BM25，`score_kind` 说明当前排序分数，默认是 `rrf`。
 
-PREPROCESS_MAX_INPUT_BYTES 控制原文入口完整 Embedding 文本的 UTF-8 字节预算，修改后重建应用容器。它不是精确 token 上限，也不会改变已导入子块；需要应用新切分预算时重新提交原文。目标 tokenizer 的注入方式见[输入预算与扩展](preprocessing.md#4-evidence-输入预算)。
+PREPROCESS_MAX_INPUT_BYTES 控制原文入口完整 Embedding 文本的 UTF-8 字节预算，修改后重建应用容器。它不是精确 token 上限，也不会改变已导入子块；需要应用新切分预算时重新提交原文。目标 tokenizer 的注入方式见[输入预算与扩展](phase1/preprocessing.md#4-evidence-输入预算)。
+
+RRF 参数、关键词路分词模式和同义扩展开关不是环境变量，而是 [settings.py](../config/settings.py) 中的常量；领域词典与同义词表是 `retrieval/` 下的文本文件。它们都打包在镜像中，修改后重建应用容器即可，不需要重新导入，改动前应先评测，见[维护手册](maintenance.md)。
 
 为减少重复命令，在当前终端定义：
 
@@ -81,7 +83,7 @@ dc logs --tail=100 app db
 
 `check` 应无错误，`migrate --check` 应退出成功。数据库首次使用新卷；旧版数据库仍有业务数据时，收敛迁移会中止，应保留旧库并在新库重新导入。
 
-默认 API 只绑定宿主机 `127.0.0.1:8000`，PostgreSQL 和 Ollama 不暴露宿主机端口。端口冲突时在配置中增加 `APP_PORT=18000`，并同步下文请求地址。远程访问可通过 SSH 转发；对外部署时由 HTTPS 反向代理接入，并把域名加入 `ALLOWED_HOSTS`。
+默认 API 只绑定宿主机 `127.0.0.1:8000`，PostgreSQL 和 Ollama 不暴露宿主机端口。端口冲突时在配置中增加 `APP_PORT=18000`，并同步下文请求地址；监听地址、Gunicorn 进程数和超时可分别用 `APP_BIND_ADDRESS`（默认 `127.0.0.1`）、`WEB_WORKERS`（默认 2）、`WEB_TIMEOUT`（默认 120 秒）调整。远程访问可通过 SSH 转发；对外部署时由 HTTPS 反向代理接入，并把域名加入 `ALLOWED_HOSTS`。
 
 ## 3. 验收导入与混合检索
 
@@ -167,7 +169,7 @@ JSON
 
 首次应返回 `200`、`reused=false` 和一项 context_ids；重复提交同一请求应为 `reused=true`，ID 不变。再执行 3.4 的查询，确认 contexts 包含 Laptop Raw，父段 text 同时保留续航和噪声；matches 的 locator 中 parent_char_start/end 应定位到 text 中的命中子块，end 为开区间。
 
-购机指南、经验文档、长子块拆分、atomic 超限与失败行为通过[预处理专项测试](../unit-testing-guidelines.md#预处理专项验证)验证。真实文章的视觉排版和图片关键参数仍需人工核对。
+购机指南、经验文档、长子块拆分、atomic 超限与失败行为通过[预处理专项测试](unit-testing-guidelines.md#预处理专项验证)验证。真实文章的视觉排版和图片关键参数仍需人工核对。
 
 ### 3.6 验证维护权限
 
@@ -175,7 +177,7 @@ JSON
 
 ### 3.7 语雀网页与快照导入
 
-`.dockerignore` 白名单包含 `sources/`，镜像内提供语雀导入命令及 `sources/yuque/manifests/itxia.toml` 清单，另放行 `docs/phase1/yuque-ingestion/requirements-analysis.md`，供清单测试核对第一批文档清单；同时继续排除 `__pycache__` 和 `*.py[cod]`。
+`.dockerignore` 白名单包含 `sources/` 与 `eval/`，镜像内提供语雀导入命令、`sources/yuque/manifests/itxia.toml` 清单和召回评测脚本，另放行 `docs/phase1/yuque-ingestion/requirements-analysis.md`，供清单测试核对第一批文档清单；同时继续排除 `__pycache__` 和 `*.py[cod]`。
 
 导入命令匿名读取语雀公开网页，不需要 Token 或额外环境变量，只要求 app 容器能访问 `www.yuque.com`：
 
@@ -208,7 +210,24 @@ dc exec app python manage.py import_yuque \
 
 未接入类别报告为 `skipped`，不写入数据库；快照正文读取失败无论类别或 `--only` 都记为 `failed`，继续保存其余文档，结束后非零退出。正文的 429、其他 HTTP／网络错误、超时或格式错误（含返回验证码页）同样按单篇处理；401／403 终止整批，提示确认知识库公开或稍后重跑。知识库页面、目录或列表失败在任何正文处理前终止整批；写盘错误也终止整批。没有重试队列，修正后重跑；保存失败的正文旧文件会删除，不能把不完整快照当作完整数据。
 
-快照含正文，和凭据一样不提交。重复导入仍可能调用 Embedding，`reused` 验证的是统一保存链的内容去重。导入与检索抽查结果见[语雀导入概览](yuque-ingestion/overview.md)。
+快照含正文，和凭据一样不提交。重复导入仍可能调用 Embedding，`reused` 验证的是统一保存链的内容去重。导入与检索抽查结果见[语雀导入概览](phase1/yuque-ingestion/overview.md)。
+
+### 3.8 公众号采集导入
+
+公众号文章的采集目录和正式清单在宿主机被忽略的 `.runtime/` 下，镜像中没有，用一次性容器挂载后导入。正式库 78 篇评测的清单与采集目录在 `.runtime/eval/corpus-v1/`（`wechat-manifest.toml` 与 `capture/`）；仓库中的 [bibar.toml](../sources/wechat/manifests/bibar.toml) 只是格式样例。采集与下载规则见 [README](../README.md#公众号采集导入)。
+
+```sh
+# 试运行：只预处理，不编码、不写数据库
+dc run --rm --no-deps -v "$PWD/.runtime/eval/corpus-v1:/import:ro" app \
+  python manage.py import_wechat --manifest /import/wechat-manifest.toml --capture /import/capture --dry-run
+
+# 正式导入；正文、元数据与流水线配置不变的文章返回 reused
+dc run --rm --no-deps -v "$PWD/.runtime/eval/corpus-v1:/import:ro" app \
+  python manage.py import_wechat --manifest /import/wechat-manifest.toml --capture /import/capture \
+  --username maintainer
+```
+
+`--no-deps` 复用已运行的 `db` 与 `embedding`，一次性容器与 app 使用同一网络和配置。语雀快照同样可以这样挂载导入，例如 `-v "$PWD/.runtime/yuque-snapshot:/snapshot:ro"` 后传 `--snapshot /snapshot`；不必先复制进 app 容器。2026-10-11 按本节试运行：公众号 78 篇、语雀快照 74 篇全部 preprocessed，0 失败。
 
 ## 4. 在 Docker 中运行自动测试
 

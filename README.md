@@ -15,7 +15,7 @@
 | [来源连接器改造方案](docs/phase1/source-connector-design.md) | 通用连接器协议、清单与导入服务的拆分，平台差异与迁移步骤；未实现 |
 | [语雀文档导入方案](docs/phase1/yuque-ingestion/overview.md) | 语雀解析、教程／知识／工具条目流水线、公开网页读取与快照导入已实现；第一批 74 篇已导入开发环境 |
 | [文档预处理](docs/phase1/preprocessing.md) | 原文请求、格式适配器、父子段策略、长度预算与步骤扩展 |
-| [Docker 部署与验收](docs/phase1/deployment.md) | Compose 配置、启动、账号、标准／原文导入冒烟检查和日常操作 |
+| [Docker 部署与验收](docs/deployment.md) | Compose 配置、启动、账号、标准／原文导入冒烟检查和日常操作 |
 | [第二阶段需求](docs/phase2/requirements.md) | 第二阶段目标、范围、功能点与里程碑：检索质量与维修类内容；未实现 |
 | [召回改进方案](docs/phase2/retrieval-improvement-plan.md) | 依据评测结果的召回改进项、采纳条件与实施顺序；分词模式、同义词表与 RRF k=20 已采纳 |
 | [召回改进记录](docs/phase2/retrieval-improvement-log.md) | 每项召回改进的方法、实验结果与是否保留 |
@@ -31,7 +31,7 @@
 
 ## Docker 运行
 
-推荐按 [Docker 部署与验收](docs/phase1/deployment.md) 启动。Compose 提供 Web、PostgreSQL、可选的 Ollama 模型服务和独立测试镜像；文档包含配置、模型下载、账号创建、导入／检索验收及停止备份步骤。
+推荐按 [Docker 部署与验收](docs/deployment.md) 启动。Compose 提供 Web、PostgreSQL、可选的 Ollama 模型服务和独立测试镜像；文档包含配置、模型下载、账号创建、导入／检索验收及停止备份步骤。
 
 ## 本地运行
 
@@ -112,7 +112,7 @@ curl -H "Authorization: Token $(cat .runtime/maintainer.token)" \
 
 仍需加载本地 Django 配置。正式导入需要 `maintain_source`，内部来源另需 `read_internal`；当前清单全部为 public，internal 保留备用。试运行若提供 `--username` 也会检查账号权限。报告区分 `preprocessed`（试运行成功）、`imported`、`reused`、`skipped`、`unregistered`、`failed`，列出父段／子块数与警告，不打印正文。排障和案例类别未接入，报告为“未接入”；清单错误或正式导入缺少 Embedding 配置会启动即失败；单篇失败继续处理，批次结束以非零状态退出。重复运行按现有主链更新或返回 `reused`。
 
-401／403 会终止整批并提示确认知识库公开或稍后重跑；正文读取的 429、其他 HTTP／网络错误、超时和格式错误（含返回验证码页）记为单篇失败。目录或文档列表读取失败时整批终止，尚不处理任何正文。容器内配置和操作见[部署与验收](docs/phase1/deployment.md#37-语雀网页与快照导入)。
+401／403 会终止整批并提示确认知识库公开或稍后重跑；正文读取的 429、其他 HTTP／网络错误、超时和格式错误（含返回验证码页）记为单篇失败。目录或文档列表读取失败时整批终止，尚不处理任何正文。容器内配置和操作见[部署与验收](docs/deployment.md#37-语雀网页与快照导入)。
 
 ## 公众号采集导入
 

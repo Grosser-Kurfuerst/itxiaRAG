@@ -86,7 +86,7 @@ version = 2
 source_type = "wechat"
 
 [collections."笔吧评测室"]
-visibility = "internal"
+visibility = "public"
 
 [docs."笔吧评测室/2026-09-28-laike-gt16"]
 category = "product_review"

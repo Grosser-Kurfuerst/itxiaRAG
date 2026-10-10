@@ -134,7 +134,7 @@ group = "itxia"
 visibility = "public"
 
 [collections.textbook]
-visibility = "internal"        # 已确认：培训手册面向社员
+visibility = "public"          # 当前全部公开；internal 保留备用
 
 [[path_rules]]                 # 目录规则：命中的文档无需逐篇登记
 collection = "help"

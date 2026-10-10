@@ -107,7 +107,7 @@ OpenAPI 模式从环境变量 `YUQUE_TOKEN` 读取获授权的语雀 Token，空
 
 `--snapshot` 与 `--save-snapshot` 互斥。保存快照时先读取清单内所有知识库的已分类文档正文（含未接入的知识、工具、排障和案例），再从快照执行导入；`--only` 只限制导入范围，不缩小保存范围。目录与完整分页列表也会保存，跳过和未登记的文档不保存正文。该范围覆盖清单中的第一批 74 篇，实际完整性仍需用真实目录和读取报告核对。保存时任一单篇读取失败均记为 `failed`，即使该类别未接入或不在 `--only` 中；失败正文不保留旧文件，快照可能不完整，应重跑补齐。
 
-仍需加载本地 Django 配置。正式导入需要 `maintain_source`，内部来源另需 `read_internal`；`textbook` 默认为 internal。试运行若提供 `--username` 也会检查账号权限。报告区分 `preprocessed`（试运行成功）、`imported`、`reused`、`skipped`、`unregistered`、`failed`，列出父段／子块数与警告，不打印正文。知识与工具暂未接入，清单错误或正式导入缺少 Embedding 配置会启动即失败；单篇失败继续处理，批次结束以非零状态退出。重复运行按现有主链更新或返回 `reused`。
+仍需加载本地 Django 配置。正式导入需要 `maintain_source`，内部来源另需 `read_internal`；当前清单全部为 public，internal 保留备用。试运行若提供 `--username` 也会检查账号权限。报告区分 `preprocessed`（试运行成功）、`imported`、`reused`、`skipped`、`unregistered`、`failed`，列出父段／子块数与警告，不打印正文。知识与工具暂未接入，清单错误或正式导入缺少 Embedding 配置会启动即失败；单篇失败继续处理，批次结束以非零状态退出。重复运行按现有主链更新或返回 `reused`。
 
 OpenAPI 的 401／403 会终止整批并提示检查 Token 与知识库权限；详情读取的 429、其他 HTTP／网络错误、超时和格式错误记为单篇失败。目录或文档列表读取失败时整批终止，尚不处理任何正文。容器内配置和操作见[部署与验收](docs/phase1/deployment.md#37-语雀-openapi-与快照导入)。
 

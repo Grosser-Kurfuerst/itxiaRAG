@@ -13,7 +13,7 @@ visibility = "public"
 visibility = "public"
 
 [collections.textbook]
-visibility = "internal"
+visibility = "public"
 
 [collections.basic-computer]
 visibility = "public"

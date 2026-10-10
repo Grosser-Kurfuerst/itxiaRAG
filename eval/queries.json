@@ -1,0 +1,1205 @@
+{
+ "scopes": {
+  "reviews": [
+   "product_review"
+  ],
+  "all": [
+   "product_review",
+   "tutorial"
+  ]
+ },
+ "aliases": {
+  "GT16": "联想 来酷GT 16 酷睿版",
+  "Air16": "联想 来酷Air 16",
+  "Air14": "联想 来酷Air 14",
+  "TB锐龙": "联想 ThinkBook 14+ 锐龙版 2026",
+  "TB酷睿": "联想 ThinkBook 14+ 酷睿版",
+  "7000P": "联想 来酷 斗战者 战7000P",
+  "7000X": "联想 来酷 斗战者 战7000X",
+  "H7": "荣耀 WIN游戏本 H7",
+  "H9": "荣耀 WIN游戏本 H9",
+  "星耀14PTL": "机械革命 星耀14 PTL酷睿版",
+  "耀世5090": "机械革命 耀世16 Ultra RTX 5090版",
+  "耀世5070Ti": "机械革命 耀世16 Ultra RTX 5070 Ti版",
+  "7000P锐龙": "联想 来酷 斗战者 战7000P 锐龙版",
+  "MBA15": "苹果 MacBook Air 15",
+  "MBA13": "苹果 MacBook Air 13",
+  "Y7000X": "联想 拯救者 Y7000X",
+  "Y9000P": "联想 拯救者 Y9000P 至尊版 2026",
+  "蛟龙潮玩": "机械革命 蛟龙16 Pro 潮玩版",
+  "无界暴风雪": "机械革命 无界15X Pro 暴风雪",
+  "泰坦18锐龙": "微星 泰坦18 Pro 锐龙版",
+  "TB16+": "联想 ThinkBook 16+ 酷睿独显版",
+  "a豆14": "华硕 a豆14 Air 2026",
+  "YOGA14": "联想 YOGA Air 14 Ultra Aura",
+  "MateS": "华为 MateBook Pro S",
+  "语雀:校园网导读": {
+   "doc": "help/nju_network_guide",
+   "titles": [
+    "1 校园网使用简单导读",
+    "2 使用无线连接",
+    "3 使用有线连接 > 3.1 怎么物理接入网络",
+    "3 使用有线连接 > 3.2 采用网线直连的方式连接"
+   ]
+  },
+  "语雀:宿舍路由器": {
+   "doc": "help/nju_network_guide",
+   "titles": [
+    "3 使用有线连接 > 3.3 采用路由器连接 > 3.3.3 连接路由器",
+    "3 使用有线连接 > 3.3 采用路由器连接 > 3.3.4 配置路由器"
+   ]
+  },
+  "语雀:无脑激活": {
+   "doc": "help/win10_activation_short",
+   "titles": [
+    "Windows 10/11 无脑激活与版本转换指南",
+    "无脑参照表"
+   ]
+  },
+  "语雀:装机激活": {
+   "doc": "help/install_win10",
+   "titles": [
+    "激活设置篇 > 三、激活吧！我的Windows！"
+   ]
+  },
+  "语雀:验机激活": {
+   "doc": "help/hello_my_pc",
+   "titles": [
+    "六、系统初步设置 > 6.3、激活Windows并登入微软账户绑定"
+   ]
+  },
+  "语雀:教材激活": {
+   "doc": "textbook/yo04izg5or2hurpo",
+   "titles": [
+    "激活"
+   ]
+  },
+  "语雀:分区调整": {
+   "doc": "help/partition-resize",
+   "titles": [
+    "一、序言与准备工作",
+    "三、进行调整"
+   ]
+  },
+  "语雀:改用户名": {
+   "doc": "help/change_win_account_name"
+  },
+  "语雀:流氓软件": {
+   "doc": "help/sweep_out_malware",
+   "titles": [
+    "〇、神秘图标",
+    "二、顺藤摸瓜",
+    "三、不行就分"
+   ]
+  },
+  "语雀:南大Office": {
+   "doc": "help/setup_office",
+   "titles": [
+    "二、安装南大正版 MS Office 相关问题"
+   ]
+  },
+  "语雀:OTP装Office": {
+   "doc": "article/otp_intro",
+   "titles": [
+    "操作流程"
+   ]
+  },
+  "语雀:新机验机": {
+   "doc": "help/hello_my_pc",
+   "titles": [
+    "面向南京大学师生的新笔记本电脑验机/设置指南",
+    "二、开箱检查",
+    "三、开机检查并进入审核模式（OOBE）",
+    "四、检查电脑配置"
+   ]
+  },
+  "语雀:U盘装系统": {
+   "doc": "help/install_win10",
+   "titles": [
+    "准备篇",
+    "安装篇 > 二、进入装机盘",
+    "安装篇 > 三、开始安装"
+   ]
+  },
+  "语雀:进入装机盘": {
+   "doc": "help/install_win10",
+   "titles": [
+    "安装篇 > 二、进入装机盘"
+   ]
+  },
+  "语雀:驱动降级": {
+   "doc": "help/win_drivers",
+   "titles": [
+    "2、驱动重装（或降级）"
+   ]
+  },
+  "语雀:远程连接": {
+   "doc": "help/remote_access",
+   "titles": [
+    "如何远程连接到宿舍/实验室的电脑（文档建设中）",
+    "本地直连的远程服务 > RDP",
+    "具有云服务的远程服务",
+    "使用校内接入服务"
+   ]
+  },
+  "语雀:Mac装Win": {
+   "doc": "help/win10_on_intel_mac",
+   "titles": [
+    "面向小白的Intel处理器MacBook上Win10安装傻瓜教程",
+    "本篇概览",
+    "写在前头",
+    "第二步：使用启动转换助理"
+   ]
+  },
+  "语雀:Adobe激活": {
+   "doc": "article/nju_adobe_tips",
+   "titles": [
+    "Q7：学校的Adobe到底要不要激活？"
+   ]
+  },
+  "语雀:OneDrive1T": {
+   "doc": "article/hlkpwa",
+   "titles": [
+    "免费1T的OneDrive怎么薅？",
+    "如何获取Office教育版的OneDrive"
+   ]
+  },
+  "语雀:A1国际版": {
+   "doc": "help/get_o365",
+   "titles": [
+    "四、如何获取 Office365 A1 国际版"
+   ]
+  },
+  "语雀:EndNote写作": {
+   "doc": "help/vhqnnk",
+   "titles": [
+    "三、EndNote怎么用？ > 论文写作"
+   ]
+  },
+  "语雀:校园网报修": {
+   "doc": "help/nju_itsc_warranty",
+   "titles": [
+    "一、搞清楚负责单位",
+    "三、信息化中心报修"
+   ]
+  },
+  "语雀:官方售后": {
+   "doc": "help/find_your_support",
+   "titles": [
+    "线上寻找售后支持",
+    "线下寻找售后支持 > 假冒官方售后的危害",
+    "线下寻找售后支持 > 寻找售后的注意事项"
+   ]
+  },
+  "语雀:真假官网": {
+   "doc": "help/find_official_website",
+   "titles": [
+    "准确的搜索",
+    "检查网址",
+    "检查网页内容"
+   ]
+  },
+  "语雀:防患未然": {
+   "doc": "help/sweep_out_malware",
+   "titles": [
+    "一、防患未然"
+   ]
+  },
+  "语雀:制作PE": {
+   "doc": "textbook/make_pe"
+  },
+  "语雀:系统清理": {
+   "doc": "help/clean_and_backup",
+   "titles": [
+    "一、系统功能：深藏不露"
+   ]
+  },
+  "语雀:教材清理": {
+   "doc": "textbook/manage_data",
+   "titles": [
+    "系统清理"
+   ]
+  },
+  "语雀:螺丝技巧": {
+   "doc": "textbook/au70ga5onvxr2vqa",
+   "titles": [
+    "一些小技巧"
+   ]
+  },
+  "语雀:硬件更换": {
+   "doc": "textbook/hardware_maintenance",
+   "titles": [
+    "常见的硬件更换"
+   ]
+  },
+  "语雀:清灰": {
+   "doc": "textbook/physical_cleaning"
+  }
+ },
+ "attributes": "attributes.json",
+ "queries": [
+  {
+   "id": "A01",
+   "cat": "A",
+   "q": "联想来酷GT 16 酷睿版的噪音有多大",
+   "rel": [
+    "GT16"
+   ],
+   "facts": [
+    "55.4dB"
+   ]
+  },
+  {
+   "id": "A02",
+   "cat": "A",
+   "q": "来酷Air 16 续航多久",
+   "rel": [
+    "Air16"
+   ],
+   "facts": [
+    "9小时56分"
+   ]
+  },
+  {
+   "id": "A03",
+   "cat": "A",
+   "q": "ThinkBook 14+ 锐龙版 2026 多少钱",
+   "rel": [
+    "TB锐龙"
+   ],
+   "facts": [
+    "5099.15"
+   ]
+  },
+  {
+   "id": "A04",
+   "cat": "A",
+   "q": "战7000X 用的是什么固态硬盘",
+   "rel": [
+    "7000X"
+   ],
+   "facts": [
+    "群联"
+   ]
+  },
+  {
+   "id": "A05",
+   "cat": "A",
+   "q": "荣耀WIN游戏本H7 的屏幕亮度",
+   "rel": [
+    "H7"
+   ],
+   "facts": [
+    "528nits"
+   ]
+  },
+  {
+   "id": "A06",
+   "cat": "A",
+   "q": "荣耀WIN游戏本 H9 的散热模组是什么结构",
+   "rel": [
+    "H9"
+   ],
+   "facts": [
+    "5热管"
+   ]
+  },
+  {
+   "id": "B01",
+   "cat": "B",
+   "q": "7000P 噪音",
+   "rel": [
+    "7000P"
+   ],
+   "facts": [
+    "55.0dB"
+   ]
+  },
+  {
+   "id": "B02",
+   "cat": "B",
+   "q": "TB14+ 酷睿 内存能换吗",
+   "rel": [
+    "TB酷睿"
+   ],
+   "facts": [
+    "LPCAMM2"
+   ]
+  },
+  {
+   "id": "B03",
+   "cat": "B",
+   "q": "H9 有几个风扇",
+   "rel": [
+    "H9"
+   ],
+   "facts": [
+    "六个风扇"
+   ]
+  },
+  {
+   "id": "B04",
+   "cat": "B",
+   "q": "air14 多重",
+   "rel": [
+    "Air14"
+   ],
+   "facts": [
+    "984g"
+   ]
+  },
+  {
+   "id": "B05",
+   "cat": "B",
+   "q": "GT16 能加内存吗",
+   "rel": [
+    "GT16"
+   ],
+   "facts": [
+    "内存插槽"
+   ]
+  },
+  {
+   "id": "B06",
+   "cat": "B",
+   "q": "7000X 适配器多重",
+   "rel": [
+    "7000X"
+   ],
+   "facts": [
+    "438g"
+   ]
+  },
+  {
+   "id": "C01",
+   "cat": "C",
+   "q": "来酷air16的内存可以自己升级吗",
+   "rel": [
+    "Air16"
+   ],
+   "facts": [
+    "板载"
+   ]
+  },
+  {
+   "id": "C02",
+   "cat": "C",
+   "q": "荣耀那台六个风扇的游戏本烤机CPU多少度",
+   "rel": [
+    "H9"
+   ],
+   "facts": [
+    "100℃"
+   ]
+  },
+  {
+   "id": "C03",
+   "cat": "C",
+   "q": "thinkbook锐龙版续航咋样，能撑一天吗",
+   "rel": [
+    "TB锐龙"
+   ],
+   "facts": [
+    "12小时40分"
+   ]
+  },
+  {
+   "id": "C04",
+   "cat": "C",
+   "q": "战7000P双烤为啥要从电池取电",
+   "rel": [
+    "7000P"
+   ],
+   "facts": [
+    "电池"
+   ]
+  },
+  {
+   "id": "C05",
+   "cat": "C",
+   "q": "H7的硬盘是不是QLC的",
+   "rel": [
+    "H7"
+   ],
+   "facts": [
+    "QLC"
+   ]
+  },
+  {
+   "id": "D01",
+   "cat": "D",
+   "q": "一万元以内、机身轻薄、性能释放强的游戏本",
+   "constraints": {
+    "gaming": true,
+    "price": [
+     null,
+     10000
+    ],
+    "weight_max": 2.3,
+    "gpu": [
+     "RTX 5060",
+     "RTX 5070",
+     "RTX 5070Ti",
+     "RTX 5080",
+     "RTX 5090"
+    ]
+   },
+   "facts": []
+  },
+  {
+   "id": "D03",
+   "cat": "D",
+   "q": "带OCuLink接口的笔记本",
+   "constraints": {
+    "ports": [
+     "oculink"
+    ]
+   },
+   "facts": []
+  },
+  {
+   "id": "D04",
+   "cat": "D",
+   "q": "用石墨烯导热的游戏本",
+   "rel": [
+    "H9"
+   ],
+   "facts": [
+    "石墨烯"
+   ]
+  },
+  {
+   "id": "D05",
+   "cat": "D",
+   "q": "1kg以下的轻薄本推荐",
+   "constraints": {
+    "thin_light": true,
+    "weight_max": 1.0
+   },
+   "facts": []
+  },
+  {
+   "id": "D06",
+   "cat": "D",
+   "q": "支持TGX接口外接显卡的笔记本",
+   "constraints": {
+    "ports": [
+     "oculink"
+    ]
+   },
+   "facts": []
+  },
+  {
+   "id": "D07",
+   "cat": "D",
+   "q": "5000多块钱的入门游戏本，RTX 3050",
+   "constraints": {
+    "gaming": true,
+    "price": [
+     5000,
+     5999
+    ],
+    "gpu": [
+     "RTX 3050"
+    ]
+   },
+   "facts": []
+  },
+  {
+   "id": "D08",
+   "cat": "D",
+   "q": "预算8000元，推荐一台轻薄本",
+   "constraints": {
+    "price": [
+     6000.0,
+     8800.0
+    ],
+    "thin_light": true
+   },
+   "facts": []
+  },
+  {
+   "id": "D09",
+   "cat": "D",
+   "q": "预算8000元，推荐一台接口丰富的笔记本",
+   "constraints": {
+    "price": [
+     6000.0,
+     8800.0
+    ],
+    "ports_rich": true
+   },
+   "facts": []
+  },
+  {
+   "id": "D10",
+   "cat": "D",
+   "q": "5000元以内的轻薄本",
+   "constraints": {
+    "price": [
+     null,
+     5000
+    ],
+    "thin_light": true
+   },
+   "facts": []
+  },
+  {
+   "id": "D11",
+   "cat": "D",
+   "q": "8000左右的RTX 5060游戏本",
+   "constraints": {
+    "price": [
+     7200.0,
+     8800.0
+    ],
+    "gaming": true,
+    "gpu": [
+     "RTX 5060"
+    ]
+   },
+   "facts": []
+  },
+  {
+   "id": "D12",
+   "cat": "D",
+   "q": "预算一万左右，显卡要5070以上的游戏本",
+   "constraints": {
+    "price": [
+     9000.0,
+     11000.0
+    ],
+    "gaming": true,
+    "gpu": [
+     "RTX 5070",
+     "RTX 5070Ti",
+     "RTX 5080",
+     "RTX 5090"
+    ]
+   },
+   "facts": []
+  },
+  {
+   "id": "D13",
+   "cat": "D",
+   "q": "两万以上的顶级游戏本",
+   "constraints": {
+    "price": [
+     20000,
+     null
+    ],
+    "gaming": true
+   },
+   "facts": []
+  },
+  {
+   "id": "D14",
+   "cat": "D",
+   "q": "带网口的轻薄本",
+   "constraints": {
+    "thin_light": true,
+    "ports": [
+     "rj45"
+    ]
+   },
+   "facts": []
+  },
+  {
+   "id": "D15",
+   "cat": "D",
+   "q": "预算7000，想要OLED屏的笔记本",
+   "constraints": {
+    "price": [
+     5250.0,
+     7700.000000000001
+    ],
+    "oled": true
+   },
+   "facts": []
+  },
+  {
+   "id": "D16",
+   "cat": "D",
+   "q": "16寸的大屏轻薄本",
+   "constraints": {
+    "thin_light": true,
+    "screen_min": 16
+   },
+   "facts": []
+  },
+  {
+   "id": "D17",
+   "cat": "D",
+   "q": "续航10小时以上、6000元以内的笔记本",
+   "constraints": {
+    "battery_min": 10,
+    "price": [
+     null,
+     6000
+    ]
+   },
+   "facts": []
+  },
+  {
+   "id": "D18",
+   "cat": "D",
+   "q": "4000多的笔记本推荐",
+   "constraints": {
+    "price": [
+     4000,
+     4999
+    ]
+   },
+   "facts": []
+  },
+  {
+   "id": "D19",
+   "cat": "D",
+   "q": "带雷电接口、5000元以内的轻薄本",
+   "constraints": {
+    "thin_light": true,
+    "price": [
+     null,
+     5000
+    ],
+    "ports": [
+     "thunderbolt"
+    ]
+   },
+   "facts": []
+  },
+  {
+   "id": "D20",
+   "cat": "D",
+   "q": "适合出差的笔记本，1.2kg以内、续航12小时以上",
+   "constraints": {
+    "weight_max": 1.2,
+    "battery_min": 12
+   },
+   "facts": []
+  },
+  {
+   "id": "E01",
+   "cat": "E",
+   "q": "来酷Air 14 和 Air 16 哪个续航更长",
+   "rel": [
+    "Air14",
+    "Air16"
+   ],
+   "facts": [],
+   "pair": true
+  },
+  {
+   "id": "E02",
+   "cat": "E",
+   "q": "ThinkBook 14+ 酷睿版和锐龙版内存有什么区别",
+   "rel": [
+    "TB酷睿",
+    "TB锐龙"
+   ],
+   "facts": [],
+   "pair": true
+  },
+  {
+   "id": "E03",
+   "cat": "E",
+   "q": "战7000P 和 战7000X 有什么区别",
+   "rel": [
+    "7000P",
+    "7000X"
+   ],
+   "facts": [],
+   "pair": true
+  },
+  {
+   "id": "E04",
+   "cat": "E",
+   "q": "荣耀 H7 和 H9 怎么选",
+   "rel": [
+    "H7",
+    "H9"
+   ],
+   "facts": [],
+   "pair": true
+  },
+  {
+   "id": "A07",
+   "cat": "A",
+   "q": "拯救者Y9000P 2026 散热怎么样",
+   "rel": [
+    "Y9000P"
+   ],
+   "facts": []
+  },
+  {
+   "id": "A08",
+   "cat": "A",
+   "q": "MacBook Air M4 续航多久",
+   "rel": [
+    "MBA13"
+   ],
+   "facts": [
+    "12小时50分"
+   ]
+  },
+  {
+   "id": "G03",
+   "cat": "G",
+   "q": "戴尔XPS 13 多少钱",
+   "rel": [],
+   "facts": []
+  },
+  {
+   "id": "G06",
+   "cat": "G",
+   "q": "打印机驱动怎么装",
+   "rel": [],
+   "facts": []
+  },
+  {
+   "id": "F01",
+   "cat": "F",
+   "q": "机械革命 星耀14 PTL酷睿版 续航多久",
+   "rel": [
+    "星耀14PTL"
+   ],
+   "facts": [
+    "13小时50分"
+   ]
+  },
+  {
+   "id": "F02",
+   "cat": "F",
+   "q": "耀世16 Ultra 5090 噪音大吗",
+   "rel": [
+    "耀世5090"
+   ],
+   "facts": [
+    "50.9dB"
+   ]
+  },
+  {
+   "id": "F03",
+   "cat": "F",
+   "q": "耀世16 Ultra RTX 5070 Ti 噪音多大",
+   "rel": [
+    "耀世5070Ti"
+   ],
+   "facts": [
+    "56.1dB"
+   ]
+  },
+  {
+   "id": "F04",
+   "cat": "F",
+   "q": "战7000P 锐龙版 噪音",
+   "rel": [
+    "7000P锐龙"
+   ],
+   "facts": [
+    "56.1dB"
+   ]
+  },
+  {
+   "id": "F05",
+   "cat": "F",
+   "q": "MacBook Air 15 续航",
+   "rel": [
+    "MBA15"
+   ],
+   "facts": [
+    "12小时39分"
+   ]
+  },
+  {
+   "id": "F06",
+   "cat": "F",
+   "q": "拯救者 Y7000X 续航多久",
+   "rel": [
+    "Y7000X"
+   ],
+   "facts": [
+    "5小时51分"
+   ]
+  },
+  {
+   "id": "F07",
+   "cat": "F",
+   "q": "蛟龙16 Pro 潮玩版 噪音",
+   "rel": [
+    "蛟龙潮玩"
+   ],
+   "facts": [
+    "54.7dB"
+   ]
+  },
+  {
+   "id": "F08",
+   "cat": "F",
+   "q": "无界15X Pro 暴风雪续航怎么样",
+   "rel": [
+    "无界暴风雪"
+   ],
+   "facts": [
+    "11小时14分"
+   ]
+  },
+  {
+   "id": "F09",
+   "cat": "F",
+   "q": "泰坦18 Pro 锐龙版 噪音",
+   "rel": [
+    "泰坦18锐龙"
+   ],
+   "facts": [
+    "54.7dB"
+   ]
+  },
+  {
+   "id": "F10",
+   "cat": "F",
+   "q": "苹果那台无风扇的13寸轻薄本续航怎么样",
+   "rel": [
+    "MBA13"
+   ],
+   "facts": [
+    "12小时50分"
+   ]
+  },
+  {
+   "id": "T01",
+   "cat": "T",
+   "q": "校园网怎么连接",
+   "rel": [
+    "语雀:校园网导读"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "T02",
+   "cat": "T",
+   "q": "Windows 激活失败怎么办",
+   "rel": [
+    "语雀:无脑激活",
+    "语雀:装机激活",
+    "语雀:验机激活",
+    "语雀:教材激活"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "T03",
+   "cat": "T",
+   "q": "宿舍买的路由器怎么设置才能连上校园网",
+   "rel": [
+    "语雀:宿舍路由器"
+   ],
+   "facts": [
+    "DHCP"
+   ],
+   "origin": "manual"
+  },
+  {
+   "id": "T04",
+   "cat": "T",
+   "q": "C盘太小了，不重装系统能把D盘的空间分给C盘吗",
+   "rel": [
+    "语雀:分区调整"
+   ],
+   "facts": [
+    "调整分区大小"
+   ],
+   "origin": "manual"
+  },
+  {
+   "id": "T05",
+   "cat": "T",
+   "q": "Windows 用户名是中文，怎么改成英文",
+   "rel": [
+    "语雀:改用户名"
+   ],
+   "facts": [
+    "中文"
+   ],
+   "origin": "manual"
+  },
+  {
+   "id": "T06",
+   "cat": "T",
+   "q": "电脑老是弹广告，怎么找到是哪个软件并删掉",
+   "rel": [
+    "语雀:流氓软件"
+   ],
+   "facts": [
+    "SoftCNKiller"
+   ],
+   "origin": "manual"
+  },
+  {
+   "id": "T07",
+   "cat": "T",
+   "q": "南大学生怎么免费安装正版 Office",
+   "rel": [
+    "语雀:南大Office",
+    "语雀:OTP装Office"
+   ],
+   "facts": [
+    "kms.nju.edu.cn"
+   ],
+   "origin": "manual"
+  },
+  {
+   "id": "T08",
+   "cat": "T",
+   "q": "新笔记本到手要检查哪些东西",
+   "rel": [
+    "语雀:新机验机"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "T09",
+   "cat": "T",
+   "q": "怎么用U盘重装 Win11",
+   "rel": [
+    "语雀:U盘装系统"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "T10",
+   "cat": "T",
+   "q": "更新显卡驱动后出问题了，怎么回退到旧版本",
+   "rel": [
+    "语雀:驱动降级"
+   ],
+   "facts": [
+    "降级"
+   ],
+   "origin": "manual"
+  },
+  {
+   "id": "T11",
+   "cat": "T",
+   "q": "在寝室怎么远程控制实验室的电脑",
+   "rel": [
+    "语雀:远程连接"
+   ],
+   "facts": [
+    "RDP"
+   ],
+   "origin": "manual"
+  },
+  {
+   "id": "T12",
+   "cat": "T",
+   "q": "Intel 芯片的 MacBook 怎么装 Windows 双系统",
+   "rel": [
+    "语雀:Mac装Win"
+   ],
+   "facts": [
+    "启动转换助理"
+   ],
+   "origin": "manual"
+  },
+  {
+   "id": "T13",
+   "cat": "T",
+   "q": "学校下载的 Adobe 软件需要激活吗",
+   "rel": [
+    "语雀:Adobe激活"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "T14",
+   "cat": "T",
+   "q": "用学校邮箱怎么领 1T 的 OneDrive",
+   "rel": [
+    "语雀:OneDrive1T",
+    "语雀:A1国际版"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "T15",
+   "cat": "T",
+   "q": "EndNote 怎么在 Word 里插入参考文献",
+   "rel": [
+    "语雀:EndNote写作"
+   ],
+   "facts": [
+    "Insert Citation"
+   ],
+   "origin": "manual"
+  },
+  {
+   "id": "T16",
+   "cat": "T",
+   "q": "宿舍校园网坏了找谁报修",
+   "rel": [
+    "语雀:校园网报修"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "T17",
+   "cat": "T",
+   "q": "电脑坏了怎么找官方售后，避免遇到假售后",
+   "rel": [
+    "语雀:官方售后"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "T18",
+   "cat": "T",
+   "q": "下载软件时怎么判断是不是真官网",
+   "rel": [
+    "语雀:真假官网",
+    "语雀:防患未然"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "T19",
+   "cat": "T",
+   "q": "怎么制作 PE 启动U盘",
+   "rel": [
+    "语雀:制作PE"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "T20",
+   "cat": "T",
+   "q": "C盘空间不够了怎么清理",
+   "rel": [
+    "语雀:系统清理",
+    "语雀:教材清理"
+   ],
+   "facts": [
+    "磁盘清理"
+   ],
+   "origin": "manual"
+  },
+  {
+   "id": "T21",
+   "cat": "T",
+   "q": "拆机时螺丝拧花了怎么办",
+   "rel": [
+    "语雀:螺丝技巧"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "X01",
+   "cat": "X",
+   "q": "来酷GT 16 能自己加内存吗，怎么装",
+   "rel": [
+    "GT16",
+    "语雀:硬件更换"
+   ],
+   "facts": [
+    "两个内存插槽"
+   ],
+   "pair": true,
+   "origin": "manual"
+  },
+  {
+   "id": "X02",
+   "cat": "X",
+   "q": "战7000X 想加一块固态硬盘，怎么装",
+   "rel": [
+    "7000X",
+    "语雀:硬件更换"
+   ],
+   "facts": [
+    "2280规格的空盘位"
+   ],
+   "pair": true,
+   "origin": "manual"
+  },
+  {
+   "id": "X03",
+   "cat": "X",
+   "q": "刚买的荣耀 MagicBook 14 到手怎么验机",
+   "rel": [
+    "语雀:新机验机"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "X04",
+   "cat": "X",
+   "q": "拯救者 Y7000X 用了两年温度高风扇响，怎么清灰",
+   "rel": [
+    "语雀:清灰"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "X05",
+   "cat": "X",
+   "q": "ThinkBook 14+ 重装系统怎么从U盘启动",
+   "rel": [
+    "语雀:进入装机盘"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "G07",
+   "cat": "G",
+   "q": "拯救者 Y9000P 2025款续航多久",
+   "rel": [],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "G08",
+   "cat": "G",
+   "q": "机械革命蛟龙15K多少钱",
+   "rel": [],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "G09",
+   "cat": "G",
+   "q": "笔记本键盘进水了怎么办",
+   "rel": [],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "G10",
+   "cat": "G",
+   "q": "台式机装机配置推荐",
+   "rel": [],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "G11",
+   "cat": "G",
+   "q": "笔记本外接投影仪没反应怎么办",
+   "rel": [],
+   "facts": [],
+   "origin": "manual"
+  }
+ ]
+}

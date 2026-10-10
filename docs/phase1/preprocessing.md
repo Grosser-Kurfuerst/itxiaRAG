@@ -97,20 +97,20 @@ Markdown 支持 ATX 标题、独占行的粗体标题、管道表格、列表与
 
 购买指南和经验文档的 Evidence 按小节分组，散热条件/结果、购买建议等受保护小节，以及含表格或代码的整个小节，标为 `atomic` 不可拆单元。受保护栏目还包含其下级标题，后续长度控制保留完整内容或明确拒绝超限。
 
-### 教程章节树与检索块
+### 教程与知识的章节树与检索块
 
-`tutorial@1` 使用 `SectionedDocumentStrategy(TUTORIAL)`。参数为父段上限 3000 字、短父段阈值 150 字、子块目标 500 字、短子块阈值 120 字。父段规划长度按去空白的正文字符数计算，不计标题；子块合并长度包含标题、正文及段落间隔。它与来源平台、输入格式独立，不修改其他三种策略。
+`tutorial@1` 使用 `SectionedDocumentStrategy(TUTORIAL)`。参数为父段上限 3000 字、短父段阈值 150 字、子块目标 500 字、短子块阈值 120 字。`knowledge@1` 使用同一策略的 KNOWLEDGE 参数：父段上限 2500 字、子块目标 400 字，其余相同，并开启表格行组；两者的增强步骤和截图提醒相同。父段规划长度按去空白的正文字符数计算，不计标题；子块合并长度包含标题、正文及段落间隔。它与来源平台、输入格式独立，不修改其他三种策略。
 
 - 按标题级别建立任意深度的章节树，级别跳跃按相对深度挂载。文档标题来自 `raw.metadata.title`，正文第一个 H1 也按普通章节处理。虚拟根收纳第一个标题前的导语；无标题文档整篇一个父段，导语和无标题文档的父段标题均为文档标题。
 - 根只有一个子节点、根导语短于 150 字且该节点还有子节点时，去掉包裹标题，把其导语并入根导语，并以其子节点为顶层；重复判断。包裹标题不进入父段路径。
 - 顶层子树不超过 3000 字或没有子标题时，整棵子树成为一个父段。否则章节导语非空时单独成父段，再对子节点递归。没有子标题的超长章节仍保留一个完整父段。
 - 短于 150 字的父段只合并到同一上级下相邻的前一个父段；没有前一个时并入后一个；没有同级邻居时保留。合并保持原文顺序，沿用接收方标题和 key，不跨上级合并。
-- 父段标题为章节路径，如“安装篇 > 三、开始安装”。超过 200 字时保留前 99 字和后 100 字，中间用“…”连接。key 用完整路径哈希，同名路径按出现次数区分，不受显示标题截断影响。父段 metadata 保留完整 `section_path`、`content_type=tutorial` 和 `omitted_images`。
+- 父段标题为章节路径，如“安装篇 > 三、开始安装”。超过 200 字时保留前 99 字和后 100 字，中间用“…”连接。key 用完整路径哈希，同名路径按出现次数区分，不受显示标题截断影响。父段 metadata 保留完整 `section_path`、`content_type`（`tutorial` 或 `knowledge`）和 `omitted_images`。
 - 无说明图片在建树前移除占位（含 Markdown 行内图片及 HTML 图文混排），仅整理含占位行的多余空白；其他行原样保留，包括代码与列表缩进、连续空格和行尾空白，块内换行保留。移除后仅剩空白的块整体过滤；数量按原文父段区间中移除的占位数写入 `omitted_images`，有说明图片保留占位文字。图片过滤不重新编号原文块，父段 locator 保留连续的 `block_start/end`，Markdown 输入另保留 `line_start/end`。区间包含被过滤的图片，便于计数与警告归属。
 - 父段内任意标题（含伪标题）开启新子块，标题与后文相连。连续标题尚无正文时按原文顺序带入后续块，key 与 `section` 取最后一个标题，定位覆盖这些标题。以“：”“；”结尾的引导句、连续列表／表格行、`1、` `2、` 式编号段落沿用相连规则；`callout` 与前一块相连，警告尽量留在所属步骤。短于 120 字的子块并入前一块。
 - 子块 key 为小节标题哈希加小节内块序号，同名小节用出现次数区分；普通正文修改或另一小节的块数变化不移动该小节的序号。短块合并沿用接收块的 key；预算拆分另加 `-part-N`。
 
-表格整体参与合并，代码在合并阶段不切开，教程子块均不标 `atomic`；超预算交给 BudgetChunker。当前教程不做表格行组策略，也没有知识、工具条目流水线。
+代码在合并阶段不切开，子块均不标 `atomic`；超预算交给 BudgetChunker。教程表格整体参与合并。知识开启 `table_rows_as_children`：连续表格块（Markdown 一张表为一个块，HTML 每行一个块）长于子块目标时展开为逐行，按目标长度分成连续行组，每组单独成子块；表头行（Markdown 含分隔行）与尚无正文的前置标题归入第一组，表头原文写入每组的 `retrieval_prefix`。行组子块的正文是父段正文的连续片段，Markdown 输入的 `line_start/end` 精确到行；行组不参与短块合并，表格前后的正文另成子块。短表格仍整体参与合并。当前没有工具条目流水线。
 
 ## 4. Evidence 输入预算
 
@@ -163,7 +163,7 @@ Parse → Structure(Sectioned[TUTORIAL]) → CalloutWarning → TimeExpression �
 
 全局风险提示需要写入 `PreprocessContext.warnings`，因此作为步骤而非章节策略的一部分；导语被短段规则合并后仍按原文第一个标题的位置判断。BuildDocumentStep 合并 `raw.metadata.warnings` 与处理中的文档 warnings。
 
-`ParseStep(parser, image_warning=...)` 可配置图片警告文案。注册流水线时显式传入 `image_warning`，为 `None` 时使用 ParseStep 默认文案。教程使用“原文含未转写的截图，操作界面以原文链接为准”，其他流水线仍为“原文含未提供文字说明的图片，关键参数需人工补录。”。增强步骤不调用模型，也不计算来源距今多久。
+`ParseStep(parser, image_warning=...)` 可配置图片警告文案。注册流水线时显式传入 `image_warning`，为 `None` 时使用 ParseStep 默认文案。教程与知识使用“原文含未转写的截图，操作界面以原文链接为准”，其他流水线仍为“原文含未提供文字说明的图片，关键参数需人工补录。”。增强步骤不调用模型，也不计算来源距今多久。
 
 ## 6. 原文导入 API
 
@@ -181,11 +181,11 @@ Parse → Structure(Sectioned[TUTORIAL]) → CalloutWarning → TimeExpression �
 }
 ```
 
-默认注册 `product_review@1`、`purchase_guide@1`、`experience_case@1`、`tutorial@1`，四者均支持 text/html、text/markdown、text/plain、text/x-yuque-markdown。平台和 Schema 独立，例如语雀 Markdown 同样可以选择购买指南策略。media_type 可带 charset 参数，但内容必须 UTF-8。HTTP JSON 总大小仍限 2 MiB。
+默认注册 `product_review@1`、`purchase_guide@1`、`experience_case@1`、`tutorial@1`、`knowledge@1`，五者均支持 text/html、text/markdown、text/plain、text/x-yuque-markdown。平台和 Schema 独立，例如语雀 Markdown 同样可以选择购买指南策略。media_type 可带 charset 参数，但内容必须 UTF-8。HTTP JSON 总大小仍限 2 MiB。
 
 metadata 的 title/source_date/entity_title/entity_key/entity_headings/collection_path/document_metadata/warnings 是通用控制字段，API 校验它们的格式。`collection_path` 是可选字符串数组，最多 10 项，每项不超过 100 字；可传空数组，项须为非空文本。它表示来源内的目录，不限于语雀。校验后的值进入 RawDocument.metadata，增强步骤可读，并保留在文档 metadata 中；缺省不新增该字段。其余字段保留给来源或新增步骤，并写入文档 metadata；document_metadata 可显式补充文档元数据。未知日期留空，不使用导入日期。HTTP 不指定步骤顺序，步骤/策略在 config/components.py 的有序列表中配置；新增类型由显式 register 接入，不读取任何请求提供的 Python 路径。
 
-导入教程时将 `preprocess` 设为 `{"schema": "tutorial", "version": 1}`，在 `raw.metadata` 提供文档标题，可附 `"collection_path": ["合成目录"]`；语雀 Markdown 的 `media_type` 为 `text/x-yuque-markdown`。合成原文 API 样本及检索预期见[教程流水线验收](yuque-ingestion/implementation-phases.md#33-验收)。当前入口仍为逐篇原文 API，没有语雀读取客户端、导入清单或批量导入命令。
+导入教程时将 `preprocess` 设为 `{"schema": "tutorial", "version": 1}`，知识改用 `knowledge`，在 `raw.metadata` 提供文档标题，可附 `"collection_path": ["合成目录"]`；语雀 Markdown 的 `media_type` 为 `text/x-yuque-markdown`。合成原文 API 样本及检索预期见[教程流水线验收](yuque-ingestion/implementation-phases.md#33-验收)。语雀批量导入使用 `import_yuque` 命令，按清单类别选择流水线，见[语雀导入](../../README.md#语雀导入)。
 
 权限与来源范围校验在解析之前执行，原文和公共 DTO 校验在创建模型适配器之前完成；解析失败不调用 Embedding 或保存。成功响应与标准导入一致 `{source_id, context_ids, reused}`。Python 调用方可用 import_raw；HTTP 先调用 preprocess_raw，再调用 import_processed，以便模型未配置时仍准确报告预处理输入错误。
 

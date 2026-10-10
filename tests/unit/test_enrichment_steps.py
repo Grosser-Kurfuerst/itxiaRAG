@@ -131,6 +131,18 @@ def test_units_enrichment_steps_are_compatible_with_pipeline_stage_validation():
     assert document.contexts[0].warnings == ["含时间限定表述‘截至 2025 年’，请结合来源日期判断是否仍适用"]
 
 
+def test_registered_knowledge_combines_collection_prefix_with_table_header():
+    rows = "".join(f"| 第{i}项功能 | cmd{i} |\n" for i in range(30))
+    document = components.preprocessors().process(RawDocument(
+        f"| 功能 | 命令 |\n| --- | --- |\n{rows}".encode(), "text/x-yuque-markdown",
+        {"title": "速查表", "collection_path": ["合成目录"]},
+    ), "knowledge", 1)
+    assert document.document_schema == "knowledge"
+    parent, = document.contexts
+    assert len(parent.children) > 1
+    assert all(child.retrieval_prefix == "合成目录\n| 功能 | 命令 |" for child in parent.children)
+
+
 @pytest.mark.parametrize("media_type,content", [
     ("text/markdown", "## 安装篇\n\n![](synthetic.png)\n\n安装说明。"),
     ("text/x-yuque-markdown", "## 安装篇\n\n![](synthetic.png)\n\n安装说明。"),

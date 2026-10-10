@@ -10,7 +10,7 @@ from ingestion.enrichment import CalloutWarningStep, RetrievalPrefixStep, TimeEx
 from ingestion.parsers import ParserRegistry
 from ingestion.preprocessing import BuildDocumentStep, ChunkStep, ParseStep, PreprocessPipeline, StructureStep, ValidateStep
 from ingestion.strategies import ExperienceCaseStrategy, PurchaseGuideStrategy, ReviewStrategy
-from ingestion.sections import SectionedDocumentStrategy, TUTORIAL
+from ingestion.sections import KNOWLEDGE, SectionedDocumentStrategy, TUTORIAL
 from ingestion.yuque_markdown import YuqueMarkdownParser
 from retrieval.hybrid import MultiRouteRecall
 from retrieval.keyword import KeywordRetriever
@@ -19,7 +19,7 @@ from retrieval.steps import GroupParentsStep, RRFFusionStep, TopKParentsStep
 from retrieval.vector import VectorRetriever
 
 
-YUQUE_CATEGORY_PIPELINES = {"tutorial": ("tutorial", 1)}
+YUQUE_CATEGORY_PIPELINES = {"tutorial": ("tutorial", 1), "knowledge": ("knowledge", 1)}
 WECHAT_CATEGORY_PIPELINES = {"product_review": ("product_review", 1), "purchase_guide": ("purchase_guide", 1)}
 
 
@@ -72,7 +72,9 @@ def preprocessors(*, counter=None, max_input_units=None):
     registry.register("product_review", 1, pipeline("product_review", ReviewStrategy()))
     registry.register("purchase_guide", 1, pipeline("purchase_guide", PurchaseGuideStrategy()))
     registry.register("experience_case", 1, pipeline("experience_case", ExperienceCaseStrategy()))
-    registry.register("tutorial", 1, pipeline("tutorial", SectionedDocumentStrategy(TUTORIAL),
-                                            [CalloutWarningStep(), TimeExpressionStep(), RetrievalPrefixStep()],
-                                            image_warning="原文含未转写的截图，操作界面以原文链接为准"))
+    screenshot_warning = "原文含未转写的截图，操作界面以原文链接为准"
+    for schema, profile in [("tutorial", TUTORIAL), ("knowledge", KNOWLEDGE)]:
+        registry.register(schema, 1, pipeline(schema, SectionedDocumentStrategy(profile),
+                                              [CalloutWarningStep(), TimeExpressionStep(), RetrievalPrefixStep()],
+                                              image_warning=screenshot_warning))
     return registry

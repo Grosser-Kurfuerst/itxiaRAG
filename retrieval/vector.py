@@ -31,14 +31,14 @@ class VectorRetriever:
         query_vector = validate_vectors([self.embedder.embed_query(query)], 1)[0]
 
         def candidates():
-            rows = scoped_evidence(scope).values_list("id", "context_id", "embedding")
-            for evidence_id, context_id, vector in rows.iterator(chunk_size=256):
+            rows = scoped_evidence(scope).values_list("id", "context_id", "embedding", "stable_key")
+            for evidence_id, context_id, vector, stable_key in rows.iterator(chunk_size=256):
                 validate_vectors([vector], 1, len(query_vector))
                 score = cosine(query_vector, vector)
                 if self.min_cosine is None or score >= self.min_cosine:
                     yield Candidate(evidence_id, context_id, score,
-                                    route_scores={self.name: score}, score_kind="cosine")
+                                    route_scores={self.name: score}, score_kind="cosine", stable_key=stable_key)
 
-        best = heapq.nsmallest(limit, candidates(), key=lambda item: (-item.score, str(item.evidence_id)))
+        best = heapq.nsmallest(limit, candidates(), key=Candidate.sort_key)
         return [replace(item, ranks={self.name: rank})
                 for rank, item in enumerate(best, 1)]

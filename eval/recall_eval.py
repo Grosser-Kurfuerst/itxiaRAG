@@ -1,6 +1,7 @@
 """初步召回评测：父段级 Hit/MRR、分路排名、事实子块排名、负例分数；
 D 类按属性条件生成分级标注，另报 P@5、nDCG@5、R@10。
 
+答案按来源类别分别报三路名次，区分召回失败（两路候选中都没有）与排序失败（已召回但未进入混合前 5）。
 查询集的 scopes 定义若干检索范围（范围名 -> document_schema 列表），每个范围各跑一遍；
 答案按范围过滤，范围内没有答案的查询在该范围按负例统计。
 别名可指向评测标题（字符串），或指向语雀文档的父段 {"doc": "book/slug", "titles": [...]}，省略 titles 表示整篇。
@@ -36,6 +37,7 @@ TOP_PARENTS = 20
 RICH_PORTS = ("usb_a", "usb_c", "video_out")  # 视频输出含 HDMI、DP 与支持 DP 的 USB-C；网口不作要求
 THIN_LIGHT_MAX_KG = 1.5
 DEFAULT_SCOPES = {"reviews": ["product_review"]}
+SCHEMA_NAMES = {"product_review": "评测", "tutorial": "教程", "purchase_guide": "指南"}
 
 
 @dataclass
@@ -194,6 +196,11 @@ def evaluate_query(item, scope, schemas, corpus, collector, pipeline):
            "ranks": {m: first_rank(o, rel_ids) for m, o in orders.items()},
            "top1_cos": vector[0].score if vector else None,
            "top1_bm25": keyword[0].score if keyword else None}
+    by_schema = {}
+    for cid in rel_ids:
+        by_schema.setdefault(corpus.schema_of(cid), set()).add(cid)
+    row["source_ranks"] = {schema: {m: first_rank(o, ids) for m, o in orders.items()}
+                           for schema, ids in sorted(by_schema.items())}
     if item["cat"] == "D":
         row["set"] = {m: set_metrics(o, grades) for m, o in orders.items()}
         row["n_rel"] = len(rel_ids)
@@ -216,6 +223,19 @@ def score_stats(rows, key):
     return {"min": min(values), "max": max(values), "mean": mean(values)}
 
 
+def failures(rows):
+    """按（查询, 来源类别）分类：两路候选都没有答案为召回失败，召回到但未进入混合前 5 为排序失败。"""
+    recall, ranking = [], []
+    for r in rows:
+        for schema, ranks in r.get("source_ranks", {}).items():
+            tag = f"{r['id']}[{SCHEMA_NAMES.get(schema, schema)}]"
+            if ranks["keyword"] is None and ranks["vector"] is None:
+                recall.append(tag)
+            elif ranks["hybrid"] is None or ranks["hybrid"] > 5:
+                ranking.append(tag)
+    return {"recall": recall, "ranking": ranking}
+
+
 def summarize(rows):
     pos = [r for r in rows if r["rel"]]
     neg = [r for r in rows if not r["rel"]]
@@ -225,7 +245,7 @@ def summarize(rows):
         by_cat[cat] = {"n": len(sub), **{m: hit_metrics([r["ranks"][m] for r in sub]) for m in METHODS}}
     d_rows = [r for r in rows if "set" in r]
     d_set = {m: {k: mean(r["set"][m][k] for r in d_rows) for k in SET_METRICS} for m in METHODS} if d_rows else None
-    return {"by_cat": by_cat, "d_n": len(d_rows), "d_set": d_set,
+    return {"by_cat": by_cat, "d_n": len(d_rows), "d_set": d_set, "failures": failures(pos),
             "cos": {"pos": score_stats(pos, "top1_cos"), "neg": score_stats(neg, "top1_cos")},
             "bm25": {"pos": score_stats(pos, "top1_bm25"), "neg": score_stats(neg, "top1_bm25")}}
 
@@ -240,6 +260,10 @@ def detail_line(r):
         h = r["set"]["hybrid"]
         extra += f" 答案{r['n_rel']}台 P@5={h['p@5']:.2f} nDCG@5={h['ndcg@5']:.2f} R@10={h['r@10']:.2f}"
     ranks = "/".join(str(r["ranks"][m]) for m in METHODS)
+    if len(r.get("source_ranks", {})) > 1:
+        extra += " 分来源 " + " ".join(
+            f"{SCHEMA_NAMES.get(schema, schema)}={'/'.join(str(v[m]) for m in METHODS)}"
+            for schema, v in r["source_ranks"].items())
     return (f"{r['id']} H/K/V={ranks} cos={(r['top1_cos'] or 0):.3f} bm25={(r['top1_bm25'] or 0):.1f}{extra}"
             f" | {r['q']} -> {r['top5']}")
 
@@ -255,6 +279,9 @@ def print_report(scope_name, rows, summary):
     if summary["d_set"]:
         print("  ".join([f"D 集合指标(n={summary['d_n']})"] + [
             f"{m}: " + " ".join(f"{k}={v:.3f}" for k, v in summary["d_set"][m].items()) for m in METHODS]))
+    fails = summary["failures"]
+    print(f"-- 召回失败（两路前 {CANDIDATES_PER_ROUTE} 个子块均无答案）{len(fails['recall'])} 项：{' '.join(fails['recall'])}")
+    print(f"-- 排序失败（已召回，未进入混合前 5）{len(fails['ranking'])} 项：{' '.join(fails['ranking'])}")
     cos, bm25 = summary["cos"], summary["bm25"]
     print(f"-- top1 余弦：正例 min={cos['pos']['min']:.3f} mean={cos['pos']['mean']:.3f}"
           f"；负例 max={cos['neg']['max']:.3f} mean={cos['neg']['mean']:.3f}")

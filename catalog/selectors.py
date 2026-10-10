@@ -1,4 +1,12 @@
+from django.db.models import CharField, Value
+from django.db.models.functions import Concat
+
 from catalog.models import ContextUnit, EvidenceUnit
+
+# 来源类型 + 定位符唯一确定来源，父段、子块 key 在来源内唯一；拼接结果重新导入后不变。
+EVIDENCE_STABLE_KEY = Concat(
+    "context__source__source_type", Value(":"), "context__source__canonical_locator",
+    Value("#"), "context__key", Value("#"), "key", output_field=CharField())
 
 
 def scoped_contexts(scope):
@@ -10,7 +18,7 @@ def scoped_contexts(scope):
 
 
 def scoped_evidence(scope):
-    return EvidenceUnit.objects.filter(context__in=scoped_contexts(scope))
+    return EvidenceUnit.objects.filter(context__in=scoped_contexts(scope)).annotate(stable_key=EVIDENCE_STABLE_KEY)
 
 
 class DjangoContextReader:

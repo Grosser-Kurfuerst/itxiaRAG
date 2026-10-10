@@ -20,6 +20,16 @@ def test_rrf_uses_ranks_merges_routes_and_does_not_double_count():
     assert result[1].score == pytest.approx(1/61)
 
 
+def test_rrf_orders_ties_by_stable_key_and_keeps_it():
+    a, b, parent = UUID(int=1), UUID(int=2), UUID(int=10)
+    # 关键词第 1 名与向量第 1 名的 RRF 分数相同，按稳定键而不是 id 排序。
+    keyword = [Candidate(a, parent, 9, {'keyword': 1}, stable_key='s:2')]
+    vector = [Candidate(b, parent, .9, {'vector': 1}, stable_key='s:1')]
+    result = RRFRanker().rank('q', [keyword, vector])
+    assert [row.evidence_id for row in result] == [b, a]
+    assert [row.stable_key for row in result] == ['s:1', 's:2']
+
+
 def test_collector_passes_identical_scope_and_keeps_routes_separate():
     from unittest.mock import Mock
     left, right, scope = Mock(), Mock(), object()
@@ -60,7 +70,7 @@ def test_rrf_preserves_scores_for_the_best_rank_of_each_route():
 def test_vector_threshold_is_inclusive_and_preserves_raw_scores(threshold, expected):
     from unittest.mock import Mock, patch
     parent, scope = UUID(int=10), object()
-    rows = [(UUID(int=i), parent, vector) for i, vector in enumerate(
+    rows = [(UUID(int=i), parent, vector, f'k{i}') for i, vector in enumerate(
         [[1, 0], [.6, .8], [0, 1], [-1, 0]], 1)]
     embedder = Mock()
     embedder.embed_query.return_value = [1, 0]
@@ -88,11 +98,24 @@ def test_vector_threshold_one_keeps_non_axis_aligned_identical_vectors(vector):
     embedder.embed_query.return_value = vector
     with patch('retrieval.vector.scoped_evidence') as scoped:
         scoped.return_value.values_list.return_value.iterator.return_value = [
-            (UUID(int=1), parent, vector),
+            (UUID(int=1), parent, vector, 'k1'),
         ]
         result = VectorRetriever(embedder, min_cosine=1).search('q', scope)
     assert len(result) == 1 and result[0].score == 1
     assert result[0].route_scores == {'vector': 1}
+
+
+def test_vector_orders_ties_by_stable_key():
+    from unittest.mock import Mock, patch
+    parent = UUID(int=10)
+    embedder = Mock()
+    embedder.embed_query.return_value = [1, 0]
+    rows = [(UUID(int=1), parent, [1, 0], 's:2'), (UUID(int=2), parent, [2, 0], 's:1')]
+    with patch('retrieval.vector.scoped_evidence') as scoped:
+        scoped.return_value.values_list.return_value.iterator.return_value = rows
+        result = VectorRetriever(embedder).search('q', object())
+    assert [row.evidence_id for row in result] == [UUID(int=2), UUID(int=1)]
+    assert [row.stable_key for row in result] == ['s:1', 's:2']
 
 
 def test_cosine_basics():

@@ -58,9 +58,9 @@ def test_bm25_handles_empty_corpora(corpus):
 def test_keyword_tokenizer_is_replaceable_and_ranking_precedes_limit():
     scope, parent = object(), UUID(int=10)
     tokenizer = Mock(side_effect=lambda text: text.split())
-    rows = [(UUID(int=2), parent, 'battery screen'),
-            (UUID(int=1), parent, 'battery'),
-            (UUID(int=3), parent, 'keyboard')]
+    rows = [(UUID(int=2), parent, 'battery screen', 'k2'),
+            (UUID(int=1), parent, 'battery', 'k1'),
+            (UUID(int=3), parent, 'keyboard', 'k3')]
     with patch('retrieval.keyword.scoped_evidence') as scoped:
         scoped.return_value.values_list.return_value = rows
         result = KeywordRetriever(tokenizer).search('battery', scope, 1)
@@ -70,15 +70,18 @@ def test_keyword_tokenizer_is_replaceable_and_ranking_precedes_limit():
     assert result[0].context_id == parent and result[0].ranks == {'keyword': 1}
 
 
-def test_keyword_excludes_nonmatches_and_orders_ties_by_id():
+def test_keyword_excludes_nonmatches_and_orders_ties_by_stable_key():
     parent = UUID(int=10)
-    rows = [(UUID(int=2), parent, '续航'), (UUID(int=1), parent, '续航'),
-            (UUID(int=3), parent, '屏幕')]
+    # 稳定键与 id 顺序相反：同分时按导入后不变的稳定键排序，不依赖随机生成的 id。
+    rows = [(UUID(int=1), parent, '续航', 'wechat:b#context-x#evidence-1'),
+            (UUID(int=2), parent, '续航', 'wechat:a#context-x#evidence-1'),
+            (UUID(int=3), parent, '屏幕', 'wechat:c#context-x#evidence-1')]
     with patch('retrieval.keyword.scoped_evidence') as scoped:
         scoped.return_value.values_list.return_value = rows
         result = KeywordRetriever().search('续航怎么样', object())
-    assert [item.evidence_id for item in result] == [UUID(int=1), UUID(int=2)]
+    assert [item.evidence_id for item in result] == [UUID(int=2), UUID(int=1)]
     assert [item.ranks for item in result] == [{'keyword': 1}, {'keyword': 2}]
+    assert [item.stable_key for item in result] == ['wechat:a#context-x#evidence-1', 'wechat:b#context-x#evidence-1']
 
 
 def test_keyword_empty_query_does_not_read_the_database():
@@ -89,7 +92,7 @@ def test_keyword_empty_query_does_not_read_the_database():
 
 def test_keyword_threshold_preserves_positive_matches_and_original_scores():
     parent = UUID(int=10)
-    rows = [(UUID(int=i), parent, 'battery') for i in range(1, 5)]
+    rows = [(UUID(int=i), parent, 'battery', f'k{i}') for i in range(1, 5)]
     with patch('retrieval.keyword.scoped_evidence') as scoped, \
             patch('retrieval.keyword.bm25_scores', return_value=[0, .4, .8, 1.2]) as scoring:
         scoped.return_value.values_list.return_value = rows

@@ -1,5 +1,6 @@
 from copy import deepcopy
 from unittest.mock import patch
+from uuid import UUID
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -250,6 +251,20 @@ def test_multiple_hits_count_top_k_by_parent_and_keep_complete_context(actor, em
     assert len(query('续航', actor, embedder, top_k=1)['contexts']) == 1
     assert all(row['text'] == second['body'] and 'citations' not in row
                for row in result['contexts'])
+
+
+def test_tied_candidates_keep_order_across_reimports(actor, embedder, document_payload):
+    document = document_payload['document']
+    second = deepcopy(document['contexts'][0])
+    second.update(key='laptop-0', title='笔记本 0')  # 稳定键排在 laptop-a 之前，与写入顺序相反
+    document['contexts'].append(second)
+    for _ in range(3):
+        # 删除后重新导入，子块获得新的随机 id；两个父段正文相同，两路分数都并列。
+        KnowledgeSource.objects.all().delete()
+        ingest(deepcopy(document_payload), actor, embedder)
+        result = query('续航', actor, embedder, top_k=2)
+        keys = ContextUnit.objects.in_bulk([row['context_id'] for row in result['contexts']])
+        assert [keys[UUID(row['context_id'])].key for row in result['contexts']] == ['laptop-0', 'laptop-a']
 
 
 def test_api_uses_injected_post_recall_steps_and_exposes_original_route_scores(

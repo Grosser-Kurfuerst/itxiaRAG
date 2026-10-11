@@ -49,7 +49,7 @@ def assert_matches_locate_original_text(response):
 
 def test_synthetic_install_tutorial_matches_manual_acceptance_and_duplicate_is_reused(embedder):
     client = client_for("maintain_source")
-    # 分阶段方案 3.3 的手工合成样本，短准备篇合并后沿用安装篇标题。
+    # 分阶段方案 3.3 的手工合成样本；准备篇虽短但有正文，单独成父段。
     content = (
         "# 合成安装教程\n\n## 准备篇\n\n"
         "准备一个 8GB 以上的 U 盘，并备份 C 盘中的个人文件。下载官方镜像后使用写盘工具制作启动盘，"
@@ -65,15 +65,15 @@ def test_synthetic_install_tutorial_matches_manual_acceptance_and_duplicate_is_r
         source = KnowledgeSource.objects.get()
         assert source.document_schema == "tutorial" and source.source_date == date(2025, 11, 23)
         assert source.metadata["collection_path"] == ["合成目录"]
-        parent = ContextUnit.objects.get()
-        assert parent.title == "安装篇"
+        assert list(ContextUnit.objects.order_by("ordinal").values_list("title", flat=True)) == ["准备篇", "安装篇"]
+        parent = ContextUnit.objects.get(title="安装篇")
         assert parent.warnings == [
             "【警告】\n删除分区前确认已经备份数据。",
             "含时间限定表述‘截至 2025 年’，请结合来源日期判断是否仍适用",
         ]
         response = client.post("/api/v1/search/", {"query": "开机按什么键选择 U 盘", "top_k": 5}, format="json")
         assert response.status_code == 200, response.data
-        context, = response.data["contexts"]
+        context = response.data["contexts"][0]
         assert context["title"] == "安装篇" and context["source"]["document_schema"] == "tutorial"
         assert context["warnings"] == parent.warnings
         assert_matches_locate_original_text(response)

@@ -21,10 +21,12 @@ class SectionProfile:
     chunk_target_chars: int
     chunk_min_chars: int
     table_rows_as_children: bool = False
+    wrapper_intro_chars: int = 0
 
 
-TUTORIAL = SectionProfile("tutorial", 3000, 150, 500, 120)
-KNOWLEDGE = SectionProfile("knowledge", 2500, 150, 400, 120, table_rows_as_children=True)
+# 有标题的短章节也是独立对象，只把正文不足 30 字的空节点或占位并入相邻父段。
+TUTORIAL = SectionProfile("tutorial", 3000, 30, 500, 120, wrapper_intro_chars=150)
+KNOWLEDGE = SectionProfile("knowledge", 2500, 30, 400, 120, table_rows_as_children=True, wrapper_intro_chars=150)
 # 工具条目按工具成父段而不按长度：父段上限 0 使合集拆到叶子章节，短父段与短子块都不合并。
 TOOL_CARD = SectionProfile("tool_card", 0, 0, 400, 0)
 
@@ -78,7 +80,7 @@ class _ParentSection:
 
 def plan_parents(root: SectionNode, profile: SectionProfile, document_title: str) -> list[_ParentSection]:
     # 唯一的包裹标题不进入章节路径；导语保留在虚拟根，允许逐层下降。
-    while len(root.children) == 1 and _content_size(root.blocks) < profile.min_parent_chars:
+    while len(root.children) == 1 and _content_size(root.blocks) < profile.wrapper_intro_chars:
         wrapper = root.children[0]
         if not wrapper.children:
             break
@@ -112,7 +114,7 @@ def plan_parents(root: SectionNode, profile: SectionProfile, document_title: str
         occurrences[title] += 1
         section.key = _key("context", title, occurrences[title])
 
-    # 只合并同一上级下连续的父段，身份始终由接收方保留。
+    # 只合并同一上级下连续的父段；被并入的是空节点或占位，没有可检索内容，身份由接收方保留。
     index = 0
     while index < len(planned):
         section = planned[index]

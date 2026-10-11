@@ -89,6 +89,16 @@ def test_short_parents_do_not_merge_across_different_ancestors():
     assert single.title == "唯一节"
 
 
+@pytest.mark.parametrize("profile", [TUTORIAL, KNOWLEDGE])
+def test_default_profiles_keep_short_titled_siblings_and_merge_only_placeholders(profile):
+    text = ("## 硬盘\n\n" + "硬盘保存系统与数据。" * 30 + "\n\n## 电源\n\n" + "电源为各部件供电。" * 5
+            + "\n\n## 结语\n\n完。")
+    parents = build(text, profile=profile)
+    assert [parent.title for parent in parents] == ["硬盘", "电源"]
+    assert "电源为各部件供电。" not in parents[0].body
+    assert parents[1].body.endswith("结语\n\n完。")
+
+
 def test_untitled_document_uses_metadata_title_and_empty_input_has_no_parents():
     parent, = build("段落一。\n\n段落二。")
     assert parent.title == "合成教程" and parent.body == "段落一。\n\n段落二。"
@@ -132,14 +142,15 @@ def test_consecutive_headings_stay_with_following_body_using_tutorial_defaults()
 
 def test_short_children_merge_into_previous_child():
     parent, = build("## 安装篇\n\n" + "安装说明。" * 10 + "\n\n### 附注\n\n短。",
-                    profile=replace(TUTORIAL, min_parent_chars=0, chunk_target_chars=30, chunk_min_chars=10))
+                    profile=replace(TUTORIAL, min_parent_chars=0, wrapper_intro_chars=0,
+                                    chunk_target_chars=30, chunk_min_chars=10))
     child, = parent.children
     assert "附注\n\n短。" in child.body
     assert child.key == _key("evidence", "安装篇") + "-1"
 
 
 def test_keys_are_stable_across_edits_to_unrelated_sections_and_duplicate_paths_are_unique():
-    profile = replace(TUTORIAL, min_parent_chars=0, chunk_target_chars=15, chunk_min_chars=0)
+    profile = replace(TUTORIAL, min_parent_chars=0, wrapper_intro_chars=0, chunk_target_chars=15, chunk_min_chars=0)
     original = build("## 安装篇\n\n### 甲节\n\n原文。\n\n### 乙节\n\n保留正文。\n\n## 安装篇\n\n另一篇。", profile=profile)
     edited = build("## 安装篇\n\n### 甲节\n\n" + "新增很多正文。" * 10
                    + "\n\n### 乙节\n\n保留正文。\n\n## 安装篇\n\n另一篇。", profile=profile)

@@ -22,7 +22,7 @@ IT 侠语雀是社团最主要的知识沉淀：在线互助常见问题集（he
 | basic-computer 计算机基础知识 | 2 | 1 | 分层 FAQ，单篇 1.7 万字 |
 | dygh8t 设备／品牌维护技巧 | 2 | 1 | |
 | intro_for_public 关于我们 | 3 | 0 | 社团说明与索引，不导入 |
-| 合计 | 122 | 74 | 另有 22 篇排障／案例留待后续，26 篇不导入 |
+| 合计 | 122 | 74 | 另有 19 篇排障／案例（10＋9）留待后续，29 篇不导入，逐篇见附录 |
 
 三类文档的总体特征：
 
@@ -317,3 +317,70 @@ IT 侠语雀是社团最主要的知识沉淀：在线互助常见问题集（he
 | dygh8t/mwsgeb | 电池保护相关 | — | 2020-11-05 |
 
 重复副本以 help 版本为准，跳过 article 中的 `partition-resize`、`install_win10_from_scratch`、`gagpcm`。
+
+## 附录：后续批次与不导入清单
+
+2026-10-11 按 2026-10-08 快照的标题、结构和正文逐篇复核，已登记到清单。排障与案例在流水线接入前报告为“未接入”；最终以清单文件为准。
+
+### 排障指南（10 篇）
+
+按排查步骤或阶段组织，常带全局导读、条件分支和风险标记。`article/kbg5vc` 与 `article/find_vendor` 虽带【日常维修】前缀，但讲的是通用排查方法，不是单个事件。
+
+| 知识库/slug | 标题 | 目录路径 | 内容更新 |
+| --- | --- | --- | --- |
+| help/windows_problem_cheatsheet | Windows 系统异常（显示错误/蓝屏/死机）的常见解决方案 | Windows 问题相关 | 2023-12-15 |
+| help/nju_wlan_qa_pro_plus_max_ultra | 南京大学校园网使用异常修复指南 | 校园网使用问题相关 | 2024-09-20 |
+| help/cam_mic_not_work | 摄像头、耳机、麦克风排障指南 | 常用功能故障处理 | 2022-10-29 |
+| help/nju_network | 软件问题无法上网建议方案 | 常用功能故障处理 > 网络（校园网）问题相关 | 2023-11-06 |
+| help/network_problem | 通用网络故障排查 | 常用功能故障处理 > 网络（校园网）问题相关 | 2022-09-29 |
+| help/network_alter | 硬件问题无法上网临时方案 | 常用功能故障处理 > 网络（校园网）问题相关 | 2022-09-11 |
+| help/o365_qa | Office365 常见问题举隅 | 校内常用软件问题相关 > Microsoft Office > Office 365（A1/世纪互联） | 2021-09-16 |
+| help/ms_office_problems | MS Office 常见问题举隅 | 校内常用软件问题相关 > Microsoft Office > Office 桌面版 | 2021-09-12 |
+| article/kbg5vc | 【日常维修】较新系统对旧设备驱动的兼容问题 | — | 2022-11-12 |
+| article/find_vendor | 【日常维修】识别未知的外接设备并手动找到对应驱动 | — | 2022-10-07 |
+
+### 单案例记录（9 篇）
+
+一篇只讲一个具体问题，多为“现象 → 原因 → 解决 → 来源”。
+
+| 知识库/slug | 标题 | 目录路径 | 内容更新 |
+| --- | --- | --- | --- |
+| article/ghrq7ikst4cce451 | 【互助群归档】开机出现 EARLY EXIT ON FAILURE “蓝屏” | — | 2023-04-16 |
+| article/vegchy | 【互助群归档】Windows安装程序提示缺少介质驱动程序 | — | 2019-07-10 |
+| article/yhsqeg | 【互助群归档】ms-settings:xxx问题 | — | 2019-12-26 |
+| article/rzqnsh | 【互助群归档】Python import 不是有效的Win32程序 | — | 2019-11-06 |
+| article/ggwbb1 | 【互助群归档】提醒 \| 一类U盘病毒的处理方法 | — | 2019-10-14 |
+| article/mogtov | 【日常维修】Dell系台式机或笔记本突然无法使用麦克风问题 | — | 2021-08-06 |
+| article/syr9fw | 【日常维修】关于老电脑的驱动问题 | — | 2020-07-17 |
+| article/geve3g | 【日常维修】官方维修点也需小心 | — | 2021-04-14 |
+| article/fqhg6o | 【推送归档】UWP应用报错0x8007007e问题详解 | — | 2019-10-14 |
+
+### 不导入（23 篇）
+
+另有 3 个重复副本（见上一附录）和未登记的 `intro_for_public` 知识库 3 篇，不导入合计 29 篇。
+
+| 知识库/slug | 标题 | 跳过原因 |
+| --- | --- | --- |
+| help/useful_tools | IT侠常用工具大全 | 索引导航 |
+| help/recommanded_win_docs | Windows相关问题的优质教程/文档资源 | 索引导航 |
+| article/index_of_docs | 【TODO】IT侠共享文档索引 | 索引导航 |
+| textbook/sitemap | 新人必读：IT侠知识矩阵 | 索引导航 |
+| help/zijingbt | 紫荆站相关（已废弃。晚安！紫荆！） | 已废弃 |
+| help/zijingbt_faq | 紫荆站使用常见问题汇编 | 已废弃 |
+| help/zijingbt_brief_guide | 紫荆简明使用教程 | 已废弃 |
+| article/brief_guide_zijingbt | 【教程收集】紫荆简明使用教程 | 已废弃 |
+| help/bot_manual | IT侠bot命令使用指南（已废弃。Bot！不！） | 已废弃 |
+| help/install_software_old | 软件讲座系列下载/安装教程 | 已废弃 |
+| help/itxia_toolkits | 微PE&IT侠工具箱使用说明 | 仅含链接或附件 |
+| article/ygi9hs | 【日常维修】关于蓝屏处理的临时收集（建设中，后续实践整理） | 仅含链接或附件 |
+| textbook/install_os | 系统安装 ⭐ | 仅含链接或附件 |
+| help/statement | IT侠在线互助常见问题集声明&须知 | 说明或前言 |
+| article/introduction | IT侠教程&记录系列-归档说明 | 说明或前言 |
+| article/ofrwrn | 【TODO】Markdown推广计划 | 说明或前言 |
+| textbook/intro | 学习前必读 | 说明或前言 |
+| basic-computer/overview | 绪论、组织与结构 | 说明或前言 |
+| dygh8t/vx6pkp | 文档前言 | 说明或前言 |
+| article/bhn0za | 【互助群归档】Word 视图无法切换至页面视图 | 内容过少 |
+| article/ly73yq | 【互助群归档】No Boot Device Found Solution | 内容过少 |
+| article/bzt5q5 | 【推送归档】Tips \| QQ群直播/群课堂用不了？ | 内容过时 |
+| article/sgddz0 | 【推送归档】来IT侠装系统，守住你的生活费！ | 非维修参考主题 |

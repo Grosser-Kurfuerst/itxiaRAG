@@ -80,7 +80,7 @@
 | --- | --- | --- |
 | 语料 v2 | 28 篇教程（`tutorial@1`） | 取得社团 Token，用 `import_yuque --save-snapshot .runtime/eval/corpus-v1/yuque-snapshot --dry-run` 冻结快照，之后用 `--snapshot` 离线导入以保证可复现 |
 | 语料 v3 | 15 篇知识、31 篇工具 | 阶段 5、6 流水线已接入，2026-10-10 导入 |
-| 后续 | 10 篇排障、12 篇案例，以及 timdoc、handbook、xqa 等非公开库 | 排障与案例策略待设计；非公开库需成员 Token |
+| 后续 | 10 篇排障、9 篇案例，以及 timdoc、handbook、xqa 等非公开库 | 排障与案例策略待设计；非公开库需成员 Token |
 
 语雀在评测中的作用：
 

@@ -168,7 +168,7 @@ def test_repository_manifest_classifies_all_74_appendix_docs():
             )
             counts[category] += 1
     assert counts == {"tutorial": 28, "tool_card": 31, "knowledge": 15}
-    assert len(manifest.docs) == 49  # 46 个单篇分类 + 3 个重复副本。
+    assert len(manifest.docs) == 91  # 46 + 19 个单篇分类，3 个重复副本与 23 个不导入。
     assert manifest.collections == ["help", "article", "textbook", "basic-computer", "dygh8t"]
     assert manifest.visibility_for(ref("textbook/make_pe")) == "public"
     for slug in ["partition-resize", "install_win10_from_scratch", "gagpcm"]:
@@ -178,3 +178,28 @@ def test_repository_manifest_classifies_all_74_appendix_docs():
     assert manifest.canonical_for(ref("article/partition-resize")) == "help/partition-resize"
     assert manifest.canonical_for(ref("article/install_win10_from_scratch")) == "help/install_win10"
     assert manifest.canonical_for(ref("article/gagpcm")) == "help/nju_network_guide"
+
+
+def test_repository_manifest_matches_later_batch_appendix():
+    root = Path(__file__).resolve().parents[2]
+    manifest = Manifest.load(root / "sources/yuque/manifests/itxia.toml", source_type="yuque",
+                             categories=CATEGORIES)
+    appendix = (root / "docs/phase1/yuque-ingestion/requirements-analysis.md").read_text().split(
+        "## 附录：后续批次与不导入清单", 1,
+    )[1]
+    counts = Counter()
+    for heading in ["排障指南", "单案例记录", "不导入"]:
+        section = appendix.split("### " + heading, 1)[1].split("\n### ", 1)[0]
+        for line in section.splitlines():
+            match = re.match(r"\| ([a-z0-9_-]+/[a-z0-9_-]+) \|", line)
+            if not match:
+                continue
+            classification = manifest.classify(ref(match[1]))
+            if heading == "不导入":
+                reason = line.split(" | ")[-1].rstrip(" |")
+                assert (classification.category, classification.skip) == (None, reason), match[1]
+            else:
+                category = "troubleshooting" if heading == "排障指南" else "case"
+                assert (classification.category, classification.skip) == (category, None), match[1]
+            counts[heading] += 1
+    assert counts == {"排障指南": 10, "单案例记录": 9, "不导入": 23}

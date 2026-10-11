@@ -1,4 +1,5 @@
 # 第一批 74 篇：28 教程、31 工具（28 篇由目录规则覆盖）、15 知识。
+# 后续批次 19 篇：10 排障、9 案例，流水线接入前报告为“未接入”；另有 26 篇跳过（含 3 个重复副本）。
 # 清单只保存标识和分类；不保存正文、快照或凭据。
 version = 2
 source_type = "yuque"
@@ -176,3 +177,135 @@ canonical = "help/install_win10"
 [docs."article/gagpcm"]
 skip = "duplicate"
 canonical = "help/nju_network_guide"
+
+# 后续批次：排障指南，流水线接入前跳过并报告“未接入”。
+
+[docs."help/windows_problem_cheatsheet"]
+category = "troubleshooting"
+
+[docs."help/nju_wlan_qa_pro_plus_max_ultra"]
+category = "troubleshooting"
+
+[docs."help/cam_mic_not_work"]
+category = "troubleshooting"
+
+[docs."help/nju_network"]
+category = "troubleshooting"
+
+[docs."help/network_problem"]
+category = "troubleshooting"
+
+[docs."help/network_alter"]
+category = "troubleshooting"
+
+[docs."help/o365_qa"]
+category = "troubleshooting"
+
+[docs."help/ms_office_problems"]
+category = "troubleshooting"
+
+[docs."article/kbg5vc"]
+category = "troubleshooting"
+
+[docs."article/find_vendor"]
+category = "troubleshooting"
+
+# 后续批次：单案例记录。
+
+[docs."article/ghrq7ikst4cce451"]
+category = "case"
+
+[docs."article/vegchy"]
+category = "case"
+
+[docs."article/yhsqeg"]
+category = "case"
+
+[docs."article/rzqnsh"]
+category = "case"
+
+[docs."article/ggwbb1"]
+category = "case"
+
+[docs."article/mogtov"]
+category = "case"
+
+[docs."article/syr9fw"]
+category = "case"
+
+[docs."article/geve3g"]
+category = "case"
+
+[docs."article/fqhg6o"]
+category = "case"
+
+# 不导入：索引、废弃、仅含链接、说明前言，以及内容过少、过时或主题不符的文档。
+
+[docs."help/useful_tools"]
+skip = "索引导航"
+
+[docs."help/recommanded_win_docs"]
+skip = "索引导航"
+
+[docs."article/index_of_docs"]
+skip = "索引导航"
+
+[docs."textbook/sitemap"]
+skip = "索引导航"
+
+[docs."help/zijingbt"]
+skip = "已废弃"
+
+[docs."help/zijingbt_faq"]
+skip = "已废弃"
+
+[docs."help/zijingbt_brief_guide"]
+skip = "已废弃"
+
+[docs."article/brief_guide_zijingbt"]
+skip = "已废弃"
+
+[docs."help/bot_manual"]
+skip = "已废弃"
+
+[docs."help/install_software_old"]
+skip = "已废弃"
+
+[docs."help/itxia_toolkits"]
+skip = "仅含链接或附件"
+
+[docs."article/ygi9hs"]
+skip = "仅含链接或附件"
+
+[docs."textbook/install_os"]
+skip = "仅含链接或附件"
+
+[docs."help/statement"]
+skip = "说明或前言"
+
+[docs."article/introduction"]
+skip = "说明或前言"
+
+[docs."article/ofrwrn"]
+skip = "说明或前言"
+
+[docs."textbook/intro"]
+skip = "说明或前言"
+
+[docs."basic-computer/overview"]
+skip = "说明或前言"
+
+[docs."dygh8t/vx6pkp"]
+skip = "说明或前言"
+
+[docs."article/bhn0za"]
+skip = "内容过少"
+
+[docs."article/ly73yq"]
+skip = "内容过少"
+
+[docs."article/bzt5q5"]
+skip = "内容过时"
+
+[docs."article/sgddz0"]
+skip = "非维修参考主题"

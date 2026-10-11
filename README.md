@@ -20,6 +20,7 @@
 | [第二阶段需求](docs/phase2/requirements.md) | 第二阶段目标、范围、功能点与里程碑：检索质量与维修类内容；M2 低成本检索改进已完成，F2-12～F2-14 维修类内容已接入并评测，其余未实现 |
 | [召回改进方案](docs/phase2/retrieval-improvement-plan.md) | 依据评测结果的召回改进项、采纳条件与实施顺序；分词模式、同义词表与 RRF k=20 已采纳 |
 | [召回改进记录](docs/phase2/retrieval-improvement-log.md) | 每项召回改进的方法、实验结果与是否保留 |
+| [第三阶段需求](docs/phase3/requirements.md) | 草案：从第二阶段移入、计划接入大模型后实现的功能（选购条件识别等） |
 | [项目测试规则](docs/unit-testing-guidelines.md) | 测试环境、预处理专项、回归命令与完成定义 |
 
 建议按任务阅读：

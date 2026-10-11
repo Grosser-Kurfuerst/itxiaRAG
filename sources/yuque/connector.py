@@ -2,7 +2,6 @@
 import re
 from zoneinfo import ZoneInfo
 
-from contracts.errors import DomainError
 from contracts.types import FetchedSource, RawDocument, SourceRef
 from sources.yuque.client import YuqueClient, YuqueDocRef
 
@@ -41,12 +40,7 @@ class YuqueConnector:
 
     def fetch(self, ref: SourceRef) -> FetchedSource:
         doc = to_doc_ref(ref)
-        markdown = self.client.read_markdown(doc)
-        try:
-            content = markdown.encode("utf-8")
-        except UnicodeError:
-            # OpenAPI 的 JSON 转义可能带孤立代理字符，按单篇格式错误处理。
-            raise DomainError("INVALID_YUQUE_RESPONSE", "语雀正文含无法编码的字符") from None
+        content = self.client.read_markdown(doc).encode("utf-8")
         metadata = {
             "title": ref.title,
             "source_date": doc.content_updated_at.astimezone(ZoneInfo("Asia/Shanghai")).date().isoformat(),

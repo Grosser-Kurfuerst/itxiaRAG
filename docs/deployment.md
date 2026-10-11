@@ -83,7 +83,7 @@ dc logs --tail=100 app db
 
 `check` 应无错误，`migrate --check` 应退出成功。数据库首次使用新卷；旧版数据库仍有业务数据时，收敛迁移会中止，应保留旧库并在新库重新导入。
 
-默认 API 只绑定宿主机 `127.0.0.1:8000`，PostgreSQL 和 Ollama 不暴露宿主机端口。端口冲突时在配置中增加 `APP_PORT=18000`，并同步下文请求地址；监听地址、Gunicorn 进程数和超时可分别用 `APP_BIND_ADDRESS`（默认 `127.0.0.1`）、`WEB_WORKERS`（默认 2）、`WEB_TIMEOUT`（默认 120 秒）调整。远程访问可通过 SSH 转发；对外部署时由 HTTPS 反向代理接入，并把域名加入 `ALLOWED_HOSTS`。
+默认 API 只绑定宿主机 `127.0.0.1:8000`；PostgreSQL 只绑定 `127.0.0.1:15432`，供本机 Navicat、psql 等客户端查看导入的父段和子块，连接参数取 `.env.docker` 中的库名、用户和密码，端口冲突时设置 `DB_PORT`；Ollama 不暴露宿主机端口。端口冲突时在配置中增加 `APP_PORT=18000`，并同步下文请求地址；监听地址、Gunicorn 进程数和超时可分别用 `APP_BIND_ADDRESS`（默认 `127.0.0.1`）、`WEB_WORKERS`（默认 2）、`WEB_TIMEOUT`（默认 120 秒）调整。远程访问可通过 SSH 转发；对外部署时由 HTTPS 反向代理接入，并把域名加入 `ALLOWED_HOSTS`。
 
 ## 3. 验收导入与混合检索
 
@@ -230,10 +230,10 @@ dc run --rm --no-deps -v "$PWD/.runtime/eval/corpus-v1:/import:ro" app \
 
 ## 4. 在 Docker 中运行自动测试
 
-使用独立 Compose 项目 `itxia-tests`，避免触碰运行服务的数据库和卷。测试内部再创建 PostgreSQL 测试库；模型使用明确的测试替身，不需要启动 Ollama。
+使用独立 Compose 项目 `itxia-tests`，避免触碰运行服务的数据库和卷。测试内部再创建 PostgreSQL 测试库；模型使用明确的测试替身，不需要启动 Ollama。项目隔离不包括宿主机端口，测试库改用 `DB_PORT=25432`，避免与运行服务占用的 15432 冲突；shell 环境变量优先于 `--env-file`。
 
 ```sh
-dct() { docker compose --env-file "$ITXIA_ENV" -p itxia-tests --profile test "$@"; }
+dct() { DB_PORT=25432 docker compose --env-file "$ITXIA_ENV" -p itxia-tests --profile test "$@"; }
 dct run --build --rm test
 ```
 

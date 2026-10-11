@@ -537,6 +537,12 @@
     "维修实践中的 Bitlocker > 挂起/恢复 Bitlocker"
    ]
   },
+  "语雀:解密BitLocker": {
+   "doc": "textbook/bitlocker",
+   "titles": [
+    "维修实践中的 Bitlocker > 解密 Bitlocker"
+   ]
+  },
   "语雀:BitLocker概述": {
    "doc": "textbook/bitlocker",
    "titles": [
@@ -1877,7 +1883,8 @@
    "cat": "K",
    "q": "BitLocker 挂起和解密有什么区别",
    "rel": [
-    "语雀:挂起BitLocker"
+    "语雀:挂起BitLocker",
+    "语雀:解密BitLocker"
    ],
    "facts": [],
    "origin": "manual"

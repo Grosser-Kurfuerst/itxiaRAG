@@ -13,11 +13,11 @@
 | [首期技术设计](docs/phase1/phase1-technical-design.md) | 模块、公共 DTO、存储、检索、API 响应与错误、迁移 |
 | [来源接入说明](docs/phase1/source-ingestion-plan.md) | 资料获取与准备、提交方式选择、更新与后续平台连接器 |
 | [来源连接器改造方案](docs/phase1/source-connector-design.md) | 通用连接器协议、清单与导入服务的拆分，平台差异与迁移步骤；已实现 |
-| [语雀文档导入方案](docs/phase1/yuque-ingestion/overview.md) | 语雀解析、教程／知识／工具条目流水线、公开网页读取与快照导入已实现；第一批 74 篇已导入开发环境 |
+| [语雀文档导入方案](docs/phase1/yuque-ingestion/overview.md) | 语雀解析、教程／知识／工具条目流水线、排障指南与单案例流水线、公开网页读取与快照导入已实现；93 篇已导入开发环境 |
 | [文档预处理](docs/phase1/preprocessing.md) | 原文请求、格式适配器、父子段策略、长度预算与步骤扩展 |
 | [Docker 部署与验收](docs/deployment.md) | Compose 配置、启动、账号、标准／原文导入冒烟检查和日常操作 |
 | [维护手册](docs/maintenance.md) | 资料更新与下线、检索词表与参数、评测集、账号与备份等人工维护流程 |
-| [第二阶段需求](docs/phase2/requirements.md) | 第二阶段目标、范围、功能点与里程碑：检索质量与维修类内容；M2 低成本检索改进已完成，其余未实现 |
+| [第二阶段需求](docs/phase2/requirements.md) | 第二阶段目标、范围、功能点与里程碑：检索质量与维修类内容；M2 低成本检索改进已完成，F2-12～F2-14 维修类内容已接入并评测，其余未实现 |
 | [召回改进方案](docs/phase2/retrieval-improvement-plan.md) | 依据评测结果的召回改进项、采纳条件与实施顺序；分词模式、同义词表与 RRF k=20 已采纳 |
 | [召回改进记录](docs/phase2/retrieval-improvement-log.md) | 每项召回改进的方法、实验结果与是否保留 |
 | [项目测试规则](docs/unit-testing-guidelines.md) | 测试环境、预处理专项、回归命令与完成定义 |

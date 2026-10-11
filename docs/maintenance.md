@@ -227,7 +227,7 @@ dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/retrieval:/app/retrie
     .runtime/eval/corpus-v3/results-v10.json --scope all
   ```
 
-- 当前基线是 v9（k=20、文档端搜索模式、开启同义词）。
+- 当前基线是语料 v4 上的 `.runtime/eval/corpus-v4/results-v15.json`（查询集 v5、k=20、文档端搜索模式、开启同义词），见[排障与案例方案 8.4](phase2/troubleshooting-and-case-design.md#84-维修类评测f2-142026-10-11)。
 
 ## 7. 账号、备份与例行检查
 

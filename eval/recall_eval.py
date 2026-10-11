@@ -4,7 +4,7 @@ D 类按属性条件生成分级标注，另报 P@5、nDCG@5、R@10。
 答案按来源类别分别报三路名次，区分召回失败（两路候选中都没有）与排序失败（已召回但未进入混合前 5）。
 查询集的 scopes 定义若干检索范围（范围名 -> document_schema 列表），每个范围各跑一遍；
 答案按范围过滤，范围内没有答案的查询在该范围按负例统计。
-别名可指向评测标题（字符串），或指向语雀文档（教程、知识、工具条目）的父段
+别名可指向评测标题（字符串），或指向语雀文档（教程、知识、工具条目、排障指南、案例）的父段
 {"doc": "book/slug", "titles": [...]}，省略 titles 表示整篇。
 
 查询集 queries.json 与属性表 attributes.json 在本目录；语料原文与评测结果放在被忽略的 .runtime/eval/。
@@ -44,7 +44,8 @@ TOP_PARENTS = 20
 RICH_PORTS = ("usb_a", "usb_c", "video_out")  # 视频输出含 HDMI、DP 与支持 DP 的 USB-C；网口不作要求
 THIN_LIGHT_MAX_KG = 1.5
 DEFAULT_SCOPES = {"reviews": ["product_review"]}
-LABEL_PREFIXES = {"purchase_guide": "指南:", "tutorial": "教程:", "knowledge": "知识:", "tool_card": "工具:"}
+LABEL_PREFIXES = {"purchase_guide": "指南:", "tutorial": "教程:", "knowledge": "知识:", "tool_card": "工具:",
+                  "troubleshooting": "排障:", "experience_case": "案例:"}
 
 
 @dataclass

@@ -4,7 +4,7 @@ from statistics import mean
 METHODS = ("hybrid", "keyword", "vector")
 SET_METRICS = ("p@5", "ndcg@5", "r@10")
 SCHEMA_NAMES = {"product_review": "评测", "tutorial": "教程", "knowledge": "知识", "tool_card": "工具",
-                "purchase_guide": "指南"}
+                "purchase_guide": "指南", "troubleshooting": "排障", "experience_case": "案例"}
 
 
 def hit_metrics(ranks):

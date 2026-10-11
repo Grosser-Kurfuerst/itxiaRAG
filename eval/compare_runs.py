@@ -4,7 +4,7 @@
       .runtime/eval/corpus-v3/rrf/results-k*.json --scope all
 
 输出两部分：
-1. 汇总表：全部、A～F、D（含集合指标）及 T／X／K／U 类的混合指标，召回失败与排序失败条数，
+1. 汇总表：全部、A～F、D（含集合指标）及 T／X／K／U／R 类的混合指标，召回失败与排序失败条数，
    以及按查询编号奇偶分半的 MRR@10 相对基线变化（两半都提升才视为稳定的改进）；
 2. 逐条变化：每个实验组相对基线混合名次变化的查询，标出进入／跌出前 5，
    并列出新进入前 5、但不在本条答案中的父段，供增量补标核对。
@@ -18,7 +18,7 @@ from statistics import mean
 from metrics import failures, hit_metrics
 
 ORIGINAL_CATS = set("ABCDEF")
-CAT_COLUMNS = ("T", "X", "K", "U")
+CAT_COLUMNS = ("T", "X", "K", "U", "R")
 
 
 def load(path, scope):

@@ -7,7 +7,9 @@
    "product_review",
    "tutorial",
    "knowledge",
-   "tool_card"
+   "tool_card",
+   "troubleshooting",
+   "experience_case"
   ]
  },
  "aliases": {
@@ -707,6 +709,181 @@
    "titles": [
     "利用OTP处理其他问题"
    ]
+  },
+  "排障:蓝屏排查顺序": {
+   "doc": "help/windows_problem_cheatsheet",
+   "titles": [
+    "Windows 系统异常（显示错误/蓝屏/死机）的常见解决方案",
+    "0、重启试试、升级看看、原位修复"
+   ]
+  },
+  "排障:系统文件修复": {
+   "doc": "help/windows_problem_cheatsheet",
+   "titles": [
+    "2、系统文件修复"
+   ]
+  },
+  "排障:安全模式": {
+   "doc": "help/windows_problem_cheatsheet",
+   "titles": [
+    "1、进入安全模式检查"
+   ]
+  },
+  "排障:事件查看器": {
+   "doc": "help/windows_problem_cheatsheet",
+   "titles": [
+    "3、利用事件查看器定位问题"
+   ]
+  },
+  "排障:WinDbg": {
+   "doc": "help/windows_problem_cheatsheet",
+   "titles": [
+    "4、WinDbg定位蓝屏问题"
+   ]
+  },
+  "排障:重置重装": {
+   "doc": "help/windows_problem_cheatsheet",
+   "titles": [
+    "5、重置、重装与原位修复（仅限Windows10与以后版本）"
+   ]
+  },
+  "排障:校园网会不会用": {
+   "doc": "help/nju_wlan_qa_pro_plus_max_ultra",
+   "titles": [
+    "零、想一想自己到底会不会上校园网"
+   ]
+  },
+  "排障:校园网查设备": {
+   "doc": "help/nju_wlan_qa_pro_plus_max_ultra",
+   "titles": [
+    "一、查一查自己设备的问题"
+   ]
+  },
+  "排障:校园网BUG": {
+   "doc": "help/nju_wlan_qa_pro_plus_max_ultra",
+   "titles": [
+    "二、赌一赌是校园网的BUG"
+   ]
+  },
+  "排障:登录排查": {
+   "doc": "help/nju_network",
+   "titles": [
+    "2、一般方法：无法登录校园网问题排查"
+   ]
+  },
+  "排障:判断问题位置": {
+   "doc": "help/network_problem",
+   "titles": [
+    "1、当你在宿舍上网时数据是怎么走的",
+    "2、判断你的问题出在哪一步"
+   ]
+  },
+  "排障:分步排查": {
+   "doc": "help/network_problem",
+   "titles": [
+    "2、判断你的问题出在哪一步"
+   ]
+  },
+  "排障:应急上网": {
+   "doc": "help/network_alter"
+  },
+  "排障:麦克风权限": {
+   "doc": "help/cam_mic_not_work",
+   "titles": [
+    "一、针对Windows系统 > 2、系统应用检查"
+   ]
+  },
+  "排障:会议软件": {
+   "doc": "help/cam_mic_not_work",
+   "titles": [
+    "一、针对Windows系统 > 3、浏览器/会议软件/通讯软件等检查"
+   ]
+  },
+  "排障:Mac摄像头": {
+   "doc": "help/cam_mic_not_work",
+   "titles": [
+    "二、针对MacOS"
+   ]
+  },
+  "排障:OneDrive冲突": {
+   "doc": "help/o365_qa",
+   "titles": [
+    "一、Office365 A1国际版与高校世纪互联版 OneDrive 冲突问题"
+   ]
+  },
+  "排障:Mac Office卡死": {
+   "doc": "help/ms_office_problems",
+   "titles": [
+    "1、MacOS 运行 MS Office 经常卡死"
+   ]
+  },
+  "排障:装Visio": {
+   "doc": "help/ms_office_problems",
+   "titles": [
+    "3、我想安装 Visio/已经有 Office 想要再安装 Visio"
+   ]
+  },
+  "排障:旧设备驱动": {
+   "doc": "article/kbg5vc"
+  },
+  "排障:查找厂商": {
+   "doc": "article/find_vendor",
+   "titles": [
+    "一、观察包装",
+    "三、查看属性里的信息",
+    "四、寻找可查询的数据库"
+   ]
+  },
+  "案例:EARLY EXIT": {
+   "doc": "article/ghrq7ikst4cce451"
+  },
+  "案例:介质驱动": {
+   "doc": "article/vegchy"
+  },
+  "案例:ms-settings": {
+   "doc": "article/yhsqeg"
+  },
+  "案例:WinError193": {
+   "doc": "article/rzqnsh"
+  },
+  "案例:U盘病毒": {
+   "doc": "article/ggwbb1"
+  },
+  "案例:Dell麦克风": {
+   "doc": "article/mogtov"
+  },
+  "案例:蓝牙驱动": {
+   "doc": "article/syr9fw"
+  },
+  "案例:官方维修点": {
+   "doc": "article/geve3g"
+  },
+  "案例:UWP": {
+   "doc": "article/fqhg6o"
+  },
+  "语雀:世纪互联网页登录": {
+   "doc": "help/double_o365",
+   "titles": [
+    "一、网页端"
+   ]
+  },
+  "语雀:OneDrive共存": {
+   "doc": "help/double_o365",
+   "titles": [
+    "二、OneDrive 客户端冲突问题"
+   ]
+  },
+  "排障:麦克风硬件": {
+   "doc": "help/cam_mic_not_work",
+   "titles": [
+    "一、针对Windows系统 > 1、电脑硬件检查"
+   ]
+  },
+  "排障:驱动安装注意": {
+   "doc": "article/find_vendor",
+   "titles": [
+    "六、驱动的选择与安装的注意事项"
+   ]
   }
  },
  "attributes": "attributes.json",
@@ -1223,13 +1400,6 @@
    "facts": []
   },
   {
-   "id": "G06",
-   "cat": "G",
-   "q": "打印机驱动怎么装",
-   "rel": [],
-   "facts": []
-  },
-  {
    "id": "F01",
    "cat": "F",
    "q": "机械革命 星耀14 PTL酷睿版 续航多久",
@@ -1723,7 +1893,9 @@
    "q": "连上了校园网 WiFi，但是打不开校外网站",
    "rel": [
     "语雀:网络常见问题",
-    "语雀:访问校外网络"
+    "语雀:访问校外网络",
+    "排障:校园网会不会用",
+    "排障:分步排查"
    ],
    "facts": [],
    "origin": "manual"
@@ -2296,6 +2468,308 @@
    "cat": "G",
    "q": "笔记本外接投影仪没反应怎么办",
    "rel": [],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R01",
+   "cat": "R",
+   "q": "电脑经常死机蓝屏，应该按什么顺序排查",
+   "rel": [
+    "排障:蓝屏排查顺序"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R02",
+   "cat": "R",
+   "q": "系统文件损坏了怎么用命令扫描修复",
+   "rel": [
+    "排障:系统文件修复"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R03",
+   "cat": "R",
+   "q": "怎么进入 Windows 安全模式",
+   "rel": [
+    "排障:安全模式"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R04",
+   "cat": "R",
+   "q": "蓝屏之后怎么查是哪个驱动引起的",
+   "rel": [
+    "排障:WinDbg",
+    "排障:事件查看器"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R05",
+   "cat": "R",
+   "q": "Windows 出了问题实在修不好，重置和重装怎么选",
+   "rel": [
+    "排障:重置重装"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R06",
+   "cat": "R",
+   "q": "浏览器打不开网页，但是微信QQ都能正常用",
+   "rel": [
+    "排障:校园网查设备",
+    "排障:登录排查",
+    "语雀:网络常见问题"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R07",
+   "cat": "R",
+   "q": "连上 NJU-WLAN 之后弹不出登录页面",
+   "rel": [
+    "排障:校园网会不会用",
+    "排障:登录排查"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R08",
+   "cat": "R",
+   "q": "校园网用着用着突然被强制下线",
+   "rel": [
+    "排障:校园网BUG"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R09",
+   "cat": "R",
+   "q": "宿舍上不了网，怎么判断是网线、路由器还是电脑的问题",
+   "rel": [
+    "排障:判断问题位置"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R10",
+   "cat": "R",
+   "q": "在宿舍搜不到 NJU-WLAN 信号",
+   "rel": [
+    "排障:校园网会不会用",
+    "排障:分步排查"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R11",
+   "cat": "R",
+   "q": "电脑网卡坏了，有什么办法先临时上网",
+   "rel": [
+    "排障:应急上网",
+    "语雀:网络常见问题"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R12",
+   "cat": "R",
+   "q": "腾讯会议里别人听不到我说话",
+   "rel": [
+    "排障:麦克风权限",
+    "排障:会议软件",
+    "排障:麦克风硬件"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R13",
+   "cat": "R",
+   "q": "Mac 上开视频会议摄像头没有画面",
+   "rel": [
+    "排障:Mac摄像头"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R14",
+   "cat": "R",
+   "q": "南大的世纪互联版 Office 365 怎么登录",
+   "rel": [
+    "语雀:世纪互联网页登录"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R15",
+   "cat": "R",
+   "q": "国际版 OneDrive 和学校的 OneDrive 在一台电脑上冲突",
+   "rel": [
+    "排障:OneDrive冲突",
+    "语雀:OneDrive共存"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R16",
+   "cat": "R",
+   "q": "Mac 上的 Word 经常卡死",
+   "rel": [
+    "排障:Mac Office卡死"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R17",
+   "cat": "R",
+   "q": "已经装了 Office，再装 Visio 要注意什么",
+   "rel": [
+    "排障:装Visio"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R18",
+   "cat": "R",
+   "q": "旧打印机的驱动在新版 Windows 上装不上",
+   "rel": [
+    "排障:旧设备驱动",
+    "排障:驱动安装注意"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R19",
+   "cat": "R",
+   "q": "设备上看不出牌子，怎么查是哪家厂商、去哪找驱动",
+   "rel": [
+    "排障:查找厂商"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R20",
+   "cat": "R",
+   "q": "开机出现 EARLY EXIT ON FAILURE 怎么办",
+   "rel": [
+    "案例:EARLY EXIT"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R21",
+   "cat": "R",
+   "q": "装系统时提示找不到所需的介质驱动程序",
+   "rel": [
+    "案例:介质驱动"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R22",
+   "cat": "R",
+   "q": "打开 Windows 设置提示 ms-settings 没有与之关联的应用",
+   "rel": [
+    "案例:ms-settings"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R23",
+   "cat": "R",
+   "q": "Anaconda 里 import 包报 WinError 193",
+   "rel": [
+    "案例:WinError193"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R24",
+   "cat": "R",
+   "q": "U盘插上后文件全变成了快捷方式",
+   "rel": [
+    "案例:U盘病毒"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R25",
+   "cat": "R",
+   "q": "戴尔笔记本插耳机后识别不到麦克风",
+   "rel": [
+    "案例:Dell麦克风"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R26",
+   "cat": "R",
+   "q": "蓝牙键盘连电脑后间歇性疯狂重复按键",
+   "rel": [
+    "案例:蓝牙驱动"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R27",
+   "cat": "R",
+   "q": "电脑进水后送官方售后，需要注意什么",
+   "rel": [
+    "案例:官方维修点",
+    "语雀:售后注意事项"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R28",
+   "cat": "R",
+   "q": "电脑上浏览器和网易云音乐突然都没有声音",
+   "rel": [
+    "案例:UWP"
+   ],
+   "facts": [],
+   "origin": "manual"
+  },
+  {
+   "id": "R29",
+   "cat": "R",
+   "q": "打印机驱动怎么装",
+   "rel": [
+    "排障:旧设备驱动",
+    "排障:驱动安装注意"
+   ],
    "facts": [],
    "origin": "manual"
   }

@@ -160,7 +160,7 @@ YUQUE_CATEGORY_PIPELINES = {
 - 样本分析基于 2026-10-08 快照，正式导入前以重新保存的快照试运行为准。
 - `nju_wlan_qa_pro_plus_max_ultra`“零”节约 3000 字、含 5 个问答，父段偏长。
 - 正文加粗警告不进入 warnings 字段；前置知识不随后续步骤返回。
-- 新语料与现有查询的答案竞争：Hit@5 不变，K、U 类 MRR 下降，见 8.4。
+- 新语料与现有查询的答案竞争：Hit@5 不变，T、K、U 类 MRR 下降，见 8.4。
 
 ## 8. 实施与验收结果
 
@@ -257,4 +257,4 @@ R06 的排障答案第 9，靠知识父段进入前 5，所以仍列在分来源
 
 K、U 类 MRR 分别下降约 0.035、0.041，原因是新语料参与竞争，检索配置没有变化。此后检索改进以 v15 为基线。维修类偏好（F2-15）需同时确认这些查询不再下降。
 
-结果在 `.runtime/eval/corpus-v4/`：`results-v13～15.json`、`report-v13～15.txt`，原有查询的对比在 `compare-old-v12-v15.txt`。过滤后的结果是 `results-v12-old-queries.json` 和 `results-v15-old-queries.json`。v13 是补标前的结果，v14 是 G06 转为 R29、R 类补标后的结果，v15 是 K08 补标后的结果。
+结果在 `.runtime/eval/corpus-v4/`：`results-v13～15.json`、`report-v13～15.txt`，原有查询的对比在 `compare-old-v12-v15.txt`。过滤后的结果是 `results-v12-old-queries.json` 和 `results-v15-old-queries.json`。v13 是补标前的结果，v14 是 G06 转为 R29、R 类补标后的结果，v15 是 K08 补标、别名改用“语雀:”前缀后的结果。v13、v14 使用改名前的别名，不能直接与 v15 对比。

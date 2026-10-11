@@ -50,7 +50,7 @@ Markdown 支持 ATX 标题、独占行的粗体标题、管道表格、列表与
 
 `MarkdownParser(pseudo_heading="level2")` 默认把整行加粗视为二级标题，保持既有伪标题行为。`pseudo_heading="nested_label"` 只把不超过 30 字且不含句内标点（，。；！？,;!?）的整行加粗视为标题，级别为最近真实 ATX 标题加一；没有真实标题时为 2，最高为 6，连续伪标题不互相抬升级别。其余整行加粗保留为段落。
 
-[YuqueMarkdownParser](../../ingestion/yuque_markdown.py) 默认使用 `nested_label`，也可注入其他 MarkdownParser。规范化按[语雀方言规则](yuque-ingestion/technical-design.md#42-规范化规则)移除白名单样式标签、删除线（连同只含删除内容的行内代码）和文内锚点链接，将表格行内 `<br>`／`<br/>` 改为“；”、语雀提示块改为 GitHub 提示块、单行折叠块改为 `**标题**：正文`（丢弃其中图片）、独占一行的 HTML 图片改为 Markdown 图片，删除行内空加粗 `****`，空结构改为空行。白名单外尖括号（如 `<你的用户名>`）保留；围栏代码中的内容不做方言改写。每行只改写为一行或空行，保持原文行号。
+[YuqueMarkdownParser](../../ingestion/yuque_markdown.py) 默认使用 `nested_label`，也可注入其他 MarkdownParser。规范化按[语雀方言规则](yuque-ingestion/technical-design.md#42-规范化规则)移除白名单样式标签（只含数字字母的上标改写为 `^` 幂次）、删除线（连同只含删除内容的行内代码）和文内锚点链接，将表格行内 `<br>`／`<br/>` 改为“；”、语雀提示块改为 GitHub 提示块、单行折叠块改为 `**标题**：正文`（丢弃其中图片）、独占一行的 HTML 图片改为 Markdown 图片，删除行内空加粗 `****`，空结构改为空行。白名单外尖括号（如 `<你的用户名>`）保留；围栏代码中的内容不做方言改写。每行只改写为一行或空行，保持原文行号。
 
 例如微信原文：
 

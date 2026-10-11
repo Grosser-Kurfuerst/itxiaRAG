@@ -16,6 +16,8 @@ class _NormalizeState:
 
 
 def _strip_styles(line, _state):
+    # 只含数字字母的上标是幂次（2<sup>32</sup>），改写为 2^32 以免读成 232；脚注等其余上标只保留文字。
+    line = re.sub(r"<sup(?:\s+[^<>]*?)?>([0-9A-Za-z]+)</sup>", r"^\1", line, flags=re.IGNORECASE)
     return re.sub(
         r"</?(?:font|span|u|sup|sub|mark|strong|em)(?:\s+[^<>]*?)?\s*/?>",
         "", line, flags=re.IGNORECASE,

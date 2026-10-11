@@ -12,6 +12,11 @@ def test_yuque_removes_only_whitelisted_style_tags_and_preserves_their_text(tag)
     assert normalize_yuque(f'<{tag} style="color:red">文字</{tag}>\n') == "文字\n"
 
 
+def test_yuque_alphanumeric_superscript_becomes_power_and_footnotes_keep_text():
+    assert normalize_yuque("最多 2<sup>32</sup> 个，即 10<SUP>n</SUP>\n") == "最多 2^32 个，即 10^n\n"
+    assert normalize_yuque('周期<sup><font style="color:#0070C0;">[2]</font></sup>是半年\n') == "周期[2]是半年\n"
+
+
 def test_yuque_preserves_unknown_angle_brackets_and_placeholder_names():
     content = "<你的用户名> <你的Windows用户名> <font-color>文字</font-color> <custom>文字</custom>\n"
     assert normalize_yuque(content) == content

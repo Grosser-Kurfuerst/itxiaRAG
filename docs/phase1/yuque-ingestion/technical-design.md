@@ -199,7 +199,7 @@ class YuqueMarkdownParser:
 
 | 规则 | 输入 | 输出 |
 | --- | --- | --- |
-| 样式标签 | `<font>`、`<span>`、`<u>`、`<sup>`、`<sub>`、`<mark>`、`<strong>`、`<em>`（白名单） | 保留文字。白名单外的尖括号原样保留，例如 `<你的Windows用户名>` |
+| 样式标签 | `<font>`、`<span>`、`<u>`、`<sup>`、`<sub>`、`<mark>`、`<strong>`、`<em>`（白名单） | 保留文字。只含数字字母的上标是幂次，写成 `^`（`2<sup>32</sup>` → `2^32`），脚注等其余上标只去标签。白名单外的尖括号原样保留，例如 `<你的Windows用户名>` |
 | 表格内换行 | 表格行中的 `<br>`、`<br/>` | `；` |
 | 提示块 | `:::warning` … `:::` | 起始行改为 `> [!WARNING]`，块内行加 `> ` 前缀，结束行改为空行。tips／info／success／colorN 对应 NOTE，danger 对应 CAUTION |
 | 折叠块 | 单行 `<details><summary>S</summary>…</details>` | `**S**：正文文本`；用 HTML 解析取文本，丢弃其中图片 |

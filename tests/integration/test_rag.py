@@ -8,6 +8,7 @@ from django.contrib.auth.models import Permission
 from rest_framework.test import APIClient
 
 from catalog.models import ContextUnit, EvidenceUnit, KnowledgeSource
+from catalog.policies import visible_scopes
 from catalog.selectors import DjangoContextReader
 from catalog.storage import DjangoDocumentStore
 from config import components
@@ -32,30 +33,30 @@ def actor():
     return user
 
 
-def ingest(payload, actor, embedder, store=None):
+def ingest(payload, embedder, store=None):
     serializer = SourceImportSerializer(data=payload)
     serializer.is_valid(raise_exception=True)
     source, document = import_dtos(serializer.validated_data)
-    return import_processed(source, document, actor, embedder=embedder, store=store or DjangoDocumentStore())
+    return import_processed(source, document, embedder=embedder, store=store or DjangoDocumentStore())
 
 
-def query(text, actor, embedder, **fields):
+def query(text, user, embedder, **fields):
     s = QuerySerializer(data={'query': text, **fields})
     s.is_valid(raise_exception=True)
-    return search(s.validated_data, actor, collector=components.recall_collector(embedder),
+    return search(s.validated_data, visible_scopes(user), collector=components.recall_collector(embedder),
         pipeline=components.post_recall_pipeline(), reader=DjangoContextReader(),
         embedding_space=embedder.space_id)
 
 
 def test_import_dedupe_and_update_keep_ids_without_job_or_publication(actor, embedder, document_payload):
-    first = ingest(document_payload, actor, embedder)
-    again = ingest(document_payload, actor, embedder)
+    first = ingest(document_payload, embedder)
+    again = ingest(document_payload, embedder)
     assert again.reused and again.context_ids == first.context_ids
     child_id = EvidenceUnit.objects.get(key='battery').pk
     parent = document_payload['document']['contexts'][0]
     parent['body'] = '续航约 9 小时。'
     parent['children'] = [{'key': 'battery', 'body': parent['body']}]
-    updated = ingest(document_payload, actor, embedder)
+    updated = ingest(document_payload, embedder)
     assert not updated.reused and updated.context_ids == first.context_ids
     assert EvidenceUnit.objects.get().pk == child_id
     assert KnowledgeSource.objects.count() == ContextUnit.objects.count() == 1
@@ -71,7 +72,7 @@ def test_vector_recalls_synonym_and_returns_full_parent_with_hit_locations(actor
     draft['warnings'] = ['父段警告']
     draft['children'][0]['metadata'] = {'detail': '大体积子块元数据' * 1000}
     draft['children'][0]['warnings'] = ['子块附加提示']
-    ingest(document_payload, actor, embedder)
+    ingest(document_payload, embedder)
     scope = SearchScope(('public',), embedder.space_id)
     assert KeywordRetriever().search('电池能用多久', scope) == []
     result = query('电池能用多久', actor, embedder, top_k=1)
@@ -90,10 +91,10 @@ def test_vector_recalls_synonym_and_returns_full_parent_with_hit_locations(actor
 
 
 def test_both_routes_apply_visibility_source_and_embedding_space_filters(actor, embedder, document_payload):
-    public = ingest(document_payload, actor, embedder)
+    public = ingest(document_payload, embedder)
     private = deepcopy(document_payload)
     private['source'].update(canonical_locator='private:review', visibility='internal')
-    internal = ingest(private, actor, embedder)
+    internal = ingest(private, embedder)
     reader = get_user_model().objects.create_user('reader')
     assert {c['source']['id'] for c in query('续航', reader, embedder)['contexts']} == {str(public.source_id)}
     assert len(query('续航', actor, embedder)['contexts']) == 2
@@ -103,12 +104,12 @@ def test_both_routes_apply_visibility_source_and_embedding_space_filters(actor, 
 
 
 def test_schema_and_optional_topics_do_not_filter_recall(actor, embedder, document_payload):
-    ingest(document_payload, actor, embedder)
+    ingest(document_payload, embedder)
     before = query('续航', actor, embedder)['contexts'][0]
     document_payload['document']['document_schema'] = 'custom_note'
     for child in document_payload['document']['contexts'][0]['children']:
         child['metadata'] = {'topic': 'unrelated_topic'}
-    ingest(document_payload, actor, embedder)
+    ingest(document_payload, embedder)
     after = query('续航', actor, embedder)['contexts'][0]
     assert after['matches'] == before['matches']
     assert after['text'] == before['text']
@@ -117,19 +118,23 @@ def test_schema_and_optional_topics_do_not_filter_recall(actor, embedder, docume
 def test_embedding_failure_precedes_storage_and_save_failure_rolls_back(actor, embedder, document_payload):
     with patch.object(embedder, 'embed_documents', side_effect=DomainError('EMBEDDING_UNAVAILABLE', '模型不可用', 502)):
         with pytest.raises(DomainError):
-            ingest(document_payload, actor, embedder)
+            ingest(document_payload, embedder)
     assert not KnowledgeSource.objects.exists()
     with patch.object(EvidenceUnit.objects, 'update_or_create', side_effect=RuntimeError('write failure')):
         with pytest.raises(RuntimeError):
-            ingest(document_payload, actor, embedder)
+            ingest(document_payload, embedder)
     assert not KnowledgeSource.objects.exists() and not ContextUnit.objects.exists()
 
 
-def test_permissions_block_import_before_model_call(actor, embedder, document_payload):
+def test_api_import_without_maintain_permission_is_rejected_before_model_call(embedder, document_payload):
+    from rest_framework.authtoken.models import Token
     reader = get_user_model().objects.create_user('reader')
-    with patch.object(embedder, 'embed_documents') as encode:
-        with pytest.raises(DomainError):
-            ingest(document_payload, reader, embedder)
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION='Token ' + Token.objects.create(user=reader).key)
+    with patch('config.components.embedding_provider', return_value=embedder), \
+            patch.object(embedder, 'embed_documents') as encode:
+        response = client.post('/api/v1/sources/', document_payload, format='json')
+    assert response.status_code == 403 and response.data['error']['code'] == 'PERMISSION_DENIED'
     encode.assert_not_called()
 
 
@@ -159,11 +164,11 @@ def test_real_token_api_import_search_errors_and_removed_routes(actor, embedder,
 def test_storage_adapter_can_be_replaced(actor, embedder, document_payload):
     from unittest.mock import Mock
     store = Mock()
-    ingest(document_payload, actor, embedder, store)
-    source, document, vectors, space, supplied_actor = store.save.call_args.args
+    ingest(document_payload, embedder, store)
+    source, document, vectors, space = store.save.call_args.args
     assert source.canonical_locator == 'example:laptop-a'
     assert document.contexts[0].key == 'laptop-a' and len(vectors) == 2
-    assert space == embedder.space_id and supplied_actor == actor
+    assert space == embedder.space_id
 
 
 def test_legacy_data_blocks_destructive_migration(actor, embedder, document_payload):
@@ -171,7 +176,7 @@ def test_legacy_data_blocks_destructive_migration(actor, embedder, document_payl
     from django.apps import apps
     from django.db import connection
     migration = importlib.import_module('catalog.migrations.0003_minimal_rag')
-    ingest(document_payload, actor, embedder)
+    ingest(document_payload, embedder)
     with connection.schema_editor(atomic=False) as editor:
         with pytest.raises(RuntimeError, match='旧版知识库仍有资料'):
             migration.require_empty_legacy_catalog(apps, editor)
@@ -179,13 +184,13 @@ def test_legacy_data_blocks_destructive_migration(actor, embedder, document_payl
 
 
 def test_keyword_ranks_before_limit_and_treats_wildcards_as_text(actor, embedder, document_payload):
-    ingest(document_payload, actor, embedder)
+    ingest(document_payload, embedder)
     higher = deepcopy(document_payload)
     higher['source']['canonical_locator'] = 'example:high'
     parent = higher['document']['contexts'][0]
     parent.update(title='续航', body='续航 model_1 100%charge')
     parent['children'] = [{'key': 'detail', 'body': parent['body']}]
-    result = ingest(higher, actor, embedder)
+    result = ingest(higher, embedder)
     scope = SearchScope(('public',), embedder.space_id)
     best = KeywordRetriever().search('续航', scope, 1)
     assert best[0].context_id == result.context_ids[0]
@@ -194,7 +199,7 @@ def test_keyword_ranks_before_limit_and_treats_wildcards_as_text(actor, embedder
 
 
 def test_bm25_chinese_query_updates_and_filters_corpus_before_scoring(actor, embedder, document_payload):
-    public = ingest(document_payload, actor, embedder)
+    public = ingest(document_payload, embedder)
     scope = SearchScope(('public',), embedder.space_id)
     retriever = KeywordRetriever()
     initial = retriever.search('这台笔记本续航怎么样', scope)
@@ -207,7 +212,7 @@ def test_bm25_chinese_query_updates_and_filters_corpus_before_scoring(actor, emb
     ]:
         payload = deepcopy(document_payload)
         payload['source'].update(canonical_locator=locator, visibility=visibility)
-        added = ingest(payload, actor, embedder)
+        added = ingest(payload, embedder)
         KnowledgeSource.objects.filter(pk=added.source_id).update(embedding_space=space)
     assert retriever.search('这台笔记本续航怎么样', scope) == initial
     assert retriever.search('这台笔记本续航怎么样', SearchScope(('public',), embedder.space_id,
@@ -215,7 +220,7 @@ def test_bm25_chinese_query_updates_and_filters_corpus_before_scoring(actor, emb
     parent = document_payload['document']['contexts'][0]
     parent.update(title='维修资料', body='风扇噪音。')
     parent['children'] = [{'key': 'fan', 'body': parent['body']}]
-    ingest(document_payload, actor, embedder)
+    ingest(document_payload, embedder)
     public_scope = SearchScope(('public',), embedder.space_id, source_ids=(public.source_id,))
     assert retriever.search('续航', public_scope) == []
     assert len(retriever.search('风扇噪音', public_scope)) == 1
@@ -225,7 +230,7 @@ def test_bm25_chinese_query_updates_and_filters_corpus_before_scoring(actor, emb
 
 def test_independent_route_thresholds_return_keyword_only_or_no_result(
         actor, embedder, document_payload, settings):
-    ingest(document_payload, actor, embedder)
+    ingest(document_payload, embedder)
     settings.RETRIEVAL_MIN_COSINE = .5
     with patch.object(embedder, 'embed_query', return_value=[-1, 0]):
         result = query('续航', actor, embedder)
@@ -245,7 +250,7 @@ def test_multiple_hits_count_top_k_by_parent_and_keep_complete_context(actor, em
     second = deepcopy(document['contexts'][0])
     second.update(key='laptop-b', title='笔记本 B')
     document['contexts'].append(second)
-    imported = ingest(document_payload, actor, embedder)
+    imported = ingest(document_payload, embedder)
     result = query('续航', actor, embedder, top_k=2)
     assert {row['context_id'] for row in result['contexts']} == set(map(str, imported.context_ids))
     assert len(query('续航', actor, embedder, top_k=1)['contexts']) == 1
@@ -261,7 +266,7 @@ def test_tied_candidates_keep_order_across_reimports(actor, embedder, document_p
     for _ in range(3):
         # 删除后重新导入，子块获得新的随机 id；两个父段正文相同，两路分数都并列。
         KnowledgeSource.objects.all().delete()
-        ingest(deepcopy(document_payload), actor, embedder)
+        ingest(deepcopy(document_payload), embedder)
         result = query('续航', actor, embedder, top_k=2)
         keys = ContextUnit.objects.in_bulk([row['context_id'] for row in result['contexts']])
         assert [keys[UUID(row['context_id'])].key for row in result['contexts']] == ['laptop-0', 'laptop-a']
@@ -278,7 +283,7 @@ def test_api_uses_injected_post_recall_steps_and_exposes_original_route_scores(
         def process(self, request, batch):
             return EvidenceBatch([])
 
-    ingest(document_payload, actor, embedder)
+    ingest(document_payload, embedder)
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION='Token ' + Token.objects.create(user=actor).key)
     with patch('config.components.embedding_provider', return_value=embedder):

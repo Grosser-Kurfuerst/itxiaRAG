@@ -305,16 +305,14 @@ def test_snapshot_metadata_errors_are_clear(snapshot, filename, content):
     assert error.value.code == "INVALID_SNAPSHOT"
 
 
-def test_command_dry_run_needs_no_account_database_embedding_or_store(snapshot):
+def test_command_dry_run_needs_no_embedding_or_store(snapshot):
     directory, path = snapshot
     output = StringIO()
     with patch("config.components.embedding_provider") as embedder, \
-            patch("config.components.document_store") as store, \
-            patch("sources.commands.get_user_model") as users:
+            patch("config.components.document_store") as store:
         call_command("import_yuque", manifest=str(path), snapshot=str(directory), dry_run=True, stdout=output)
     embedder.assert_not_called()
     store.assert_not_called()
-    users.assert_not_called()
     assert "preprocessed=3" in output.getvalue() and "failed=0" in output.getvalue()
     assert "tutorial(manifest)" in output.getvalue() and "未接入" in output.getvalue()
     assert "合成社内教程" not in output.getvalue()
@@ -330,70 +328,43 @@ def test_command_only_reads_selected_books_and_only_reports_selected_docs(snapsh
     assert "warning:" not in output.getvalue() and "textbook/" not in output.getvalue()
 
 
-def test_command_dry_run_with_account_enforces_internal_permissions_and_finishes_batch(snapshot):
-    directory, path = snapshot
-    actor = Mock(is_authenticated=True, is_active=True)
-    actor.has_perm.side_effect = lambda permission: permission == "catalog.maintain_source"
-    output = StringIO()
-    with patch("sources.commands.get_user_model") as users:
-        users.return_value.objects.get.return_value = actor
-        with pytest.raises(CommandError, match="1 篇失败"):
-            call_command("import_yuque", manifest=str(path), snapshot=str(directory), dry_run=True,
-                         username="maintainer", stdout=output)
-    assert "NOT_FOUND" in output.getvalue() and "preprocessed=2" in output.getvalue()
-
-
 def test_command_formal_import_uses_raw_main_chain_once_per_doc_and_reports_counts(snapshot, embedder):
     directory, path = snapshot
-    actor = Mock(is_authenticated=True, is_active=True, has_perm=Mock(return_value=True))
     registry = components.preprocessors()
     store = Mock()
     store.save.side_effect = lambda *args: ImportResult(uuid4(), [uuid4()], False)
     output = StringIO()
-    with patch("sources.commands.get_user_model") as users, \
-            patch("config.components.embedding_provider", return_value=embedder), \
+    with patch("config.components.embedding_provider", return_value=embedder), \
             patch("config.components.document_store", return_value=store), \
             patch("config.components.preprocessors", return_value=registry), \
             patch.object(registry, "process", wraps=registry.process) as process, \
             patch.object(embedder, "embed_documents", wraps=embedder.embed_documents) as embed:
-        users.return_value.objects.get.return_value = actor
-        call_command("import_yuque", manifest=str(path), snapshot=str(directory), username="maintainer", stdout=output)
+        call_command("import_yuque", manifest=str(path), snapshot=str(directory), stdout=output)
     assert process.call_count == embed.call_count == store.save.call_count == 3
     assert "imported=3" in output.getvalue() and "preprocessed=0" in output.getvalue()
-    source, document, vectors, space, saved_actor = store.save.call_args.args
+    source, document, vectors, space = store.save.call_args.args
     assert source.canonical_locator == "doc:20" and source.visibility == "internal"
     assert document.document_schema == "tutorial" and document.title == "社内安装"
     assert len(vectors) == sum(len(parent.children) for parent in document.contexts)
-    assert space == embedder.space_id and saved_actor is actor
+    assert space == embedder.space_id
 
 
-@pytest.mark.parametrize("failure", ["permission", "preprocessing"])
-def test_command_formal_import_failure_happens_before_embedding_or_save(snapshot, failure):
+def test_command_formal_import_failure_happens_before_embedding_or_save(snapshot):
     directory, path = snapshot
-    actor = Mock(is_authenticated=True, is_active=True)
-    actor.has_perm.side_effect = lambda permission: (
-        permission == "catalog.maintain_source" or failure != "permission"
-    )
     registry = Mock()
     message = "合成失败消息：" + "保留完整消息" * 20
     registry.process.side_effect = DomainError("SYNTHETIC_FAILURE", message)
     output = StringIO()
-    with patch("sources.commands.get_user_model") as users, \
-            patch("config.components.preprocessors", return_value=registry), \
+    with patch("config.components.preprocessors", return_value=registry), \
             patch("config.components.embedding_provider") as embedder, \
             patch("config.components.document_store") as store:
-        users.return_value.objects.get.return_value = actor
         with pytest.raises(CommandError, match="1 篇失败"):
-            call_command("import_yuque", manifest=str(path), snapshot=str(directory), username="maintainer",
+            call_command("import_yuque", manifest=str(path), snapshot=str(directory),
                          only=["textbook/install"], stdout=output)
     embedder.return_value.embed_documents.assert_not_called()
     store.return_value.save.assert_not_called()
-    if failure == "permission":
-        registry.process.assert_not_called()
-        assert "NOT_FOUND: 对象不存在" in output.getvalue()
-    else:
-        registry.process.assert_called_once()
-        assert f"SYNTHETIC_FAILURE: {message}" in output.getvalue()
+    registry.process.assert_called_once()
+    assert f"SYNTHETIC_FAILURE: {message}" in output.getvalue()
 
 
 def test_command_bad_manifest_fails_before_listing_or_submitting(snapshot):
@@ -402,30 +373,24 @@ def test_command_bad_manifest_fails_before_listing_or_submitting(snapshot):
     with patch.object(YuqueSnapshotClient, "list_docs") as listing, \
             patch("config.components.embedding_provider") as embedder:
         with pytest.raises(CommandError, match="未知字段"):
-            call_command("import_yuque", manifest=str(path), snapshot=str(directory), username="maintainer")
+            call_command("import_yuque", manifest=str(path), snapshot=str(directory))
     listing.assert_not_called()
     embedder.assert_not_called()
 
 
-def test_command_missing_username_and_invalid_only_fail_at_startup(snapshot):
+def test_command_invalid_only_fails_at_startup(snapshot):
     directory, path = snapshot
-    for options, message in [
-        ({"snapshot": str(directory)}, "--username"),
-        ({"snapshot": str(directory), "dry_run": True, "only": ["unknown/doc"]}, "--only"),
-    ]:
-        with pytest.raises(CommandError, match=message):
-            call_command("import_yuque", manifest=str(path), **options)
+    with pytest.raises(CommandError, match="--only"):
+        call_command("import_yuque", manifest=str(path), snapshot=str(directory), dry_run=True, only=["unknown/doc"])
 
 
-def test_command_missing_embedding_configuration_fails_before_account_lookup_or_listing(snapshot, settings):
+def test_command_missing_embedding_configuration_fails_before_listing(snapshot, settings):
     directory, path = snapshot
     settings.EMBEDDING = {"base_url": "", "model": "", "dimensions": 0, "revision": ""}
-    with patch.object(YuqueSnapshotClient, "list_docs") as listing, \
-            patch("sources.commands.get_user_model") as users:
+    with patch.object(YuqueSnapshotClient, "list_docs") as listing:
         with pytest.raises(CommandError, match="EMBEDDING_NOT_CONFIGURED"):
-            call_command("import_yuque", manifest=str(path), snapshot=str(directory), username="maintainer")
+            call_command("import_yuque", manifest=str(path), snapshot=str(directory))
     listing.assert_not_called()
-    users.assert_not_called()
 
 
 def test_snapshot_fetch_failures_are_reported_even_for_unselected_unimplemented_categories(snapshot):

@@ -103,16 +103,14 @@ def test_missing_account_directory_fails_listing_and_missing_page_fails_one_fetc
     assert error.value.code == "CAPTURE_READ_FAILED"
 
 
-def test_command_dry_run_uses_manifest_metadata_and_needs_no_account_or_models(capture):
+def test_command_dry_run_uses_manifest_metadata_and_needs_no_models(capture):
     root, manifest = capture
     output = StringIO()
     with patch("config.components.embedding_provider") as embedder, \
-            patch("config.components.document_store") as store, \
-            patch("sources.commands.get_user_model") as users:
+            patch("config.components.document_store") as store:
         call_command("import_wechat", manifest=str(manifest), capture=str(root), dry_run=True, stdout=output)
     embedder.assert_not_called()
     store.assert_not_called()
-    users.assert_not_called()
     text = output.getvalue()
     assert "product_review(manifest)" in text and "purchase_guide(manifest)" in text
     assert "reprint" in text and "请在清单中登记类别或 skip" in text

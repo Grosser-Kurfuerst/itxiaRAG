@@ -7,7 +7,6 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core.management import call_command
-from django.core.management.base import CommandError
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
@@ -224,18 +223,11 @@ category = "tutorial"
     return manifest, snapshot
 
 
-def command_account(*permissions):
-    user = get_user_model().objects.create_user("command-" + "-".join(permissions))
-    user.user_permissions.set(Permission.objects.filter(content_type__app_label="catalog", codename__in=permissions))
-    return user
-
-
 def test_snapshot_command_imports_only_tutorials_and_reimport_reuses_all_sources(tmp_path, embedder):
     manifest, snapshot = command_snapshot(tmp_path)
-    actor = command_account("maintain_source", "read_internal")
     first, repeated = StringIO(), StringIO()
     with patch("config.components.embedding_provider", return_value=embedder):
-        call_command("import_yuque", manifest=str(manifest), snapshot=str(snapshot), username=actor.username, stdout=first)
+        call_command("import_yuque", manifest=str(manifest), snapshot=str(snapshot), stdout=first)
         sources = list(KnowledgeSource.objects.order_by("canonical_locator"))
         assert len(sources) == 2 and all(source.source_type == "yuque" for source in sources)
         assert {source.canonical_locator for source in sources} == {"doc:1", "doc:100"}
@@ -244,30 +236,9 @@ def test_snapshot_command_imports_only_tutorials_and_reimport_reuses_all_sources
         assert {source.visibility for source in sources} == {"public", "internal"}
         assert all(source.document_schema == "tutorial" for source in sources)
         ids = list(EvidenceUnit.objects.order_by("id").values_list("id", flat=True))
-        call_command("import_yuque", manifest=str(manifest), snapshot=str(snapshot), username=actor.username, stdout=repeated)
+        call_command("import_yuque", manifest=str(manifest), snapshot=str(snapshot), stdout=repeated)
     assert "imported=2" in first.getvalue() and "reused=2" in repeated.getvalue()
     assert "skipped=3" in first.getvalue() and "unregistered=1" in first.getvalue()
     assert "case(path_rule)" in first.getvalue() and "未接入" in first.getvalue()
     assert list(EvidenceUnit.objects.order_by("id").values_list("id", flat=True)) == ids
 
-
-def test_snapshot_command_enforces_internal_visibility_and_failed_batch_exit(tmp_path, embedder):
-    manifest, snapshot = command_snapshot(tmp_path)
-    actor = command_account("maintain_source")
-    output = StringIO()
-    with patch("config.components.embedding_provider", return_value=embedder):
-        with pytest.raises(CommandError, match="1 篇失败"):
-            call_command("import_yuque", manifest=str(manifest), snapshot=str(snapshot), username=actor.username, stdout=output)
-    assert "NOT_FOUND" in output.getvalue() and "imported=1" in output.getvalue()
-    assert list(KnowledgeSource.objects.values_list("visibility", flat=True)) == ["public"]
-
-
-def test_snapshot_command_rejects_accounts_without_maintain_source_before_import(tmp_path, embedder):
-    manifest, snapshot = command_snapshot(tmp_path)
-    actor = command_account()
-    with patch("config.components.embedding_provider", return_value=embedder), \
-            patch("config.components.preprocessors") as registry:
-        with pytest.raises(CommandError, match="PERMISSION_DENIED"):
-            call_command("import_yuque", manifest=str(manifest), snapshot=str(snapshot), username=actor.username)
-    registry.assert_not_called()
-    assert not KnowledgeSource.objects.exists()

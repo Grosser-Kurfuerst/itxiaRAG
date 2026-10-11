@@ -1,12 +1,11 @@
-from catalog.policies import visible_scopes
 from contracts.types import ContextReader, RecallCollector, SearchPipeline, SearchRequest, SearchScope
 
 
-def search(data, actor, *, collector: RecallCollector, pipeline: SearchPipeline, reader: ContextReader,
+def search(data, visibilities, *, collector: RecallCollector, pipeline: SearchPipeline, reader: ContextReader,
            embedding_space: str, candidate_limit=100):
     filters = data.get("filters", {})
     scope = SearchScope(
-        tuple(visible_scopes(actor)), embedding_space,
+        tuple(visibilities), embedding_space,
         tuple(filters["source_ids"]) if "source_ids" in filters else None,
     )
     request = SearchRequest(data["query"], scope, data.get("top_k", 5))

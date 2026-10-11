@@ -3,8 +3,6 @@ from io import StringIO
 from unittest.mock import patch
 
 import pytest
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
 from django.core.management import call_command
 
 from catalog.models import EvidenceUnit, KnowledgeSource
@@ -21,15 +19,11 @@ def capture(tmp_path):
 
 def test_capture_command_imports_reviews_and_guides_then_reimport_reuses(capture, embedder):
     root, manifest = capture
-    actor = get_user_model().objects.create_user("wechat-maintainer")
-    actor.user_permissions.set(Permission.objects.filter(
-        content_type__app_label="catalog", codename__in=["maintain_source", "read_internal"]))
     first, repeated = StringIO(), StringIO()
     with patch("config.components.embedding_provider", return_value=embedder):
-        call_command("import_wechat", manifest=str(manifest), capture=str(root), username=actor.username, stdout=first)
+        call_command("import_wechat", manifest=str(manifest), capture=str(root), stdout=first)
         ids = list(EvidenceUnit.objects.order_by("id").values_list("id", flat=True))
-        call_command("import_wechat", manifest=str(manifest), capture=str(root), username=actor.username,
-                     stdout=repeated)
+        call_command("import_wechat", manifest=str(manifest), capture=str(root), stdout=repeated)
     assert "imported=2" in first.getvalue() and "reused=2" in repeated.getvalue()
     assert "skipped=1" in first.getvalue() and "unregistered=1" in first.getvalue()
     assert list(EvidenceUnit.objects.order_by("id").values_list("id", flat=True)) == ids

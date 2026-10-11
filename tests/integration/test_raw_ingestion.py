@@ -139,15 +139,12 @@ def test_raw_table_split_stores_header_in_retrieval_text_but_not_in_body(embedde
     assert embed.call_args.args[0] == [child.retrieval_text for child in children]
 
 
-def test_raw_api_checks_authentication_permissions_and_visibility_before_processing():
+def test_raw_api_checks_authentication_and_permissions_before_processing():
     assert APIClient().post("/api/v1/sources/raw/", {}, format="json").status_code == 401
     reader = client_for()
-    maintainer = client_for("maintain_source")
     data = request_payload()
     with patch("config.components.preprocessors") as registry, patch("config.components.embedding_provider") as provider:
         assert reader.post("/api/v1/sources/raw/", data, format="json").status_code == 403
-        data["source"]["visibility"] = "internal"
-        assert maintainer.post("/api/v1/sources/raw/", data, format="json").status_code == 404
         # Registry 的构造可发生，处理不得执行。
         registry.return_value.process.assert_not_called()
         provider.assert_not_called()

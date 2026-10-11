@@ -9,8 +9,6 @@ from unittest.mock import patch
 from urllib.parse import parse_qs, quote, urlsplit
 
 import pytest
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
@@ -251,17 +249,13 @@ def test_conflicting_snapshot_modes_fail_before_requests(web_command, tmp_path):
 @pytest.mark.django_db
 def test_web_formal_import_and_reimport_use_main_chain_and_reuse_sources(web_command, embedder):
     manifest, _ = web_command
-    actor = get_user_model().objects.create_user("yuque-web-maintainer")
-    actor.user_permissions.set(Permission.objects.filter(
-        content_type__app_label="catalog", codename__in=["maintain_source", "read_internal"],
-    ))
     first, repeated = StringIO(), StringIO()
     with patch("config.components.embedding_provider", return_value=embedder):
-        call_command("import_yuque", manifest=str(manifest), username=actor.username, stdout=first)
+        call_command("import_yuque", manifest=str(manifest), stdout=first)
         sources = list(KnowledgeSource.objects.order_by("canonical_locator"))
         assert {source.canonical_locator for source in sources} == {"doc:1", "doc:2", "doc:21"}
         assert all(source.source_type == "yuque" and source.document_schema == "tutorial" for source in sources)
         assert KnowledgeSource.objects.get(canonical_locator="doc:1").metadata["collection_path"] == ["教程", "父文档"]
-        call_command("import_yuque", manifest=str(manifest), username=actor.username, stdout=repeated)
+        call_command("import_yuque", manifest=str(manifest), stdout=repeated)
     assert "imported=3" in first.getvalue() and "reused=3" in repeated.getvalue()
     assert KnowledgeSource.objects.count() == 3

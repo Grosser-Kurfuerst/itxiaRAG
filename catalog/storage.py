@@ -6,8 +6,6 @@ import json
 from django.db import transaction
 
 from catalog.models import ContextUnit, EvidenceUnit, KnowledgeSource
-from catalog.policies import require_permission, visible_scopes
-from contracts.errors import DomainError
 from contracts.types import ImportResult, evidence_input
 from embeddings.validation import validate_vectors
 
@@ -20,10 +18,7 @@ def content_hash(source, document):
 
 class DjangoDocumentStore:
     @transaction.atomic
-    def save(self, source_spec, document, vectors, embedding_space, actor):
-        require_permission(actor, "maintain_source")
-        if source_spec.visibility not in visible_scopes(actor):
-            raise DomainError("NOT_FOUND", "对象不存在", 404)
+    def save(self, source_spec, document, vectors, embedding_space):
         validate_vectors(vectors, sum(len(c.children) for c in document.contexts))
         digest = content_hash(source_spec, document)
         fields = {key: value for key, value in asdict(document).items() if key != "contexts"}
@@ -33,8 +28,6 @@ class DjangoDocumentStore:
             source_type=source_spec.source_type, canonical_locator=source_spec.canonical_locator,
             defaults=fields)
         source = KnowledgeSource.objects.select_for_update().get(pk=source.pk)
-        if source.visibility not in visible_scopes(actor):
-            raise DomainError("NOT_FOUND", "对象不存在", 404)
         if source.content_hash == digest and source.embedding_space == embedding_space and source.contexts.exists():
             return ImportResult(source.pk, list(source.contexts.values_list("id", flat=True)), True)
         for name, value in fields.items():

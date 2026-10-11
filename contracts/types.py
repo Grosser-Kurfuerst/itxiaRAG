@@ -108,7 +108,7 @@ class ImportResult:
 
 class DocumentStore(Protocol):
     def save(self, source: SourceSpec, document: ProcessedDocument,
-             vectors: list[list[float]], embedding_space: str, actor: object) -> ImportResult: ...
+             vectors: list[list[float]], embedding_space: str) -> ImportResult: ...
 
 
 class EmbeddingProvider(Protocol):

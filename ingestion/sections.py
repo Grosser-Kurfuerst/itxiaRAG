@@ -117,11 +117,14 @@ def plan_parents(root: SectionNode, profile: SectionProfile, document_title: str
 
     # 只合并同一上级下连续的父段，身份由接收方保留：被并入的是没有标题的文档导语，
     # 或几乎没有正文的空节点、占位，不会让独立章节挂在相邻章节的标题下。
+    # 是否过短按合并前父段自身的正文判断，接收了导语的章节不会因此被当成导语再次并走。
+    small = {section.key for section in planned if _content_size(section.blocks) < (
+        profile.min_parent_chars if section.blocks[0].kind == "heading" else profile.min_intro_chars
+    )}
     index = 0
     while index < len(planned):
         section = planned[index]
-        titled = section.blocks[0].kind == "heading"
-        if _content_size(section.blocks) < (profile.min_parent_chars if titled else profile.min_intro_chars):
+        if section.key in small:
             if index > 0 and planned[index - 1].parent is section.parent:
                 planned[index - 1].blocks.extend(section.blocks)
                 planned.pop(index)

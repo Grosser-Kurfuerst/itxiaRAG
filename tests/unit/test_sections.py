@@ -89,6 +89,17 @@ def test_short_parents_do_not_merge_across_different_ancestors():
     assert single.title == "唯一节"
 
 
+def test_short_section_receiving_intro_keeps_its_title():
+    text = "供稿：某组\n\n## 背景\n\n" + "背景知识说明。" * 8 + "\n\n## 正文\n\n" + "正文内容。" * 40
+    parents = build(text, profile=TUTORIAL)
+    assert [parent.title for parent in parents] == ["背景", "正文"]
+    assert parents[0].body.startswith("供稿：某组\n\n背景")
+
+    # 接收导语的若是占位小节，二者一起并入后续章节。
+    text = "供稿：某组\n\n## 目录\n\n见下文。\n\n## 正文\n\n" + "正文内容。" * 40
+    assert [parent.title for parent in build(text, profile=TUTORIAL)] == ["正文"]
+
+
 @pytest.mark.parametrize("profile", [TUTORIAL, KNOWLEDGE])
 def test_default_profiles_keep_short_titled_siblings_and_merge_only_intro_and_placeholders(profile):
     text = ("本文按部件介绍电脑硬件。\n\n## 硬盘\n\n" + "硬盘保存系统与数据。" * 30

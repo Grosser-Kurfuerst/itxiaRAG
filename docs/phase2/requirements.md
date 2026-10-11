@@ -124,5 +124,5 @@
 - [召回改进方案](retrieval-improvement-plan.md)：F2-04～F2-11 的方案细节、风险与采纳条件。
 - [召回改进记录](retrieval-improvement-log.md)：每项改进的实验结果与是否保留。
 - [召回效果评测](../phase1/yuque-ingestion/retrieval-evaluation.md)：查询集、指标、基线结果与失败分类。
-- [语雀文档导入方案](../phase1/yuque-ingestion/overview.md)：排障、案例类别的现状与导入流程；接入设计见[排障与案例方案](../phase1/yuque-ingestion/troubleshooting-and-case-design.md)。
+- [语雀文档导入方案](../phase1/yuque-ingestion/overview.md)：排障、案例类别的现状与导入流程；接入设计见[排障与案例方案](troubleshooting-and-case-design.md)。
 - [文档预处理](../phase1/preprocessing.md)：新增流水线的契约与扩展方式。

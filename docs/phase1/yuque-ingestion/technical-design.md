@@ -567,8 +567,8 @@ summary: imported=… reused=… skipped=… unregistered=… failed=…
 
 | 场景 | 需要做的 |
 | --- | --- |
-| 接入排障指南 | 沿用教程参数的 SectionProfile（内容类型改为 `troubleshooting`），不新增增强步骤；注册 `troubleshooting@1` 并加入映射表，见[排障与案例方案](troubleshooting-and-case-design.md) |
-| 接入单案例 | 从 ToolCardStrategy 提出整篇一个父段的 WholeDocumentStrategy，注册 `experience_case@2` 并加入映射表，见[排障与案例方案](troubleshooting-and-case-design.md) |
+| 接入排障指南 | 沿用教程参数的 SectionProfile（内容类型改为 `troubleshooting`），不新增增强步骤；注册 `troubleshooting@1` 并加入映射表，见[排障与案例方案](../../phase2/troubleshooting-and-case-design.md) |
+| 接入单案例 | 从 ToolCardStrategy 提出整篇一个父段的 WholeDocumentStrategy，注册 `experience_case@2` 并加入映射表，见[排障与案例方案](../../phase2/troubleshooting-and-case-design.md) |
 | 调整某类参数 | 注册新版本（如 `tutorial@2`），映射改指向新版本；旧版本保留便于对比 |
 | 其他平台的教程 | 直接使用 `tutorial@1`，配合 `text/html` 或 `text/markdown` |
 | 新平台 | 实现 SourceConnector、编写清单与继承 SourceImportCommand 的薄命令；有自己的方言时新增方言解析器，见[来源连接器改造方案](../source-connector-design.md) |

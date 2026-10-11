@@ -1,6 +1,6 @@
 # 后续批次技术方案：排障指南与单案例记录
 
-本文给出语雀排障指南（`troubleshooting`，10 篇）与单案例记录（`case`，9 篇）的接入方案，对应[二期需求](../../phase2/requirements.md) F2-12、F2-13，评测对应 F2-14。逐篇名单见[需求分析附录](requirements-analysis.md#附录后续批次与不导入清单)。解析、章节树、父段规划和子块生成沿用[第一批技术方案](technical-design.md)第 4、5 节，本文只写差异。**状态：方案已确定，未实现。**
+本文给出语雀排障指南（`troubleshooting`，10 篇）与单案例记录（`case`，9 篇）的接入方案，对应[二期需求](requirements.md) F2-12、F2-13，评测对应 F2-14。逐篇名单见[需求分析附录](../phase1/yuque-ingestion/requirements-analysis.md#附录后续批次与不导入清单)。解析、章节树、父段规划和子块生成沿用[第一批技术方案](../phase1/yuque-ingestion/technical-design.md)第 4、5 节，本文只写差异。**状态：方案已确定，未实现。**
 
 ## 1. 结论
 
@@ -37,7 +37,7 @@
 | ggwbb1 | 一类 U 盘病毒的处理方法 | 2424 | 9 |
 | rzqnsh | Python import 不是有效的 Win32 程序 | 3746 | 5 |
 
-- 父段标题为文档标题（清洗后），多为症状描述；子块检索文本由父段标题和子块正文组成，见 [evidence_input](../../../contracts/types.py)，后段子块也带症状。
+- 父段标题为文档标题（清洗后），多为症状描述；子块检索文本由父段标题和子块正文组成，见 [evidence_input](../../contracts/types.py)，后段子块也带症状。
 - `rzqnsh` 大半是报错 traceback，拆成两个约 1500 字的子块；报错原文正好能被关键词检索命中，保留。
 - 不足 120 字的短子块并入前一个子块，例如 `vegchy` 的“解决方案”并入“问题现象”子块。父段是整篇，返回内容不受影响。
 - 9 篇写于 2019～2023 年，需要来源日期提示。
@@ -77,10 +77,10 @@
 
 ### 3.1 单案例：`experience_case@2`
 
-- 把 [ToolCardStrategy](../../../ingestion/sections.py) 中“全部内容作为虚拟根导语”的逻辑提为 `WholeDocumentStrategy(SectionedDocumentStrategy)`：`_tree` 返回 `SectionNode(None, 0, blocks)`，规划结果为一个父段，标题与 `section_path` 为文档标题，图片占位过滤、子块生成与定位沿用基类。
+- 把 [ToolCardStrategy](../../ingestion/sections.py) 中“全部内容作为虚拟根导语”的逻辑提为 `WholeDocumentStrategy(SectionedDocumentStrategy)`：`_tree` 返回 `SectionNode(None, 0, blocks)`，规划结果为一个父段，标题与 `section_path` 为文档标题，图片占位过滤、子块生成与定位沿用基类。
 - `ToolCardStrategy` 改为继承 `WholeDocumentStrategy`，只在 `tool_collection` 时改用 `build_tree`，行为不变。
 - 新增参数 `CASE = SectionProfile("experience_case", 0, 0, 500, 120)`：父段上限与合并阈值不起作用；子块目标 500 字、短子块阈值 120 字，与教程相同。
-- [SourceDateNoticeStep](../../../ingestion/enrichment.py) 的文案参数化，默认值保持工具条目现有文案；案例使用“本案例最后更新于 {日期}，系统版本、软件界面与处理办法可能已变化”。
+- [SourceDateNoticeStep](../../ingestion/enrichment.py) 的文案参数化，默认值保持工具条目现有文案；案例使用“本案例最后更新于 {日期}，系统版本、软件界面与处理办法可能已变化”。
 - 流水线：
 
   ```text
@@ -103,7 +103,7 @@
 
 ### 3.3 组合根与类别映射
 
-[config/components.py](../../../config/components.py)：
+[config/components.py](../../config/components.py)：
 
 ```python
 YUQUE_CATEGORY_PIPELINES = {
@@ -148,7 +148,7 @@ YUQUE_CATEGORY_PIPELINES = {
 
 1. 案例流水线：WholeDocumentStrategy、CASE、日期提示文案、`experience_case@2` 与映射，补测试并同步文档。
 2. 排障流水线：TROUBLESHOOTING、`troubleshooting@1` 与映射，补测试并同步文档。
-3. 重新保存快照、试运行、正式导入并抽查，结果写入[概览](overview.md)。
+3. 重新保存快照、试运行、正式导入并抽查，结果写入[概览](../phase1/yuque-ingestion/overview.md)。
 4. F2-14 维修类评测。
 
 每步完成后单独提交。

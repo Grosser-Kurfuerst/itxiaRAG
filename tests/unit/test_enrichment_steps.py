@@ -17,7 +17,7 @@ from ingestion.sections import SectionedDocumentStrategy, TUTORIAL
 def structured(text, **metadata):
     raw = RawDocument(text.encode(), "text/markdown", {"title": "教程", **metadata})
     context = ParseStep(MarkdownParser()).process(PreprocessContext(raw))
-    return StructureStep(SectionedDocumentStrategy(replace(TUTORIAL, min_parent_chars=0))).process(context)
+    return StructureStep(SectionedDocumentStrategy(replace(TUTORIAL, min_parent_chars=0, min_intro_chars=0))).process(context)
 
 
 def test_callouts_before_first_heading_go_to_document_and_others_to_parent():

@@ -1,6 +1,6 @@
 # 后续批次技术方案：排障指南与单案例记录
 
-本文给出语雀排障指南（`troubleshooting`，10 篇）与单案例记录（`case`，9 篇）的接入方案，对应[二期需求](requirements.md) F2-12、F2-13，评测对应 F2-14。逐篇名单见[需求分析附录](../phase1/yuque-ingestion/requirements-analysis.md#附录后续批次与不导入清单)。解析、章节树、父段规划和子块生成沿用[第一批技术方案](../phase1/yuque-ingestion/technical-design.md)第 4、5 节，本文只写差异。**状态：两条流水线已实现并接入语雀导入（2026-10-11），真实样本验收待补。**
+本文给出语雀排障指南（`troubleshooting`，10 篇）与单案例记录（`case`，9 篇）的接入方案，对应[二期需求](requirements.md) F2-12、F2-13，评测对应 F2-14。逐篇名单见[需求分析附录](../phase1/yuque-ingestion/requirements-analysis.md#附录后续批次与不导入清单)。解析、章节树、父段规划和子块生成沿用[第一批技术方案](../phase1/yuque-ingestion/technical-design.md)第 4、5 节，本文只写差异。**状态：已实现，19 篇已导入开发环境并完成抽查（2026-10-11），结果见第 8 节。**
 
 ## 1. 结论
 
@@ -159,3 +159,48 @@ YUQUE_CATEGORY_PIPELINES = {
 - `nju_wlan_qa_pro_plus_max_ultra`“零”节约 3000 字、含 5 个问答，父段偏长。
 - 正文加粗警告不进入 warnings 字段；前置知识不随后续步骤返回。
 - 新语料会与现有校园网、激活等查询的答案竞争，可能改变 T、K 类名次，需按第 5 节评测确认。
+
+## 8. 实施与验收结果
+
+### 8.1 实现
+
+提交 `a451c24` 按第 3 节实现：
+
+- [WholeDocumentStrategy](../../ingestion/sections.py)、`CASE`、`TROUBLESHOOTING`，ToolCardStrategy 改为继承 WholeDocumentStrategy；
+- [SourceDateNoticeStep](../../ingestion/enrichment.py) 文案模板可配置；
+- [组合根](../../config/components.py) 注册 `troubleshooting@1`、`experience_case@2` 并加入语雀类别映射。
+
+全量测试 509 条通过。
+
+### 8.2 试运行与正式导入（2026-10-11）
+
+1. 重新保存快照：`import_yuque --save-snapshot --dry-run` 得到 preprocessed=93、skipped=26、unregistered=0、failed=0，共保存 93 篇正文。19 篇正文与 2026-10-08 分析快照逐字节一致。
+2. 用该快照在开发环境正式导入：imported=19、reused=74、failed=0。第一批 74 篇全部 `reused`，说明 ToolCardStrategy 重构与新映射不影响已有文档。立即重跑，结果为 reused=93。
+3. 库中新增规模与第 2 节的试切结果一致：
+
+   | schema | 来源 | 父段 | 子块 |
+   | --- | --- | --- | --- |
+   | `troubleshooting@1` | 10 | 49 | 105 |
+   | `experience_case@2` | 9 | 9 | 34 |
+
+   语雀来源合计 93 篇：父段 364、子块 864。
+
+### 8.3 抽查
+
+| 文档 | 结果 |
+| --- | --- |
+| `windows_problem_cheatsheet` | 共 7 个父段：导读和第 0～5 章各 1 个。每章的“工作环境恢复耗时／问题恶化可能性／问题分析维修耗时”都与本章步骤在同一父段。“4.3 *收集蓝屏信息”与“问题恶化可能性：蓝屏循环，但可逆”同在第 4 章（2322 字）。第 5 章的加粗“警告：重置过程会清除部分数据”留在正文中，不进 warnings，与第 1 节的决定一致 |
+| `nju_wlan_qa_pro_plus_max_ultra` | 6 个父段。“零”节 3111 字、7 个子块，带该节 `:::warning`；“三、问一问信息化中心”只有 87 字，但有标题，单独成父段 |
+| `fqhg6o` | 整篇 1 个父段（1284 字）、5 个子块：导语与“背景补充：UWP”合为 1 个；“正文”拆为 2 个，短的 Solution A 并入后一个；Solution B、C 各 1 个。文档警告为截图提示和“本案例最后更新于 2019-10-14…” |
+| `rzqnsh` | 整篇 1 个父段（3748 字）、5 个子块。traceback 拆成两个约 1500 字的子块，问题原因、解决方法和参考资料各成一个子块 |
+
+用无权限账号和真实 Embedding 检索抽查。这些查询是对照原文写的，只用来验证接入，不计入评测：
+
+| 查询 | 结果 |
+| --- | --- |
+| 电脑蓝屏怎么用WinDbg分析 | 第 1 为 cheatsheet > 4、WinDbg定位蓝屏问题，前 5 中另有 3 个 cheatsheet 章节 |
+| 爱剪辑导致浏览器没有声音 | 第 1 为 UWP应用报错0x8007007e问题详解（案例） |
+| Python import 提示不是有效的Win32程序 | 第 1 为对应案例 |
+| 校园网连上了但是打不开网页 | 前 5 全部为排障指南，第 1、2 为南京大学校园网使用异常修复指南 |
+| U盘里文件变成快捷方式 | 第 2 为一类U盘病毒的处理方法，第 1 为知识 FAQ 的输入／输出章节 |
+| 安装Windows时提示缺少介质驱动程序 | 第 1 为对应案例 |

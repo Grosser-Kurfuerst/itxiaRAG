@@ -1,6 +1,6 @@
 # 第二阶段需求
 
-状态：F2-02、F2-04、F2-05、F2-06 已实现，M2 完成（进展见[召回改进记录](retrieval-improvement-log.md)），其余未实现。2026-10-10 依据[总体需求](../requirements.md)第 5 节（P1）和[召回效果评测](../phase1/yuque-ingestion/retrieval-evaluation.md)第 9 节整理。
+状态：F2-02、F2-04、F2-05、F2-06 已实现，M2 完成（进展见[召回改进记录](retrieval-improvement-log.md)）；F2-12、F2-13 已实现并导入开发环境（见[排障与案例方案](troubleshooting-and-case-design.md#8-实施与验收结果)）；其余未实现。2026-10-10 依据[总体需求](../requirements.md)第 5 节（P1）和[召回效果评测](../phase1/yuque-ingestion/retrieval-evaluation.md)第 9 节整理。
 
 ## 1. 背景与目标
 

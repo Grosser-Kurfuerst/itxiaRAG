@@ -884,6 +884,125 @@
    "titles": [
     "六、驱动的选择与安装的注意事项"
    ]
+  },
+  "小新Air14": "联想 小新Air 14 2026",
+  "星BookProAir14": "惠普 星Book Pro Air 14",
+  "语雀:装机准备分区": {
+   "doc": "textbook/yo04izg5or2hurpo",
+   "titles": [
+    "准备分区"
+   ]
+  },
+  "语雀:社内装系统": {
+   "doc": "textbook/yo04izg5or2hurpo",
+   "titles": [
+    "安装系统"
+   ]
+  },
+  "语雀:社内装Office": {
+   "doc": "textbook/yo04izg5or2hurpo",
+   "titles": [
+    "安装 Office"
+   ]
+  },
+  "语雀:OTP简介": {
+   "doc": "article/otp_intro",
+   "titles": [
+    "换一种更快的姿势装Office"
+   ]
+  },
+  "语雀:Moonlight": {
+   "doc": "help/remote_access",
+   "titles": [
+    "本地直连的远程服务 > Moonlight"
+   ]
+  },
+  "语雀:Parsec": {
+   "doc": "help/remote_access",
+   "titles": [
+    "本地直连的远程服务 > Parsec"
+   ]
+  },
+  "语雀:Mac下载镜像": {
+   "doc": "help/win10_on_intel_mac",
+   "titles": [
+    "第一步：下载一份Windows10镜像"
+   ]
+  },
+  "语雀:Mac驱动设置": {
+   "doc": "help/win10_on_intel_mac",
+   "titles": [
+    "第四步：驱动与设置"
+   ]
+  },
+  "语雀:售后信息": {
+   "doc": "help/find_your_support",
+   "titles": [
+    "线下寻找售后支持 > 售后信息"
+   ]
+  },
+  "语雀:假冒售后": {
+   "doc": "help/find_your_support",
+   "titles": [
+    "线下寻找售后支持 > 假冒官方售后的危害"
+   ]
+  },
+  "语雀:装机盘与PE": {
+   "doc": "help/kbfygn"
+  },
+  "语雀:软件安装位置": {
+   "doc": "help/clean_and_backup",
+   "titles": [
+    "二、第三方软件：乾坤大挪移 > 2、软件的安装、缓存与文档设置"
+   ]
+  },
+  "语雀:开始安装": {
+   "doc": "help/install_win10",
+   "titles": [
+    "安装篇 > 三、开始安装"
+   ]
+  },
+  "语雀:O365订阅区别": {
+   "doc": "article/hlkpwa",
+   "titles": [
+    "什么是Office365教育版"
+   ]
+  },
+  "语雀:A1与桌面版": {
+   "doc": "help/get_o365",
+   "titles": [
+    "一、比较 Office365 A1 与 Office 桌面版"
+   ]
+  },
+  "语雀:预装Office": {
+   "doc": "help/setup_office",
+   "titles": [
+    "一、预装 MS Office"
+   ]
+  },
+  "语雀:MTP协议": {
+   "doc": "basic-computer/vrash83101eeivsm",
+   "titles": [
+    "三层次：有一定电脑使用经验，但不完全了解基础操作 > 一层次：有能力或者能够上网查找解决，并希望了解计算机系统知识"
+   ]
+  },
+  "语雀:BitLocker维修": {
+   "doc": "textbook/bitlocker",
+   "titles": [
+    "维修实践中的 Bitlocker"
+   ]
+  },
+  "语雀:镜像黑话": {
+   "doc": "help/download_win10",
+   "titles": [
+    "Windows 纯净镜像下载途径比较"
+   ]
+  },
+  "语雀:Office混乱": {
+   "doc": "help/ms_office_problems",
+   "titles": [
+    "2、我的 Office 版本很混乱/安装失败"
+   ]
   }
  },
  "attributes": "attributes.json",
@@ -959,7 +1078,8 @@
    "cat": "B",
    "q": "7000P 噪音",
    "rel": [
-    "7000P"
+    "7000P",
+    "7000P锐龙"
    ],
    "facts": [
     "55.0dB"
@@ -992,7 +1112,10 @@
    "cat": "B",
    "q": "air14 多重",
    "rel": [
-    "Air14"
+    "Air14",
+    "YOGA14",
+    "小新Air14",
+    "星BookProAir14"
    ],
    "facts": [
     "984g"
@@ -1014,7 +1137,8 @@
    "cat": "B",
    "q": "7000X 适配器多重",
    "rel": [
-    "7000X"
+    "7000X",
+    "Y7000X"
    ],
    "facts": [
     "438g"
@@ -1574,7 +1698,8 @@
    "cat": "T",
    "q": "电脑老是弹广告，怎么找到是哪个软件并删掉",
    "rel": [
-    "语雀:流氓软件"
+    "语雀:流氓软件",
+    "语雀:SoftCnKiller"
    ],
    "facts": [
     "SoftCNKiller"
@@ -1588,7 +1713,9 @@
    "rel": [
     "语雀:南大Office",
     "语雀:OTP装Office",
-    "语雀:OTP工具"
+    "语雀:OTP工具",
+    "语雀:OTP简介",
+    "语雀:社内装Office"
    ],
    "facts": [
     "kms.nju.edu.cn"
@@ -1610,7 +1737,9 @@
    "cat": "T",
    "q": "怎么用U盘重装 Win11",
    "rel": [
-    "语雀:U盘装系统"
+    "语雀:U盘装系统",
+    "语雀:装机准备分区",
+    "语雀:社内装系统"
    ],
    "facts": [],
    "origin": "manual"
@@ -1632,7 +1761,9 @@
    "cat": "T",
    "q": "在寝室怎么远程控制实验室的电脑",
    "rel": [
-    "语雀:远程连接"
+    "语雀:远程连接",
+    "语雀:Moonlight",
+    "语雀:Parsec"
    ],
    "facts": [
     "RDP"
@@ -1644,7 +1775,9 @@
    "cat": "T",
    "q": "Intel 芯片的 MacBook 怎么装 Windows 双系统",
    "rel": [
-    "语雀:Mac装Win"
+    "语雀:Mac装Win",
+    "语雀:Mac下载镜像",
+    "语雀:Mac驱动设置"
    ],
    "facts": [
     "启动转换助理"
@@ -1700,7 +1833,8 @@
    "cat": "T",
    "q": "电脑坏了怎么找官方售后，避免遇到假售后",
    "rel": [
-    "语雀:官方售后"
+    "语雀:官方售后",
+    "语雀:售后信息"
    ],
    "facts": [],
    "origin": "manual"
@@ -1723,7 +1857,9 @@
    "rel": [
     "语雀:制作PE",
     "语雀:微PE",
-    "语雀:常用微PE"
+    "语雀:常用微PE",
+    "语雀:装机盘与PE",
+    "语雀:Ventoy"
    ],
    "facts": [],
    "origin": "manual"
@@ -1735,7 +1871,8 @@
    "rel": [
     "语雀:系统清理",
     "语雀:教材清理",
-    "语雀:磁盘占用分析"
+    "语雀:磁盘占用分析",
+    "语雀:软件安装位置"
    ],
    "facts": [
     "磁盘清理"
@@ -1806,7 +1943,8 @@
    "q": "ThinkBook 14+ 重装系统怎么从U盘启动",
    "rel": [
     "语雀:进入装机盘",
-    "语雀:微PE"
+    "语雀:微PE",
+    "语雀:装机准备分区"
    ],
    "facts": [],
    "origin": "manual"
@@ -1829,7 +1967,8 @@
    "q": "Windows 家庭版和专业版有什么区别，自己装系统选哪个",
    "rel": [
     "语雀:版本选择",
-    "语雀:社内选版本"
+    "语雀:社内选版本",
+    "语雀:开始安装"
    ],
    "facts": [],
    "origin": "manual"
@@ -1882,7 +2021,8 @@
    "q": "开机要输入 BitLocker 恢复密钥，去哪里找",
    "rel": [
     "语雀:BitLocker密钥",
-    "语雀:验机BitLocker"
+    "语雀:验机BitLocker",
+    "语雀:BitLocker概述"
    ],
    "facts": [],
    "origin": "manual"
@@ -1971,7 +2111,10 @@
    "cat": "K",
    "q": "Office 2021 和 Office 365 有什么区别",
    "rel": [
-    "语雀:Office365"
+    "语雀:Office365",
+    "语雀:O365订阅区别",
+    "语雀:A1与桌面版",
+    "语雀:预装Office"
    ],
    "facts": [],
    "origin": "manual"
@@ -1991,7 +2134,8 @@
    "cat": "K",
    "q": "手机连电脑传文件时弹出 MTP 和 PTP，选哪个",
    "rel": [
-    "语雀:手机传文件"
+    "语雀:手机传文件",
+    "语雀:MTP协议"
    ],
    "facts": [],
    "origin": "manual"
@@ -2001,7 +2145,8 @@
    "cat": "K",
    "q": "装软件的时候怎么避免被捆绑装一堆全家桶",
    "rel": [
-    "语雀:安装注意事项"
+    "语雀:安装注意事项",
+    "语雀:防患未然"
    ],
    "facts": [],
    "origin": "manual"
@@ -2056,7 +2201,8 @@
    "q": "BitLocker 挂起和解密有什么区别",
    "rel": [
     "语雀:挂起BitLocker",
-    "语雀:解密BitLocker"
+    "语雀:解密BitLocker",
+    "语雀:BitLocker维修"
    ],
    "facts": [],
    "origin": "manual"
@@ -2077,7 +2223,8 @@
    "cat": "K",
    "q": "Windows 镜像文件名里的 business editions 和 consumer editions 是什么意思",
    "rel": [
-    "语雀:镜像渠道版本"
+    "语雀:镜像渠道版本",
+    "语雀:镜像黑话"
    ],
    "facts": [],
    "origin": "manual"
@@ -2088,7 +2235,9 @@
    "q": "网上搜到一个 400 开头的电脑维修电话，怎么判断是不是官方售后",
    "rel": [
     "语雀:识别假售后",
-    "语雀:售后注意事项"
+    "语雀:售后注意事项",
+    "语雀:售后信息",
+    "语雀:假冒售后"
    ],
    "facts": [],
    "origin": "manual"
@@ -2330,7 +2479,8 @@
     "语雀:UltraISO",
     "语雀:常用Rufus",
     "语雀:Ventoy",
-    "语雀:常用Ventoy"
+    "语雀:常用Ventoy",
+    "语雀:多镜像PE"
    ],
    "facts": [],
    "origin": "manual"
@@ -2354,7 +2504,8 @@
     "语雀:Office移除",
     "语雀:OTP工具",
     "语雀:Office安装问题",
-    "语雀:OTP卸载"
+    "语雀:OTP卸载",
+    "语雀:Office混乱"
    ],
    "facts": [],
    "origin": "manual"

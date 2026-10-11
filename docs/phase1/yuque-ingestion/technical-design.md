@@ -27,7 +27,8 @@
 语雀（公开网页，或本地快照）
   → YuqueConnector.list：经 YuqueClient 列出文档，映射为 SourceRef                     [sources/yuque]
   → Manifest.classify：单篇条目 → 目录规则；未登记不导入                              [sources/manifest.py，通用]
-  → YUQUE_CATEGORY_PIPELINES：tutorial→tutorial@1，tool_card→tool_card@1，knowledge→knowledge@1   [组合根]
+  → YUQUE_CATEGORY_PIPELINES：tutorial→tutorial@1，tool_card→tool_card@1，knowledge→knowledge@1；
+    后续批次 troubleshooting→troubleshooting@1，case→experience_case@2                    [组合根]
   → YuqueConnector.fetch：读取 Markdown，生成身份、链接、清洗后标题与平台元数据         [sources/yuque]
   → build_request：合并清单元数据补丁与可见性，组装原文导入请求                         [sources/importing.py，通用]
   → preprocess_raw：来源校验                                                         [ingestion.pipeline，已有]
@@ -113,7 +114,7 @@ class Manifest:
 | 判定结果 | 状态 |
 | --- | --- |
 | 有类别，且在映射表中 | 导入 |
-| 有类别，但不在映射表中（如 `troubleshooting`） | 跳过，报告“未接入” |
+| 有类别，但不在映射表中（类别已声明、流水线尚未配置） | 跳过，报告“未接入” |
 | 清单写明 `skip` | 跳过，报告原因 |
 | 未登记 | 不导入，报告“未登记”，由维护者补写清单 |
 
@@ -154,13 +155,13 @@ skip = "duplicate"
 canonical = "help/install_win10"
 
 [docs."help/nju_wlan_qa_pro_plus_max_ultra"]
-category = "troubleshooting"   # 已分类但第一批未接入
+category = "troubleshooting"   # 后续批次，见二期排障与案例方案
 ```
 
 - 文档键用“知识库/slug”，便于人工阅读；来源身份用数字 ID（见 7.2）。slug 改名后清单条目找不到，报告提示更新。
 - 载入时严格校验，出错直接失败：
   - 未知字段，或 `category` 和 `skip` 同时出现或都缺失；`skip` 必须是非空原因。
-  - 类别不在语雀已定义集合内（[CATEGORIES](../../../sources/yuque/connector.py)）：第一批的 `tutorial`、`tool_card`、`knowledge`，以及已分类但暂未接入的 `troubleshooting`、`case`。
+  - 类别不在语雀已定义集合内（[CATEGORIES](../../../sources/yuque/connector.py)）：第一批的 `tutorial`、`tool_card`、`knowledge`，以及后续批次的 `troubleshooting`、`case`（2026-10-11 接入）。
   - `canonical` 只能用于跳过条目，且必须指向清单中存在的单篇条目。
   - 可见性不是 `public` 或 `internal`。
   - `version` 不是整数 2，`source_type` 不是 `yuque`，`[connector]` 不是只含合法 `group`，知识库／文档标识非法，文档引用了未登记的知识库。
@@ -494,7 +495,6 @@ class SourceImportService:
 doc                                 category(by)                status        parents children detail
 help/install_win10                  tutorial(manifest)          imported      12      26
 help/giq7z502ohos1d3u               tool_card(path_rule)        reused        1       1
-help/nju_wlan_qa_pro_plus_max_ultra troubleshooting(manifest)   skipped       -       -        未接入
 article/install_win10_from_scratch  -(manifest)                 skipped       -       -        duplicate → help/install_win10
 help/new_doc                        -                           unregistered  -       -        请在清单中登记类别或 skip
 summary: imported=… reused=… skipped=… unregistered=… failed=…
@@ -567,8 +567,8 @@ summary: imported=… reused=… skipped=… unregistered=… failed=…
 
 | 场景 | 需要做的 |
 | --- | --- |
-| 接入排障指南 | 沿用教程参数的 SectionProfile（内容类型改为 `troubleshooting`），不新增增强步骤；注册 `troubleshooting@1` 并加入映射表，见[排障与案例方案](../../phase2/troubleshooting-and-case-design.md) |
-| 接入单案例 | 从 ToolCardStrategy 提出整篇一个父段的 WholeDocumentStrategy，注册 `experience_case@2` 并加入映射表，见[排障与案例方案](../../phase2/troubleshooting-and-case-design.md) |
+| 接入排障指南（已实现） | 沿用教程参数的 SectionProfile（内容类型改为 `troubleshooting`），不新增增强步骤；注册 `troubleshooting@1` 并加入映射表，见[排障与案例方案](../../phase2/troubleshooting-and-case-design.md) |
+| 接入单案例（已实现） | 从 ToolCardStrategy 提出整篇一个父段的 WholeDocumentStrategy，注册 `experience_case@2` 并加入映射表，见[排障与案例方案](../../phase2/troubleshooting-and-case-design.md) |
 | 调整某类参数 | 注册新版本（如 `tutorial@2`），映射改指向新版本；旧版本保留便于对比 |
 | 其他平台的教程 | 直接使用 `tutorial@1`，配合 `text/html` 或 `text/markdown` |
 | 新平台 | 实现 SourceConnector、编写清单与继承 SourceImportCommand 的薄命令；有自己的方言时新增方言解析器，见[来源连接器改造方案](../source-connector-design.md) |
@@ -584,17 +584,17 @@ summary: imported=… reused=… skipped=… unregistered=… failed=…
 | --- | --- |
 | `tests/unit/test_preprocessing_parsers.py`（扩充） | 图片块与占位、引用与提示块、空标题、`pseudo_heading` 两种取值；现有用例不变 |
 | `tests/unit/test_yuque_markdown.py` | 每条方言规则、行号保持、占位符与代码块保真、折叠块、表格内换行 |
-| `tests/unit/test_sections.py` | 自适应顶层、包裹标题下降、超长下钻与导语父段、过短父段合并、无标题文档、子块相连规则、key 稳定、标题截断、表格行组、图片计数 |
-| `tests/unit/test_enrichment_steps.py` | 提示块进入父段或文档 warnings、时效表述、来源日期提示（含日期缺失）、工具身份、检索前缀与表头组合 |
-| `tests/unit/test_source_manifest.py` | 通用清单：单篇条目优先于目录规则、目录规则命中、未登记、跳过、未接入类别、元数据补丁、清单校验 |
-| `tests/unit/test_yuque_importer.py` | 快照连接器和假提交函数：试运行不编码、单篇失败不中断、整批访问错误终止、报告状态、标题清洗与元数据、可见性来自清单 |
+| `tests/unit/test_sections.py` | 自适应顶层、包裹标题下降、超长下钻与导语父段、过短父段合并、无标题文档、子块相连规则、key 稳定、标题截断、表格行组、图片计数、整篇一个父段（单工具、单案例） |
+| `tests/unit/test_enrichment_steps.py` | 提示块进入父段或文档 warnings、时效表述、来源日期提示（含日期缺失与案例文案）、工具身份、检索前缀与表头组合；排障与案例流水线及类别映射 |
+| `tests/unit/test_source_manifest.py` | 通用清单：单篇条目优先于目录规则、目录规则命中、未登记、跳过、后续批次类别、元数据补丁、清单校验 |
+| `tests/unit/test_yuque_importer.py` | 快照连接器和假提交函数：试运行不编码、单篇失败不中断、整批访问错误终止、报告状态（含映射表缺类别时“未接入”）、各类别路由到对应流水线、标题清洗与元数据、可见性来自清单 |
 | `tests/unit/test_yuque_client.py` | mock HTTP 边界，不开 socket；固定间隔与 timeout、网络错误、响应类型与 `appData` 格式错误、访问拒绝独立异常、快照读写失败、错误消息不泄露底层异常 |
 
 ### 10.2 集成测试
 
-`tests/integration/test_yuque_web.py`：本地临时 HTTP 服务模拟知识库页面、分页文档列表与 Markdown 导出，验证请求路径与 Accept 头、祖先路径、401／403 终止、429、验证码页与其他正文错误单篇失败后继续、列表失败、74 篇合成快照覆盖未接入类别并兼容离线模式。正式导入用例使用隔离 PostgreSQL 与模型替身；不访问真实语雀。沙箱不支持 socket 时至少执行 collect-only，集成与全量测试由隔离环境复核。
+`tests/integration/test_yuque_web.py`：本地临时 HTTP 服务模拟知识库页面、分页文档列表与 Markdown 导出，验证请求路径与 Accept 头、祖先路径、401／403 终止、429、验证码页与其他正文错误单篇失败后继续、列表失败、74 篇合成快照覆盖全部已分类文档并兼容离线模式。正式导入用例使用隔离 PostgreSQL 与模型替身；不访问真实语雀。沙箱不支持 socket 时至少执行 collect-only，集成与全量测试由隔离环境复核。
 
-`tests/integration/test_yuque_ingestion.py`：使用隔离 PostgreSQL、项目账号的 API Token 认证和明确的模型替身，不访问语雀。当前覆盖教程原文 API、合成速查表的知识原文 API（行组命中与表头检索文本）、工具条目原文 API（工具 metadata 与日期提示）与合成快照管理命令：命令只导入已接入类别、重复执行全部 reused、未登记／未接入／重复副本不写入、internal 来源权限与批次失败退出。工具与教程用例共同检查：
+`tests/integration/test_yuque_ingestion.py`：使用隔离 PostgreSQL、项目账号的 API Token 认证和明确的模型替身，不访问语雀。当前覆盖教程原文 API、合成速查表的知识原文 API（行组命中与表头检索文本）、工具条目原文 API（工具 metadata 与日期提示）与合成快照管理命令：命令导入教程、单案例与排障（schema、父段数与警告）、重复执行全部 reused、未登记／重复副本不写入、internal 来源权限与批次失败退出。工具与教程用例共同检查：
 
 - 检索返回带章节路径的父段标题、warnings、工具 metadata 和命中定位。
 - 重复导入返回 `reused`。

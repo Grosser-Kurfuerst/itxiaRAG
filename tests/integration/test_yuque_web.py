@@ -172,7 +172,7 @@ def test_rate_limit_is_one_failed_document_and_others_continue(web_command, tmp_
     with pytest.raises(CommandError, match="1 篇失败"):
         call_command("import_yuque", manifest=str(manifest), dry_run=True, stdout=output, **options)
     report = output.getvalue()
-    assert "YUQUE_RATE_LIMITED" in report and "failed=1" in report and "preprocessed=2" in report
+    assert "YUQUE_RATE_LIMITED" in report and "failed=1" in report and "preprocessed=6" in report
     assert any("/synthetic/help/second/markdown" in path for path, _ in state.requests)
 
 
@@ -183,7 +183,7 @@ def test_invalid_markdown_response_is_a_per_document_failure(web_command, conten
     output = StringIO()
     with pytest.raises(CommandError, match="1 篇失败"):
         call_command("import_yuque", manifest=str(manifest), dry_run=True, stdout=output)
-    assert "INVALID_YUQUE_RESPONSE" in output.getvalue() and "preprocessed=2" in output.getvalue()
+    assert "INVALID_YUQUE_RESPONSE" in output.getvalue() and "preprocessed=6" in output.getvalue()
 
 
 def test_list_failure_terminates_before_any_document_processing(web_command):
@@ -223,11 +223,11 @@ def test_snapshot_covers_all_classified_books_despite_only_and_can_be_imported_o
     before = len(state.requests)
     offline = StringIO()
     call_command("import_yuque", manifest=str(manifest), snapshot=str(directory), dry_run=True, stdout=offline)
-    assert "preprocessed=3" in offline.getvalue() and "failed=0" in offline.getvalue()
+    assert "preprocessed=74" in offline.getvalue() and "failed=0" in offline.getvalue()
     assert len(state.requests) == before
 
 
-def test_snapshot_failure_for_unselected_unimplemented_category_is_reported(web_command, tmp_path):
+def test_snapshot_failure_for_unselected_document_is_reported(web_command, tmp_path):
     manifest, state = web_command
     state.responses["/synthetic/textbook/case/markdown"] = (500, "text/html", "合成错误页")
     output = StringIO()
@@ -252,10 +252,13 @@ def test_web_formal_import_and_reimport_use_main_chain_and_reuse_sources(web_com
     first, repeated = StringIO(), StringIO()
     with patch("config.components.embedding_provider", return_value=embedder):
         call_command("import_yuque", manifest=str(manifest), stdout=first)
-        sources = list(KnowledgeSource.objects.order_by("canonical_locator"))
-        assert {source.canonical_locator for source in sources} == {"doc:1", "doc:2", "doc:21"}
-        assert all(source.source_type == "yuque" and source.document_schema == "tutorial" for source in sources)
+        sources = KnowledgeSource.objects.all()
+        assert {source.canonical_locator: source.document_schema for source in sources} == {
+            "doc:1": "tutorial", "doc:2": "tutorial", "doc:21": "tutorial", "doc:4": "experience_case",
+            "doc:5": "experience_case", "doc:20": "experience_case", "doc:6": "troubleshooting",
+        }
+        assert all(source.source_type == "yuque" for source in sources)
         assert KnowledgeSource.objects.get(canonical_locator="doc:1").metadata["collection_path"] == ["教程", "父文档"]
         call_command("import_yuque", manifest=str(manifest), stdout=repeated)
-    assert "imported=3" in first.getvalue() and "reused=3" in repeated.getvalue()
-    assert KnowledgeSource.objects.count() == 3
+    assert "imported=7" in first.getvalue() and "reused=7" in repeated.getvalue()
+    assert KnowledgeSource.objects.count() == 7

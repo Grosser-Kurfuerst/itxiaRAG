@@ -92,14 +92,20 @@ class ToolIdentityStep:
 
 
 class SourceDateNoticeStep:
-    """提示工具条目的最后更新日期；只写日期本身，不计算距今多久。"""
+    """提示来源的最后更新日期；只写日期本身，不计算距今多久。
+
+    文案模板中的 {updated} 替换为“最后更新于 日期”或“更新日期未知”。
+    """
 
     input_stage = output_stage = "units"
+
+    def __init__(self, template: str = "本条目内容{updated}，软件版本、下载地址和界面可能已变化，请以官网为准"):
+        self.template = template
 
     def process(self, context: PreprocessContext) -> PreprocessContext:
         source_date = context.raw.metadata.get("source_date")
         updated = f"最后更新于 {source_date}" if source_date else "更新日期未知"
-        warning = f"本条目内容{updated}，软件版本、下载地址和界面可能已变化，请以官网为准"
+        warning = self.template.format(updated=updated)
         if warning not in context.warnings:
             context.warnings.append(warning)
         return context

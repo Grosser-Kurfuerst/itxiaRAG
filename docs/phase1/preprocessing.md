@@ -73,6 +73,7 @@ Markdown 支持 ATX 标题、独占行的粗体标题、管道表格、列表与
 | PurchaseGuideStrategy | 全局建议、预算说明、单个推荐卡和 FAQ 分开 | 推荐卡中的配置、理由、限制等小节 |
 | ExperienceCaseStrategy | 默认二级标题作为章节/案例；构造参数 section_level 可调整 | 案例内现象、检查、处理、结果等小节 |
 | SectionedDocumentStrategy(TUTORIAL) | 按章节树自适应选择顶层，超长时按下一级标题下钻，短父段只在同一上级下相邻合并 | 所有标题开启新块，自然段按目标长度合并，保留步骤与提示的相连关系 |
+| WholeDocumentStrategy(CASE) | 整篇一个父段，标题为文档标题 | 同章节树策略，小标题只作子块断点 |
 
 多机型评测示例：`entity_headings=["Laptop A", "Laptop B"]`，这些标题必须出现在解析后的标题块中，缺失时明确报错。单机评测必须传 `entity_title` 作为父段标题，缺失或为空返回 ENTITY_TITLE_REQUIRED，不退回文章标题；父段标题会拼入每个子块的检索文本，让“这台电脑”等指代带上机型名。可另传 `entity_key` 指定稳定身份。购买指南保留推荐卡所属 budget 元数据，并保留原文中的全局价格警告。以上三种策略把首个一级标题作为文档标题，不额外生成只有标题的父段。
 
@@ -99,13 +100,13 @@ Markdown 支持 ATX 标题、独占行的粗体标题、管道表格、列表与
 
 ### 教程与知识的章节树与检索块
 
-`tutorial@1` 使用 `SectionedDocumentStrategy(TUTORIAL)`。参数为父段上限 3000 字、文档导语阈值 150 字、空节点阈值 30 字、子块目标 500 字、短子块阈值 120 字。`knowledge@1` 使用同一策略的 KNOWLEDGE 参数：父段上限 2500 字、子块目标 400 字，其余相同，并开启表格行组；两者的增强步骤和截图提醒相同。父段规划长度按去空白的正文字符数计算，不计标题；子块合并长度包含标题、正文及段落间隔。它与来源平台、输入格式独立，不修改其他三种策略。
+`tutorial@1` 使用 `SectionedDocumentStrategy(TUTORIAL)`。参数为父段上限 3000 字、文档导语阈值 150 字、空节点阈值 30 字、子块目标 500 字、短子块阈值 120 字。`knowledge@1` 使用同一策略的 KNOWLEDGE 参数：父段上限 2500 字、子块目标 400 字，其余相同，并开启表格行组；两者的增强步骤和截图提醒相同。`troubleshooting@1`（排障指南）使用 TROUBLESHOOTING 参数，规则与参数同 TUTORIAL，只是 `content_type` 为 `troubleshooting`，增强步骤也与教程相同。父段规划长度按去空白的正文字符数计算，不计标题；子块合并长度包含标题、正文及段落间隔。它与来源平台、输入格式独立，不修改其他三种策略。
 
 - 按标题级别建立任意深度的章节树，级别跳跃按相对深度挂载。文档标题来自 `raw.metadata.title`，正文第一个 H1 也按普通章节处理。虚拟根收纳第一个标题前的导语；无标题文档整篇一个父段，导语和无标题文档的父段标题均为文档标题。
 - 根只有一个子节点、根导语短于 150 字且该节点还有子节点时，去掉包裹标题，把其导语并入根导语，并以其子节点为顶层；重复判断。包裹标题不进入父段路径。
 - 顶层子树不超过 3000 字或没有子标题时，整棵子树成为一个父段。否则章节导语非空时单独成父段，再对子节点递归。没有子标题的超长章节仍保留一个完整父段。
 - 没有自己标题的文档导语不足 150 字，或有标题的父段正文（不计标题）不足 30 字（空节点或占位）时，只合并到同一上级下相邻的前一个父段；没有前一个时并入后一个；没有同级邻居时保留。是否过短按各父段合并前自身的正文判断，接收了导语的章节不会再被当作导语并走。合并保持原文顺序，沿用接收方标题和 key，不跨上级合并。有正文的短章节单独成父段，不并到相邻章节的标题下。
-- 父段标题为章节路径，如“安装篇 > 三、开始安装”。超过 200 字时保留前 99 字和后 100 字，中间用“…”连接。key 用完整路径哈希，同名路径按出现次数区分，不受显示标题截断影响。父段 metadata 保留完整 `section_path`、`content_type`（`tutorial`、`knowledge` 或 `tool_card`）和 `omitted_images`。
+- 父段标题为章节路径，如“安装篇 > 三、开始安装”。超过 200 字时保留前 99 字和后 100 字，中间用“…”连接。key 用完整路径哈希，同名路径按出现次数区分，不受显示标题截断影响。父段 metadata 保留完整 `section_path`、`content_type`（`tutorial`、`knowledge`、`troubleshooting`、`tool_card` 或 `experience_case`）和 `omitted_images`。
 - 无说明图片在建树前移除占位（含 Markdown 行内图片及 HTML 图文混排），仅整理含占位行的多余空白；其他行原样保留，包括代码与列表缩进、连续空格和行尾空白，块内换行保留。移除后仅剩空白的块整体过滤；数量按原文父段区间中移除的占位数写入 `omitted_images`，有说明图片保留占位文字。图片过滤不重新编号原文块，父段 locator 保留连续的 `block_start/end`，Markdown 输入另保留 `line_start/end`。区间包含被过滤的图片，便于计数与警告归属。
 - 父段内任意标题（含伪标题）开启新子块，标题与后文相连。连续标题尚无正文时按原文顺序带入后续块，key 与 `section` 取最后一个标题，定位覆盖这些标题。以“：”“；”结尾的引导句、连续列表／表格行、`1、` `2、` 式编号段落沿用相连规则；`callout` 与前一块相连，警告尽量留在所属步骤。短于 120 字的子块并入前一块。
 - 子块 key 为小节标题哈希加小节内块序号，同名小节用出现次数区分；普通正文修改或另一小节的块数变化不移动该小节的序号。短块合并沿用接收块的 key；预算拆分另加 `-part-N`。
@@ -114,10 +115,14 @@ Markdown 支持 ATX 标题、独占行的粗体标题、管道表格、列表与
 
 ### 工具条目父段
 
-`tool_card@1` 使用 `ToolCardStrategy`（TOOL_CARD 参数：子块目标 400 字，短父段、短子块阈值均为 0，不按长度规划父段），复用上述图片过滤、子块合并与定位规则，按工具成父段：
+`tool_card@1` 使用 `ToolCardStrategy`（继承 `WholeDocumentStrategy`；TOOL_CARD 参数：子块目标 400 字，短父段、短子块阈值均为 0，不按长度规划父段），复用上述图片过滤、子块合并与定位规则，按工具成父段：
 
 - 单工具文档整篇一个父段，标题与 `section_path` 为文档标题；“简介／使用方法”等子标题只作为子块断点。
 - `raw.metadata.tool_collection` 为真时视为合集，按章节树拆到叶子章节，每个叶子章节为一个工具父段，标题为“分类 > 工具名”；文档导语和分类导语有正文时单独成父段。父段与子块都不合并，工具不会并入相邻工具。语雀合集由清单 `metadata = { tool_collection = true }` 标记，第一批只有培训手册“常用软件”。
+
+### 单案例父段
+
+`experience_case@2` 使用 `WholeDocumentStrategy(CASE)`：不建章节树，整篇一个父段，标题与 `section_path` 为文档标题；“症状／解决方案”等小标题只作为子块断点，现象与处理办法不会拆进不同父段。CASE 参数的父段上限与合并阈值不起作用，子块目标 500 字、短子块阈值 120 字，与教程相同；图片过滤、子块合并与定位沿用章节树策略。`experience_case@1`（ExperienceCaseStrategy，按二级标题分段）保持不变，原文 API 仍可选择。设计依据见[排障与案例方案](../phase2/troubleshooting-and-case-design.md)。
 
 ## 4. Evidence 输入预算
 
@@ -154,14 +159,16 @@ CleanBlocksStep 和 AnnotateBlocksStep 是扩展示意名称，当前没有内�
 
 结构策略与解析器主要使用 Protocol 和组合，具体类实现对应方法即可，不要求继承协议类。ExperienceCaseStrategy 继承通用 HeadingSectionsStrategy 复用章节划分。步骤属于受信任应用代码，不接受 HTTP 请求指定顺序、加载 Python 路径或执行自定义代码。
 
-### 教程、知识与工具条目增强步骤
+### 语雀类流水线的增强步骤
 
-[组合根](../../config/components.py) 的 `pipeline(schema, strategy, enrich=(), *, image_warning=None)` 在 StructureStep 和 ChunkStep 之间插入 `units → units` 步骤；其他三种 schema 不插入增强步骤。三条流水线的顺序为：
+[组合根](../../config/components.py) 的 `pipeline(schema, strategy, enrich=(), *, version=1, image_warning=None)` 在 StructureStep 和 ChunkStep 之间插入 `units → units` 步骤；`product_review@1`、`purchase_guide@1`、`experience_case@1` 不插入增强步骤。五条流水线的顺序为：
 
 ```text
 tutorial@1  : Parse → Structure(Sectioned[TUTORIAL])  → CalloutWarning → TimeExpression → RetrievalPrefix → Chunk → Build → Validate
 knowledge@1 : Parse → Structure(Sectioned[KNOWLEDGE]) → CalloutWarning → TimeExpression → RetrievalPrefix → Chunk → Build → Validate
+troubleshooting@1 : Parse → Structure(Sectioned[TROUBLESHOOTING]) → CalloutWarning → TimeExpression → RetrievalPrefix → Chunk → Build → Validate
 tool_card@1 : Parse → Structure(ToolCard[TOOL_CARD])  → ToolIdentity → CalloutWarning → SourceDateNotice → RetrievalPrefix → Chunk → Build → Validate
+experience_case@2 : Parse → Structure(WholeDocument[CASE]) → CalloutWarning → TimeExpression → SourceDateNotice → RetrievalPrefix → Chunk → Build → Validate
 ```
 
 | 步骤 | 当前行为 |
@@ -169,12 +176,12 @@ tool_card@1 : Parse → Structure(ToolCard[TOOL_CARD])  → ToolIdentity → Cal
 | [CalloutWarningStep](../../ingestion/enrichment.py) | 原文 `level=warning/caution` 的 callout 按父段 `block_start/end` 写入父段 warnings；第一个标题前的提示写入文档 warnings，无标题时也作为全文提示。保留【警告】标记，单条截断 300 字并去重；普通 note 不作为风险警告 |
 | TimeExpressionStep | 识别“目前（2022年初）”“截至 2023 年”“（2025.11 更新）”等明确年份表述，每父段只取第一处，提示“含时间限定表述‘…’，请结合来源日期判断是否仍适用” |
 | ToolIdentityStep | 单工具文档把标题“用途：工具名”按第一个全角冒号拆为 `tool_purpose`、`tool_name`，无冒号时整个标题为 `tool_name`；`collection_path` 末段为 `tool_category`。合集只给章节路径至少两段的父段写入：末段为 `tool_name`，前一段为 `tool_category`；导语父段不写。字段写入父段 metadata，随检索结果返回 |
-| SourceDateNoticeStep | 文档 warning：“本条目内容最后更新于 YYYY-MM-DD，软件版本、下载地址和界面可能已变化，请以官网为准”；没有 `source_date` 时为“本条目内容更新日期未知，……”。只写日期本身，不计算距今多久 |
+| SourceDateNoticeStep | 文档 warning，文案模板在组合根配置，`{updated}` 替换为“最后更新于 YYYY-MM-DD”，没有 `source_date` 时为“更新日期未知”。工具条目使用默认文案“本条目内容最后更新于 YYYY-MM-DD，软件版本、下载地址和界面可能已变化，请以官网为准”；单案例为“本案例最后更新于 YYYY-MM-DD，系统版本、软件界面与处理办法可能已变化”。只写日期本身，不计算距今多久 |
 | RetrievalPrefixStep | 由 `collection_path` 与文档标题生成“目录路径 > 文档标题”，略去与完整父段章节路径重复的部分；与已有前缀（如表头）以换行组合，不改正文和定位 |
 
 全局风险提示需要写入 `PreprocessContext.warnings`，因此作为步骤而非章节策略的一部分；导语被短段规则合并后仍按原文第一个标题的位置判断。BuildDocumentStep 合并 `raw.metadata.warnings` 与处理中的文档 warnings。
 
-`ParseStep(parser, image_warning=...)` 可配置图片警告文案。注册流水线时显式传入 `image_warning`，为 `None` 时使用 ParseStep 默认文案。教程、知识与工具条目使用“原文含未转写的截图，操作界面以原文链接为准”，其他流水线仍为“原文含未提供文字说明的图片，关键参数需人工补录。”。增强步骤不调用模型，也不计算来源距今多久。
+`ParseStep(parser, image_warning=...)` 可配置图片警告文案。注册流水线时显式传入 `image_warning`，为 `None` 时使用 ParseStep 默认文案。教程、知识、排障、工具条目与 `experience_case@2` 使用“原文含未转写的截图，操作界面以原文链接为准”，其他流水线仍为“原文含未提供文字说明的图片，关键参数需人工补录。”。增强步骤不调用模型，也不计算来源距今多久。
 
 ## 6. 原文导入 API
 
@@ -192,11 +199,11 @@ tool_card@1 : Parse → Structure(ToolCard[TOOL_CARD])  → ToolIdentity → Cal
 }
 ```
 
-默认注册 `product_review@1`、`purchase_guide@1`、`experience_case@1`、`tutorial@1`、`knowledge@1`、`tool_card@1`，六者均支持 text/html、text/markdown、text/plain、text/x-yuque-markdown。平台和 Schema 独立，例如语雀 Markdown 同样可以选择购买指南策略。media_type 可带 charset 参数，但内容必须 UTF-8。HTTP JSON 总大小仍限 2 MiB。
+默认注册 `product_review@1`、`purchase_guide@1`、`experience_case@1`、`experience_case@2`、`tutorial@1`、`knowledge@1`、`troubleshooting@1`、`tool_card@1`，均支持 text/html、text/markdown、text/plain、text/x-yuque-markdown。平台和 Schema 独立，例如语雀 Markdown 同样可以选择购买指南策略。media_type 可带 charset 参数，但内容必须 UTF-8。HTTP JSON 总大小仍限 2 MiB。
 
 metadata 的 title/source_date/entity_title/entity_key/entity_headings/collection_path/document_metadata/warnings 是通用控制字段，API 校验它们的格式。`collection_path` 是可选字符串数组，最多 10 项，每项不超过 100 字；可传空数组，项须为非空文本。它表示来源内的目录，不限于语雀。校验后的值进入 RawDocument.metadata，增强步骤可读，并保留在文档 metadata 中；缺省不新增该字段。其余字段保留给来源或新增步骤，并写入文档 metadata；document_metadata 可显式补充文档元数据。未知日期留空，不使用导入日期。HTTP 不指定步骤顺序，步骤/策略在 config/components.py 的有序列表中配置；新增类型由显式 register 接入，不读取任何请求提供的 Python 路径。
 
-导入教程时将 `preprocess` 设为 `{"schema": "tutorial", "version": 1}`，知识、工具条目分别改用 `knowledge`、`tool_card`，在 `raw.metadata` 提供文档标题，可附 `"collection_path": ["合成目录"]`；语雀 Markdown 的 `media_type` 为 `text/x-yuque-markdown`。合成原文 API 样本及检索预期见[教程流水线验收](yuque-ingestion/implementation-phases.md#33-验收)。语雀批量导入使用 `import_yuque` 命令，按清单类别选择流水线，见[语雀导入](../../README.md#语雀导入)。
+导入教程时将 `preprocess` 设为 `{"schema": "tutorial", "version": 1}`，知识、排障指南、工具条目分别改用 `knowledge`、`troubleshooting`、`tool_card`，单案例改用 `{"schema": "experience_case", "version": 2}`，在 `raw.metadata` 提供文档标题，可附 `"collection_path": ["合成目录"]`；语雀 Markdown 的 `media_type` 为 `text/x-yuque-markdown`。合成原文 API 样本及检索预期见[教程流水线验收](yuque-ingestion/implementation-phases.md#33-验收)。语雀批量导入使用 `import_yuque` 命令，按清单类别选择流水线，见[语雀导入](../../README.md#语雀导入)。
 
 权限只在 HTTP 视图检查，流水线和存储不接收账号；来源校验在解析之前执行，原文和公共 DTO 校验在创建模型适配器之前完成；解析失败不调用 Embedding 或保存。成功响应与标准导入一致 `{source_id, context_ids, reused}`。Python 调用方可用 import_raw；HTTP 先调用 preprocess_raw，再调用 import_processed，以便模型未配置时仍准确报告预处理输入错误。
 

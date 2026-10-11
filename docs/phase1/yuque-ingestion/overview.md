@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-**阶段 1～3 已实现；阶段 4 的读取已改为匿名读取公开网页并实测，教程检索与人工抽查待补；阶段 5、6 已实现，第一批 74 篇已导入开发环境并完成检索抽查。** 原文 API 已支持 `text/x-yuque-markdown`、`tutorial@1`、`knowledge@1` 与 `tool_card@1`，教程可按章节自适应划分父段，附风险提示、时效提示与目录检索前缀，也可继续搭配原有三种 schema 使用。`import_yuque` 已支持公开网页／快照读取、清单分类、离线试运行与批量导入；`--save-snapshot` 保存清单内全部已分类正文，包括未接入类别，不受 `--only` 导入范围限制。知识类长表格按行组拆成子块，每组检索文本带表头；工具条目一个工具一个父段，父段带工具名、用途与分类，文档警告带最后更新日期。本目录描述第一批三类文档的需求与技术方案，实现按[分阶段实现方案](implementation-phases.md)推进；每完成一个阶段，按该阶段列出的范围同步文档，并在下表更新状态。
+**阶段 1～3 已实现；阶段 4 的读取已改为匿名读取公开网页并实测，教程检索与人工抽查待补；阶段 5、6 已实现，第一批 74 篇已导入开发环境并完成检索抽查。** 原文 API 已支持 `text/x-yuque-markdown`、`tutorial@1`、`knowledge@1` 与 `tool_card@1`，教程可按章节自适应划分父段，附风险提示、时效提示与目录检索前缀，也可继续搭配原有三种 schema 使用。`import_yuque` 已支持公开网页／快照读取、清单分类、离线试运行与批量导入；`--save-snapshot` 保存清单内全部已分类正文，不受 `--only` 导入范围限制。知识类长表格按行组拆成子块，每组检索文本带表头；工具条目一个工具一个父段，父段带工具名、用途与分类，文档警告带最后更新日期。本目录描述第一批三类文档的需求与技术方案，实现按[分阶段实现方案](implementation-phases.md)推进；每完成一个阶段，按该阶段列出的范围同步文档，并在下表更新状态。
 
 | 阶段 | 内容 | 状态 |
 | --- | --- | --- |
@@ -15,7 +15,7 @@
 | 5 | 知识流水线 | 已完成 |
 | 6 | 工具条目流水线 | 已完成 |
 
-导入清单位于 [sources/yuque/manifests/itxia.toml](../../../sources/yuque/manifests/itxia.toml)。第一批 74 篇由 46 个单篇分类条目与工具目录规则覆盖；后续批次的 10 篇排障、9 篇案例已登记类别，流水线接入前报告为“未接入”；另有 3 个重复副本与 23 篇带原因的 `skip` 条目，逐篇名单见[需求分析附录](requirements-analysis.md#附录后续批次与不导入清单)。新增文档先试运行，按报告补写单篇 `category` 或 `skip`；只有稳定且类别一致的目录才增加 `path_rules`，单篇条目优先于最长目录前缀。可见性由单篇覆盖知识库默认，当前全部为 public，internal 保留备用。清单只保存标识、类别、权限与少量处理标记（如合集的 `tool_collection`），不保存正文。
+导入清单位于 [sources/yuque/manifests/itxia.toml](../../../sources/yuque/manifests/itxia.toml)。第一批 74 篇由 46 个单篇分类条目与工具目录规则覆盖；后续批次的 10 篇排障、9 篇案例已登记类别，2026-10-11 接入 `troubleshooting@1`、`experience_case@2`；另有 3 个重复副本与 23 篇带原因的 `skip` 条目，逐篇名单见[需求分析附录](requirements-analysis.md#附录后续批次与不导入清单)。新增文档先试运行，按报告补写单篇 `category` 或 `skip`；只有稳定且类别一致的目录才增加 `path_rules`，单篇条目优先于最长目录前缀。可见性由单篇覆盖知识库默认，当前全部为 public，internal 保留备用。清单只保存标识、类别、权限与少量处理标记（如合集的 `tool_collection`），不保存正文。
 
 `article/partition-resize`、`article/install_win10_from_scratch` 与 `article/gagpcm` 分别指向 `help/partition-resize`、`help/install_win10` 与 `help/nju_network_guide`。重复副本始终跳过，不会自动导入或删除 canonical 文档。
 
@@ -57,8 +57,8 @@
 | 第一批 | 操作教程 `tutorial` | 28 | 新增章节结构流水线 |
 | 第一批 | 工具条目 `tool_card` | 31 | 同一章节策略，工具配置与工具身份步骤 |
 | 第一批 | 知识科普／对比／速查 `knowledge` | 15 | 同一章节策略，知识配置与表格行组 |
-| 后续 | 排障指南 `troubleshooting` | 10 | 方案已定、未实现：沿用教程章节规则与参数，注册 `troubleshooting@1`，见[排障与案例方案](../../phase2/troubleshooting-and-case-design.md) |
-| 后续 | 单案例记录 `case` | 9 | 方案已定、未实现：整篇一个父段，注册 `experience_case@2`，见[排障与案例方案](../../phase2/troubleshooting-and-case-design.md) |
+| 后续 | 排障指南 `troubleshooting` | 10 | 已实现：沿用教程章节规则与参数，注册 `troubleshooting@1`，见[排障与案例方案](../../phase2/troubleshooting-and-case-design.md) |
+| 后续 | 单案例记录 `case` | 9 | 已实现：整篇一个父段，注册 `experience_case@2`，见[排障与案例方案](../../phase2/troubleshooting-and-case-design.md) |
 | 不导入 | 索引导航、社团说明、废弃或空文档、内容过少或过时、重复副本 | 29 | 清单标记跳过并在报告中列出；`intro_for_public` 的 3 篇不在清单知识库内，不读取 |
 
 ## 文档导航
@@ -67,7 +67,7 @@
 | --- | --- |
 | [需求分析](requirements-analysis.md) | 资料快照、语雀导出共性问题、三类文档的特征与需求、类别识别可行性评估、第一批文档清单初稿 |
 | [技术方案](technical-design.md) | 架构与模块、运行时类别选择、语雀 Markdown 方言解析、章节结构策略、三类流水线、导入工具、契约变化、测试与实施步骤 |
-| [排障与案例方案](../../phase2/troubleshooting-and-case-design.md) | 后续批次：排障指南与单案例记录的样本分析、分段决策、流水线设计与实施步骤（方案已定，未实现） |
+| [排障与案例方案](../../phase2/troubleshooting-and-case-design.md) | 后续批次：排障指南与单案例记录的样本分析、分段决策、流水线设计、实施与真实样本验收 |
 | [分阶段实现方案](implementation-phases.md) | 先打通教程再扩充类型的 6 个阶段：各阶段的实现内容、完成后的系统状态、自动与手动验收方法、文档同步范围 |
 | [召回效果评测方案](retrieval-evaluation.md) | 笔吧推文与语雀文档的评测语料构建、查询集与标注、实验矩阵、指标与判定规则；第 9 节为已执行的初步评测记录 |
 | [召回改进方案](../../phase2/retrieval-improvement-plan.md) | 依据评测结果的召回改进项：RRF 参数、分词、同义词、条件解析、来源分路召回、重排，以及实施顺序（方案，未实现） |

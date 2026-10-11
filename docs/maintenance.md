@@ -57,7 +57,7 @@
 
    ```toml
    [docs."help/new_slug"]
-   category = "tutorial"        # tutorial、knowledge、tool_card；troubleshooting、case 尚未接入，会报 skipped
+   category = "tutorial"        # tutorial、knowledge、tool_card、troubleshooting、case
 
    [docs."help/old_note"]
    skip = "过时内容"            # 不导入时必须写原因

@@ -30,6 +30,10 @@ TUTORIAL = SectionProfile("tutorial", 3000, 30, 500, 120, min_intro_chars=150)
 KNOWLEDGE = SectionProfile("knowledge", 2500, 30, 400, 120, table_rows_as_children=True, min_intro_chars=150)
 # 工具条目按工具成父段而不按长度：父段上限 0 使合集拆到叶子章节，短父段与短子块都不合并。
 TOOL_CARD = SectionProfile("tool_card", 0, 0, 400, 0)
+# 排障指南的章节规则与参数同教程：下调上限会把章节导语中的风险层级与其步骤拆开。
+TROUBLESHOOTING = replace(TUTORIAL, content_type="troubleshooting")
+# 单案例整篇一个父段，父段上限与合并阈值不起作用；子块参数与教程相同。
+CASE = SectionProfile("experience_case", 0, 0, 500, 120)
 
 
 def _content_size(blocks: list[ContentBlock]) -> int:
@@ -285,7 +289,14 @@ class SectionedDocumentStrategy:
         return build_tree(blocks)
 
 
-class ToolCardStrategy(SectionedDocumentStrategy):
+class WholeDocumentStrategy(SectionedDocumentStrategy):
+    """整篇一个父段：不建章节树，全部内容作为虚拟根导语；子标题仍是子块断点。"""
+
+    def _tree(self, blocks: list[ContentBlock], raw: RawDocument) -> SectionNode:
+        return SectionNode(None, 0, list(blocks))
+
+
+class ToolCardStrategy(WholeDocumentStrategy):
     """一个工具一个父段：单工具文档整篇成段；清单标记 tool_collection 的合集按叶子章节成段。"""
 
     def __init__(self):
@@ -294,5 +305,4 @@ class ToolCardStrategy(SectionedDocumentStrategy):
     def _tree(self, blocks: list[ContentBlock], raw: RawDocument) -> SectionNode:
         if raw.metadata.get("tool_collection"):
             return build_tree(blocks)
-        # 单工具文档不建章节树，全部内容作为虚拟根导语；子标题仍是子块断点。
-        return SectionNode(None, 0, list(blocks))
+        return super()._tree(blocks, raw)

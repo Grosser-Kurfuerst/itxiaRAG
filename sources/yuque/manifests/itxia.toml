@@ -1,5 +1,5 @@
 # 第一批 74 篇：28 教程、31 工具（28 篇由目录规则覆盖）、15 知识。
-# 后续批次 19 篇：10 排障、9 案例，流水线接入前报告为“未接入”；另有 26 篇跳过（含 3 个重复副本）。
+# 后续批次 19 篇：10 排障（troubleshooting@1）、9 案例（experience_case@2）；另有 26 篇跳过（含 3 个重复副本）。
 # 清单只保存标识和分类；不保存正文、快照或凭据。
 version = 2
 source_type = "yuque"
@@ -178,7 +178,7 @@ canonical = "help/install_win10"
 skip = "duplicate"
 canonical = "help/nju_network_guide"
 
-# 后续批次：排障指南，流水线接入前跳过并报告“未接入”。
+# 后续批次：排障指南。
 
 [docs."help/windows_problem_cheatsheet"]
 category = "troubleshooting"

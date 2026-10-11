@@ -203,11 +203,13 @@ skip = "duplicate"
 canonical = "help/install"
 [docs."help/case"]
 category = "case"
+[docs."help/trouble"]
+category = "troubleshooting"
 [docs."textbook/install"]
 category = "tutorial"
 ''', encoding="utf-8")
     snapshot = tmp_path / "snapshot"
-    for book, slugs in [("help", ["install", "tool", "copy", "case", "new"]), ("textbook", ["install"])]:
+    for book, slugs in [("help", ["install", "tool", "copy", "case", "new", "trouble"]), ("textbook", ["install"])]:
         directory = snapshot / book
         directory.mkdir(parents=True)
         docs = [{"id": index + (100 if book == "textbook" else 1), "slug": slug,
@@ -220,25 +222,47 @@ category = "tutorial"
         (directory / "docs.json").write_text(json.dumps({"data": docs}), encoding="utf-8")
         (directory / "toc.json").write_text(json.dumps({"data": toc}), encoding="utf-8")
         (directory / "install.md").write_text("## 安装篇\n\n安装前先备份数据，再检查电池续航。", encoding="utf-8")
+    help_dir = snapshot / "help"
+    for slug in ["tool", "case"]:
+        (help_dir / f"{slug}.md").write_text(
+            ":::warning\n刷写 BIOS 有变砖风险。\n:::\n\n## 症状\n\n开机报错后自动重启。\n\n## 解决方案\n\n更新 BIOS 后恢复正常。",
+            encoding="utf-8")
+    (help_dir / "trouble.md").write_text(
+        "## 一、连不上网\n\n" + "重启路由器后等待指示灯变绿。" * 3 + "\n\n## 二、蓝屏\n\n"
+        ":::warning\n收集信息前先备份数据。\n:::\n\n" + "记录蓝屏代码后再搜索解决办法。" * 3, encoding="utf-8")
     return manifest, snapshot
 
 
-def test_snapshot_command_imports_only_tutorials_and_reimport_reuses_all_sources(tmp_path, embedder):
+def test_snapshot_command_imports_all_registered_categories_and_reimport_reuses_all_sources(tmp_path, embedder):
     manifest, snapshot = command_snapshot(tmp_path)
     first, repeated = StringIO(), StringIO()
     with patch("config.components.embedding_provider", return_value=embedder):
         call_command("import_yuque", manifest=str(manifest), snapshot=str(snapshot), stdout=first)
-        sources = list(KnowledgeSource.objects.order_by("canonical_locator"))
-        assert len(sources) == 2 and all(source.source_type == "yuque" for source in sources)
-        assert {source.canonical_locator for source in sources} == {"doc:1", "doc:100"}
-        assert all(source.title == "合成安装" and source.source_date == date(2025, 11, 24) for source in sources)
-        assert sources[0].source_url == "https://www.yuque.com/synthetic/help/install"
-        assert {source.visibility for source in sources} == {"public", "internal"}
-        assert all(source.document_schema == "tutorial" for source in sources)
+        sources = {source.canonical_locator: source for source in KnowledgeSource.objects.all()}
+        assert {locator: source.document_schema for locator, source in sources.items()} == {
+            "doc:1": "tutorial", "doc:100": "tutorial", "doc:2": "experience_case", "doc:4": "experience_case",
+            "doc:6": "troubleshooting",
+        }
+        tutorials = [sources["doc:1"], sources["doc:100"]]
+        assert all(source.source_type == "yuque" and source.source_date == date(2025, 11, 24)
+                   for source in sources.values())
+        assert all(source.title == "合成安装" for source in tutorials)
+        assert tutorials[0].source_url == "https://www.yuque.com/synthetic/help/install"
+        assert [source.visibility for source in tutorials] == ["public", "internal"]
+        case, trouble = sources["doc:4"], sources["doc:6"]
+        assert case.schema_version == 2 and trouble.schema_version == 1
+        assert case.warnings == [
+            "【警告】\n刷写 BIOS 有变砖风险。", "本案例最后更新于 2025-11-24，系统版本、软件界面与处理办法可能已变化",
+        ]
+        case_parent, = ContextUnit.objects.filter(source=case)
+        assert case_parent.title == "合成安装" and "更新 BIOS 后恢复正常" in case_parent.body
+        trouble_parents = list(ContextUnit.objects.filter(source=trouble).order_by("ordinal"))
+        assert [parent.title for parent in trouble_parents] == ["一、连不上网", "二、蓝屏"]
+        assert trouble_parents[1].warnings == ["【警告】\n收集信息前先备份数据。"] and not trouble.warnings
         ids = list(EvidenceUnit.objects.order_by("id").values_list("id", flat=True))
         call_command("import_yuque", manifest=str(manifest), snapshot=str(snapshot), stdout=repeated)
-    assert "imported=2" in first.getvalue() and "reused=2" in repeated.getvalue()
-    assert "skipped=3" in first.getvalue() and "unregistered=1" in first.getvalue()
-    assert "case(path_rule)" in first.getvalue() and "未接入" in first.getvalue()
+    assert "imported=5" in first.getvalue() and "reused=5" in repeated.getvalue()
+    assert "skipped=1" in first.getvalue() and "unregistered=1" in first.getvalue()
+    assert "case(path_rule)" in first.getvalue() and "未接入" not in first.getvalue()
     assert list(EvidenceUnit.objects.order_by("id").values_list("id", flat=True)) == ids
 

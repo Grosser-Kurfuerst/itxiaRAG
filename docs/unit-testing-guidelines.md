@@ -82,8 +82,8 @@ Makefile 默认使用 `.venv/bin/python`。已在其他虚拟环境安装依赖�
 | [公众号文章下载](../tests/unit/test_wechat_fetch.py) | 合成搜狗页面替代网络：搜索解析、跳转拼接、文章身份与精简、账号／标题／日期匹配、验证码整批终止、已下载跳过、下载结果可被 `import_wechat` 读取；不访问网络 |
 | [公众号采集连接器](../tests/unit/test_wechat_connector.py) | 永久链接、短链接与临时链接的身份规则，旁注校验，元数据，`import_wechat` 试运行、清单错误与整批终止；不访问数据库／模型 |
 | [语雀客户端](../tests/unit/test_yuque_client.py) | 不开 socket，替换 HTTP 边界验证网络／超时、响应类型与 `appData` 格式、默认间隔、访问拒绝独立异常、快照失败与底层异常不进入错误消息 |
-| [语雀集成](../tests/integration/test_yuque_ingestion.py) | 原文 API 与 `call_command` 快照导入、数据库保存与 reused、internal 权限、未登记／未接入不导入；隔离 PostgreSQL 与模型替身 |
-| [语雀网页读取](../tests/integration/test_yuque_web.py) | 本地 HTTP 服务模拟知识库页面、分页列表与 Markdown 导出：路径与 Accept 头、祖先路径、401／403 终止、限流与验证码页单篇失败后继续、列表失败、快照覆盖未接入类别并可离线读取；正式导入使用隔离 PostgreSQL 与模型替身 |
+| [语雀集成](../tests/integration/test_yuque_ingestion.py) | 原文 API 与 `call_command` 快照导入、数据库保存与 reused、internal 权限、单案例与排障导入、未登记不导入；隔离 PostgreSQL 与模型替身 |
+| [语雀网页读取](../tests/integration/test_yuque_web.py) | 本地 HTTP 服务模拟知识库页面、分页列表与 Markdown 导出：路径与 Accept 头、祖先路径、401／403 终止、限流与验证码页单篇失败后继续、列表失败、快照覆盖全部已分类文档并可离线读取；正式导入使用隔离 PostgreSQL 与模型替身 |
 | [公众号采集集成](../tests/integration/test_wechat_ingestion.py) | `call_command` 导入评测与选购指南、可见性、身份与链接、reused；隔离 PostgreSQL 与模型替身 |
 
 ```sh

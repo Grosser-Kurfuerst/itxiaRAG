@@ -22,9 +22,9 @@ def load(path):
     return Manifest.load(path, source_type="yuque", categories=CATEGORIES)
 
 
-def service(directory, path, submit):
+def service(directory, path, submit, pipelines=components.YUQUE_CATEGORY_PIPELINES):
     connector = YuqueConnector(YuqueSnapshotClient(directory), "synthetic", ["help", "textbook"])
-    return SourceImportService(connector, load(path), components.YUQUE_CATEGORY_PIPELINES, submit)
+    return SourceImportService(connector, load(path), pipelines, submit)
 
 
 def help_refs(directory):
@@ -84,6 +84,9 @@ category = "tutorial"
     # 不可导入的条目故意没有正文文件；分类应该先于正文读取。
     for slug in ["install", "second"]:
         (help_dir / f"{slug}.md").write_text("## 安装篇\n\n先备份数据再安装。\n\n![](synthetic.png)", encoding="utf-8")
+    for slug in ["tool", "case"]:
+        (help_dir / f"{slug}.md").write_text("## 症状\n\n开机报错。\n\n## 解决方案\n\n重装驱动。", encoding="utf-8")
+    (help_dir / "trouble.md").write_text("## 一、连不上网\n\n重启路由器。", encoding="utf-8")
     internal = directory / "textbook"
     internal.mkdir()
     (internal / "toc.json").write_text('{"data": []}', encoding="utf-8")
@@ -192,7 +195,10 @@ def test_service_records_all_statuses_counts_warnings_and_continues_after_domain
         doc = registry.process(raw, schema, version)
         return SubmissionResult(doc, ImportResult(uuid4(), [uuid4()], reused=True))
 
-    report = service(directory, path, submit).run(help_refs(directory))
+    # 清单登记了类别、但组合根未配置流水线的文档报告“未接入”，不读取正文。
+    first_batch = {category: components.YUQUE_CATEGORY_PIPELINES[category]
+                   for category in ["tutorial", "knowledge", "tool_card"]}
+    report = service(directory, path, submit, first_batch).run(help_refs(directory))
     rows = {row.doc: row for row in report.rows}
     assert submitted == ["doc:1", "doc:2"]
     assert rows["help/install"].status == "failed" and "SYNTHETIC_FAILURE" in rows["help/install"].detail
@@ -215,8 +221,10 @@ def test_service_records_all_statuses_counts_warnings_and_continues_after_domain
 @pytest.mark.parametrize("entry,titles", [
     ('category = "knowledge"', ["合成工具"]),
     ('category = "tool_card"\nmetadata = { tool_collection = true }', ["分类 > 合成工具"]),
+    ('category = "troubleshooting"', ["合成工具"]),
+    ('category = "case"', ["合成安装"]),
 ])
-def test_knowledge_and_tool_categories_are_routed_to_their_pipelines(snapshot, entry, titles):
+def test_categories_are_routed_to_their_pipelines(snapshot, entry, titles):
     directory, path = snapshot
     path.write_text(path.read_text(encoding="utf-8").replace(
         '[docs."help/case"]\ncategory = "case"', f'[docs."help/case"]\n{entry}'), encoding="utf-8")
@@ -230,8 +238,8 @@ def test_knowledge_and_tool_categories_are_routed_to_their_pipelines(snapshot, e
         return SubmissionResult(document, ImportResult(uuid4(), [uuid4()], reused=False))
 
     rows = {row.doc: row for row in service(directory, path, submit).run(help_refs(directory)).rows}
-    category = entry.split('"')[1]
-    assert ("doc:6", category, 1, titles) in submitted
+    schema, version = components.YUQUE_CATEGORY_PIPELINES[entry.split('"')[1]]
+    assert ("doc:6", schema, version, titles) in submitted
     assert rows["help/case"].status == "imported"
 
 
@@ -313,8 +321,9 @@ def test_command_dry_run_needs_no_embedding_or_store(snapshot):
         call_command("import_yuque", manifest=str(path), snapshot=str(directory), dry_run=True, stdout=output)
     embedder.assert_not_called()
     store.assert_not_called()
-    assert "preprocessed=3" in output.getvalue() and "failed=0" in output.getvalue()
-    assert "tutorial(manifest)" in output.getvalue() and "未接入" in output.getvalue()
+    assert "preprocessed=6" in output.getvalue() and "failed=0" in output.getvalue()
+    assert "troubleshooting(manifest)" in output.getvalue() and "case(path_rule)" in output.getvalue()
+    assert "未接入" not in output.getvalue()
     assert "合成社内教程" not in output.getvalue()
 
 
@@ -340,8 +349,8 @@ def test_command_formal_import_uses_raw_main_chain_once_per_doc_and_reports_coun
             patch.object(registry, "process", wraps=registry.process) as process, \
             patch.object(embedder, "embed_documents", wraps=embedder.embed_documents) as embed:
         call_command("import_yuque", manifest=str(path), snapshot=str(directory), stdout=output)
-    assert process.call_count == embed.call_count == store.save.call_count == 3
-    assert "imported=3" in output.getvalue() and "preprocessed=0" in output.getvalue()
+    assert process.call_count == embed.call_count == store.save.call_count == 6
+    assert "imported=6" in output.getvalue() and "preprocessed=0" in output.getvalue()
     source, document, vectors, space = store.save.call_args.args
     assert source.canonical_locator == "doc:20" and source.visibility == "internal"
     assert document.document_schema == "tutorial" and document.title == "社内安装"
@@ -393,7 +402,7 @@ def test_command_missing_embedding_configuration_fails_before_listing(snapshot, 
     listing.assert_not_called()
 
 
-def test_snapshot_fetch_failures_are_reported_even_for_unselected_unimplemented_categories(snapshot):
+def test_snapshot_fetch_failures_are_reported_even_for_unselected_docs(snapshot):
     directory, path = snapshot
     registry = components.preprocessors()
 

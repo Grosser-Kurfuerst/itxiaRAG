@@ -5,7 +5,9 @@ import pytest
 from contracts.types import RawDocument
 from ingestion.chunking import BudgetChunker
 from ingestion.parsers import HtmlParser, MarkdownParser
-from ingestion.sections import KNOWLEDGE, SectionedDocumentStrategy, ToolCardStrategy, TUTORIAL, build_tree
+from ingestion.sections import (
+    CASE, KNOWLEDGE, SectionedDocumentStrategy, ToolCardStrategy, TUTORIAL, WholeDocumentStrategy, build_tree,
+)
 from ingestion.strategies import _key
 
 
@@ -380,3 +382,25 @@ def test_tool_collection_is_one_parent_per_tool_with_intros_kept_separate():
     ]
     assert [parent.body for parent in parents[1:3]] == ["DDU\n\n卸载显卡驱动。", "SDI\n\n安装驱动。"]
     assert parents[3].body == "硬件检查\n\n分类导语。"
+
+
+def build_case(text):
+    raw = RawDocument(text.encode(), "text/markdown", {"title": "开机出现合成报错"})
+    return WholeDocumentStrategy(CASE).build(MarkdownParser().parse(raw), raw)
+
+
+def test_whole_document_case_keeps_symptom_and_solution_in_one_parent():
+    parent, = build_case("## 症状\n\n" + "开机后出现合成报错并自动重启。" * 10 + "\n\n## 解决方案\n\n### 进入 BIOS\n\n"
+                         + "关闭安全启动后重新开机。" * 12 + "\n\n## 方案来源\n\n厂商论坛。")
+    assert parent.title == "开机出现合成报错" and parent.metadata["section_path"] == ["开机出现合成报错"]
+    assert parent.metadata["content_type"] == "experience_case"
+    assert parent.body.startswith("症状") and parent.body.endswith("厂商论坛。")
+    # 小标题只是子块断点；不足 120 字的“方案来源”并入前一子块。
+    assert [child.metadata["section"] for child in parent.children] == ["症状", "进入 BIOS"]
+    assert parent.children[1].body.endswith("方案来源\n\n厂商论坛。")
+
+
+def test_whole_document_without_headings_is_one_parent():
+    parent, = build_case("段落一。\n\n段落二。")
+    assert parent.title == "开机出现合成报错" and parent.body == "段落一。\n\n段落二。"
+    assert build_case("") == []

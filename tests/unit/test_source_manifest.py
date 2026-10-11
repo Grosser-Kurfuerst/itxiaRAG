@@ -6,7 +6,6 @@ import re
 
 import pytest
 
-from config.components import YUQUE_CATEGORY_PIPELINES
 from contracts.types import SourceRef
 from sources.manifest import Classification, Manifest, ManifestError
 from sources.yuque.connector import CATEGORIES
@@ -48,7 +47,7 @@ def test_single_doc_overrides_path_rules_and_longest_prefix_is_scoped_to_collect
     assert manifest.classify(ref("help/new", ["其他", "工具"])) == Classification(None, "none")
 
 
-def test_skip_unregistered_and_known_but_unconnected_categories_are_distinct():
+def test_skip_unregistered_and_later_batch_categories_are_distinct():
     manifest = load(manifest_data())
     assert manifest.classify(ref("help/copy", ["工具"])) == Classification(None, "manifest", "duplicate")
     assert manifest.canonical_for(ref("help/copy")) == "help/install"
@@ -56,7 +55,6 @@ def test_skip_unregistered_and_known_but_unconnected_categories_are_distinct():
     assert manifest.classify(ref("help/new")) == Classification(None, "none")
     for key, category in [("help/trouble", "troubleshooting"), ("textbook/case", "case")]:
         assert manifest.classify(ref(key)) == Classification(category, "manifest")
-        assert category not in YUQUE_CATEGORY_PIPELINES
 
 
 def test_visibility_uses_document_override_then_collection_default():

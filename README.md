@@ -92,7 +92,7 @@ curl -H "Authorization: Token $(cat .runtime/maintainer.token)" \
 
 ## 语雀导入
 
-阶段 1～6 已实现，可匿名读取语雀公开网页或本机快照，批量处理教程、知识与工具条目；第一批 74 篇已导入开发环境，检索抽查结果见[概览](docs/phase1/yuque-ingestion/overview.md)。清单见 [itxia.toml](sources/yuque/manifests/itxia.toml)，快照格式见[技术方案 7.1](docs/phase1/yuque-ingestion/technical-design.md#71-平台读取)，快照与原文放在被忽略的 `.runtime/` 下。
+阶段 1～6 已实现，可匿名读取语雀公开网页或本机快照，批量处理教程、知识、工具条目，以及二期接入的排障指南与单案例记录；第一批 74 篇已导入开发环境，检索抽查结果见[概览](docs/phase1/yuque-ingestion/overview.md)。清单见 [itxia.toml](sources/yuque/manifests/itxia.toml)，快照格式见[技术方案 7.1](docs/phase1/yuque-ingestion/technical-design.md#71-平台读取)，快照与原文放在被忽略的 `.runtime/` 下。
 
 网页模式不需要 Token：从知识库页面取目录，从网页的 Markdown 导出取正文，只能读取公开知识库中已发布的文档，默认每次请求间隔 1 秒。这些是语雀网页端接口，不是公开承诺的 API，可能变化或触发验证码；官方 OpenAPI 需要团队 Token，当前未接入。
 
@@ -110,9 +110,9 @@ curl -H "Authorization: Token $(cat .runtime/maintainer.token)" \
   --only help/install_win10
 ```
 
-`--snapshot` 与 `--save-snapshot` 互斥。保存快照时先读取清单内所有知识库的已分类文档正文（含未接入的排障和案例），再从快照执行导入；`--only` 只限制导入范围，不缩小保存范围。目录与完整分页列表也会保存，跳过和未登记的文档不保存正文。该范围覆盖清单中的第一批 74 篇，2026-10-10 实测读取 0 失败。保存时任一单篇读取失败均记为 `failed`，即使该类别未接入或不在 `--only` 中；失败正文不保留旧文件，快照可能不完整，应重跑补齐。
+`--snapshot` 与 `--save-snapshot` 互斥。保存快照时先读取清单内所有知识库的已分类文档正文，再从快照执行导入；`--only` 只限制导入范围，不缩小保存范围。目录与完整分页列表也会保存，跳过和未登记的文档不保存正文。该范围覆盖清单中的第一批 74 篇与后续批次 19 篇。保存时任一单篇读取失败均记为 `failed`，即使该文档不在 `--only` 中；失败正文不保留旧文件，快照可能不完整，应重跑补齐。
 
-仍需加载本地 Django 配置。命令行导入由能进入部署环境的维护者执行，不需要账号；账号权限只用于 HTTP 接口。当前清单全部为 public，internal 保留备用。报告区分 `preprocessed`（试运行成功）、`imported`、`reused`、`skipped`、`unregistered`、`failed`，列出父段／子块数与警告，不打印正文。排障和案例类别未接入，报告为“未接入”；清单错误或正式导入缺少 Embedding 配置会启动即失败；单篇失败继续处理，批次结束以非零状态退出。重复运行按现有主链更新或返回 `reused`。
+仍需加载本地 Django 配置。命令行导入由能进入部署环境的维护者执行，不需要账号；账号权限只用于 HTTP 接口。当前清单全部为 public，internal 保留备用。报告区分 `preprocessed`（试运行成功）、`imported`、`reused`、`skipped`、`unregistered`、`failed`，列出父段／子块数与警告，不打印正文。排障、案例分别按 `troubleshooting@1`、`experience_case@2` 处理；清单错误或正式导入缺少 Embedding 配置会启动即失败；单篇失败继续处理，批次结束以非零状态退出。重复运行按现有主链更新或返回 `reused`。
 
 401／403 会终止整批并提示确认知识库公开或稍后重跑；正文读取的 429、其他 HTTP／网络错误、超时和格式错误（含返回验证码页）记为单篇失败。目录或文档列表读取失败时整批终止，尚不处理任何正文。容器内配置和操作见[部署与验收](docs/deployment.md#37-语雀网页与快照导入)。
 

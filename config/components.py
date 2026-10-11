@@ -12,7 +12,9 @@ from ingestion.enrichment import (
 from ingestion.parsers import ParserRegistry
 from ingestion.preprocessing import BuildDocumentStep, ChunkStep, ParseStep, PreprocessPipeline, StructureStep, ValidateStep
 from ingestion.strategies import ExperienceCaseStrategy, PurchaseGuideStrategy, ReviewStrategy
-from ingestion.sections import KNOWLEDGE, SectionedDocumentStrategy, ToolCardStrategy, TUTORIAL
+from ingestion.sections import (
+    CASE, KNOWLEDGE, SectionedDocumentStrategy, ToolCardStrategy, TROUBLESHOOTING, TUTORIAL, WholeDocumentStrategy,
+)
 from ingestion.yuque_markdown import YuqueMarkdownParser
 from retrieval.hybrid import MultiRouteRecall
 from retrieval.keyword import KeywordRetriever
@@ -23,7 +25,10 @@ from retrieval.tokenization import tokenize, tokenize_for_search
 from retrieval.vector import VectorRetriever
 
 
-YUQUE_CATEGORY_PIPELINES = {"tutorial": ("tutorial", 1), "knowledge": ("knowledge", 1), "tool_card": ("tool_card", 1)}
+YUQUE_CATEGORY_PIPELINES = {
+    "tutorial": ("tutorial", 1), "knowledge": ("knowledge", 1), "tool_card": ("tool_card", 1),
+    "troubleshooting": ("troubleshooting", 1), "case": ("experience_case", 2),
+}
 WECHAT_CATEGORY_PIPELINES = {"product_review": ("product_review", 1), "purchase_guide": ("purchase_guide", 1)}
 
 
@@ -77,7 +82,7 @@ def preprocessors(*, counter=None, max_input_units=None):
     parsers = ParserRegistry()
     parsers.register("text/x-yuque-markdown", YuqueMarkdownParser())
 
-    def pipeline(schema, strategy, enrich=(), *, image_warning=None):
+    def pipeline(schema, strategy, enrich=(), *, version=1, image_warning=None):
         chunker = BudgetChunker(
             max_input_units=settings.PREPROCESS_MAX_INPUT_BYTES if max_input_units is None else max_input_units,
             counter=counter,
@@ -85,7 +90,7 @@ def preprocessors(*, counter=None, max_input_units=None):
         parse = ParseStep(parsers) if image_warning is None else ParseStep(parsers, image_warning=image_warning)
         return PreprocessPipeline([
             parse, StructureStep(strategy), *enrich, ChunkStep(chunker),
-            BuildDocumentStep(document_schema=schema),
+            BuildDocumentStep(document_schema=schema, schema_version=version),
             ValidateStep(input_validator=chunker.validate),
         ])
 
@@ -94,11 +99,16 @@ def preprocessors(*, counter=None, max_input_units=None):
     registry.register("purchase_guide", 1, pipeline("purchase_guide", PurchaseGuideStrategy()))
     registry.register("experience_case", 1, pipeline("experience_case", ExperienceCaseStrategy()))
     screenshot_warning = "原文含未转写的截图，操作界面以原文链接为准"
-    for schema, profile in [("tutorial", TUTORIAL), ("knowledge", KNOWLEDGE)]:
+    for schema, profile in [("tutorial", TUTORIAL), ("knowledge", KNOWLEDGE), ("troubleshooting", TROUBLESHOOTING)]:
         registry.register(schema, 1, pipeline(schema, SectionedDocumentStrategy(profile),
                                               [CalloutWarningStep(), TimeExpressionStep(), RetrievalPrefixStep()],
                                               image_warning=screenshot_warning))
     registry.register("tool_card", 1, pipeline("tool_card", ToolCardStrategy(), [
         ToolIdentityStep(), CalloutWarningStep(), SourceDateNoticeStep(), RetrievalPrefixStep(),
     ], image_warning=screenshot_warning))
+    # @1 按 ## 切分，已由原文 API 公开；@2 整篇一个父段，现象与处理办法不被拆开。
+    case_date_notice = SourceDateNoticeStep("本案例{updated}，系统版本、软件界面与处理办法可能已变化")
+    registry.register("experience_case", 2, pipeline("experience_case", WholeDocumentStrategy(CASE), [
+        CalloutWarningStep(), TimeExpressionStep(), case_date_notice, RetrievalPrefixStep(),
+    ], version=2, image_warning=screenshot_warning))
     return registry

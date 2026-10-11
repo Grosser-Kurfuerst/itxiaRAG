@@ -1,6 +1,6 @@
 # 后续批次技术方案：排障指南与单案例记录
 
-本文给出语雀排障指南（`troubleshooting`，10 篇）与单案例记录（`case`，9 篇）的接入方案，对应[二期需求](requirements.md) F2-12、F2-13，评测对应 F2-14。逐篇名单见[需求分析附录](../phase1/yuque-ingestion/requirements-analysis.md#附录后续批次与不导入清单)。解析、章节树、父段规划和子块生成沿用[第一批技术方案](../phase1/yuque-ingestion/technical-design.md)第 4、5 节，本文只写差异。**状态：方案已确定，未实现。**
+本文给出语雀排障指南（`troubleshooting`，10 篇）与单案例记录（`case`，9 篇）的接入方案，对应[二期需求](requirements.md) F2-12、F2-13，评测对应 F2-14。逐篇名单见[需求分析附录](../phase1/yuque-ingestion/requirements-analysis.md#附录后续批次与不导入清单)。解析、章节树、父段规划和子块生成沿用[第一批技术方案](../phase1/yuque-ingestion/technical-design.md)第 4、5 节，本文只写差异。**状态：两条流水线已实现并接入语雀导入（2026-10-11），真实样本验收待补。**
 
 ## 1. 结论
 
@@ -113,7 +113,7 @@ YUQUE_CATEGORY_PIPELINES = {
 ```
 
 - `troubleshooting@1` 加入教程、知识的注册循环。
-- `experience_case@2` 单独注册，`experience_case@1` 不变。
+- `experience_case@2` 单独注册，`experience_case@1` 不变。组合根的 `pipeline()` 增加 `version` 参数，传给 BuildDocumentStep，使输出的 schema 版本与注册项一致。
 - 清单已登记 19 篇的类别，不需要修改；接入后报告不再出现“未接入”。
 
 ## 4. 契约变化
@@ -148,10 +148,10 @@ YUQUE_CATEGORY_PIPELINES = {
 
 1. 案例流水线：WholeDocumentStrategy、CASE、日期提示文案、`experience_case@2` 与映射，补测试并同步文档。
 2. 排障流水线：TROUBLESHOOTING、`troubleshooting@1` 与映射，补测试并同步文档。
-3. 重新保存快照、试运行、正式导入并抽查，结果写入[概览](../phase1/yuque-ingestion/overview.md)。
+3. 重新保存快照、试运行、正式导入并抽查，结果写入本文第 8 节，概览只记摘要。
 4. F2-14 维修类评测。
 
-每步完成后单独提交。
+每步完成后单独提交。步骤 1、2 的测试互相依赖（导入测试中两类同时由“未接入”变为可导入），合并为一次提交。
 
 ## 7. 风险与已知限制
 

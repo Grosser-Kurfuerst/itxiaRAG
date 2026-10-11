@@ -205,3 +205,59 @@ def test_registered_other_schemas_keep_default_image_warning(schema):
                     {"title": "合成文档", "entity_title": "合成机型"}), schema, 1,
     )
     assert document.warnings == ["原文含未提供文字说明的图片，关键参数需人工补录。"]
+
+
+def test_yuque_later_categories_map_to_registered_repair_schemas():
+    registry = components.preprocessors()
+    assert components.YUQUE_CATEGORY_PIPELINES["troubleshooting"] == ("troubleshooting", 1)
+    assert components.YUQUE_CATEGORY_PIPELINES["case"] == ("experience_case", 2)
+    for schema, version in components.YUQUE_CATEGORY_PIPELINES.values():
+        document = registry.process(RawDocument("合成正文。".encode(), "text/x-yuque-markdown", {"title": "合成"}),
+                                    schema, version)
+        assert (document.document_schema, document.schema_version) == (schema, version)
+
+
+def repair_case(text, **metadata):
+    return components.preprocessors().process(RawDocument(text.encode(), "text/x-yuque-markdown", {
+        "title": "开机出现合成报错", "collection_path": ["案例"], **metadata,
+    }), "experience_case", 2)
+
+
+def test_case_is_one_parent_with_callouts_time_hints_and_case_date_notice():
+    document = repair_case(":::warning\n刷写 BIOS 有变砖风险。\n:::\n\n## 症状\n\n开机报错。\n\n![](synthetic.png)\n\n"
+                           "## 解决方案\n\n截至 2023 年厂商仍提供该补丁。", source_date="2023-05-01")
+    assert document.document_schema == "experience_case"
+    parent, = document.contexts
+    assert parent.title == "开机出现合成报错" and parent.metadata["content_type"] == "experience_case"
+    # 整篇一个父段时第一个标题前的提示块仍是文档警告。
+    assert document.warnings == [
+        "原文含未转写的截图，操作界面以原文链接为准",
+        "【警告】\n刷写 BIOS 有变砖风险。",
+        "本案例最后更新于 2023-05-01，系统版本、软件界面与处理办法可能已变化",
+    ]
+    assert parent.warnings == ["含时间限定表述‘截至 2023 年’，请结合来源日期判断是否仍适用"]
+    assert parent.children[0].retrieval_prefix == "案例"
+
+
+def test_case_date_notice_without_date_and_case_v1_is_unchanged():
+    assert repair_case("开机报错。").warnings == ["本案例更新日期未知，系统版本、软件界面与处理办法可能已变化"]
+    document = components.preprocessors().process(RawDocument(
+        "## 症状\n\n开机报错。\n\n## 解决方案\n\n重装系统。".encode(), "text/markdown", {"title": "合成案例"},
+    ), "experience_case", 1)
+    assert [parent.title for parent in document.contexts] == ["症状", "解决方案"]
+
+
+def test_troubleshooting_keeps_short_answers_separate_and_risk_intro_with_its_steps():
+    steps = "".join(f"### 4.{i} 合成步骤\n\n" + "按提示检查设备状态。" * 20 + "\n\n" for i in range(1, 4))
+    document = components.preprocessors().process(RawDocument((
+        "## 一、连不上网\n\n" + "重启路由器后等待指示灯变绿。" * 3 + "\n\n## 二、网速慢\n\n" + "在路由器后台更换无线信道。" * 3 + "\n\n"
+        "## 四、蓝屏\n\n问题恶化可能性：蓝屏循环，但可逆。\n\n" + steps
+        + ":::warning\n收集信息前先备份数据。\n:::\n\n" + "收集蓝屏代码。" * 5
+    ).encode(), "text/x-yuque-markdown", {"title": "合成排障指南"}), "troubleshooting", 1)
+    assert document.document_schema == "troubleshooting"
+    assert [parent.title for parent in document.contexts] == ["一、连不上网", "二、网速慢", "四、蓝屏"]
+    risk = document.contexts[2]
+    assert risk.metadata["content_type"] == "troubleshooting"
+    assert "问题恶化可能性" in risk.body and "收集蓝屏代码" in risk.body
+    assert risk.warnings == ["【警告】\n收集信息前先备份数据。"]
+    assert not document.warnings and not document.contexts[0].warnings

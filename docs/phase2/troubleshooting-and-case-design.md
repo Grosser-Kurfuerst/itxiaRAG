@@ -144,7 +144,7 @@ YUQUE_CATEGORY_PIPELINES = {
   1. 先不看检索结果，为每篇至少写 1 条维修类问题，约 19 条，再查原文标注。
   2. 全量评测，确认现有 T、K 类不因新语料退步。结果写回评测文档。
 
-  实际结果（见 8.4）：原有查询 Hit@5 不变，但 T、K、U 类 MRR 下降，留给 F2-15 处理。评测结果暂时写在本文 8.4。[评测文档](../phase1/yuque-ingestion/retrieval-evaluation.md)的 9.1、9.3、9.4 还没同步，因为该文件有尚未提交的改动。
+  实际结果（见 8.4）：原有查询 Hit@5 不变，T、K、U 类 MRR 下降，属于相近主题的正常竞争，分析见[评测 9.6](../phase1/yuque-ingestion/retrieval-evaluation.md#96-结论与遗留问题)。结果已写回[评测文档](../phase1/yuque-ingestion/retrieval-evaluation.md)第 9.1～9.5 节。
 
 ## 6. 实施步骤
 
@@ -255,6 +255,6 @@ R06 的排障答案第 9，靠知识父段进入前 5，所以仍列在分来源
 - 8 条名次下降，没有查询跌出前 5。其中 4 条丢失第 1 名：K29、K30、U06、U20 降到第 2 或第 3，排在前面的是蓝屏、系统文件修复、Office 版本等维修父段。
 - 负例 top1 余弦最大值仍为 0.674（G08）。
 
-K、U 类 MRR 分别下降约 0.035、0.041，原因是新语料参与竞争，检索配置没有变化。此后检索改进以 v15 为基线。维修类偏好（F2-15）需同时确认这些查询不再下降。
+K、U 类 MRR 分别下降约 0.035、0.041，原因是新语料参与竞争，检索配置没有变化。此后检索改进以 v15 为基线。下降的 5 条带维修词，维修类偏好（F2-15）只会让它们排得更低，应作为 F2-15 不能退步的对照，见[评测 9.6](../phase1/yuque-ingestion/retrieval-evaluation.md#96-结论与遗留问题)。
 
 结果在 `.runtime/eval/corpus-v4/`：`results-v13～15.json`、`report-v13～15.txt`，原有查询的对比在 `compare-old-v12-v15.txt`。过滤后的结果是 `results-v12-old-queries.json` 和 `results-v15-old-queries.json`。v13 是补标前的结果，v14 是 G06 转为 R29、R 类补标后的结果，v15 是 K08 补标、别名改用“语雀:”前缀后的结果。v13、v14 使用改名前的别名，不能直接与 v15 对比。

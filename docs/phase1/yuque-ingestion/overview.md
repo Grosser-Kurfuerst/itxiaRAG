@@ -19,7 +19,7 @@
 
 `article/partition-resize`、`article/install_win10_from_scratch` 与 `article/gagpcm` 分别指向 `help/partition-resize`、`help/install_win10` 与 `help/nju_network_guide`。重复副本始终跳过，不会自动导入或删除 canonical 文档。
 
-试运行成功状态为 `preprocessed`，不调用 Embedding 或数据库保存；无账号时直接运行注册预处理器，提供账号时执行与 API 相同的来源权限校验。`--save-snapshot --dry-run` 仍会保存快照文件。正式导入复用原文请求 Serializer、DTO 转换，依次调用 `preprocess_raw` 与 `import_processed`。操作命令见 [README](../../../README.md#语雀导入)。
+试运行成功状态为 `preprocessed`，不调用 Embedding 或数据库保存，与正式导入走同一条来源校验和预处理路径。命令行导入不需要账号。`--save-snapshot --dry-run` 仍会保存快照文件。正式导入复用原文请求 Serializer、DTO 转换，依次调用 `preprocess_raw` 与 `import_processed`。操作命令见 [README](../../../README.md#语雀导入)。
 
 2026-10-09：阶段 4 的 OpenAPI 客户端与快照保存已接入命令，并新增本地临时 HTTP 服务测试。官方接口实测、按实测差异调整方言、真实目录 slug 核对、真实快照保存，以及 28 篇教程的真实导入／检索和人工抽查，均待 Token 到位后补测；本次不调整方言规则或清单，不声称阶段 4 已完整验收。
 

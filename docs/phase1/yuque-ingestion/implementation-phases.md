@@ -199,7 +199,7 @@ for c in doc.contexts:
 | `sources/yuque/client.py` | YuqueDocRef、YuqueClient 协议、YuqueSnapshotClient |
 | `sources/yuque/manifest.py` | 清单读取、校验与 `classify` |
 | `sources/yuque/importer.py` | 标题清洗、`build_request`、YuqueImportService、报告 |
-| `sources/management/commands/import_yuque.py` | `--manifest`、`--snapshot`、`--only`、`--dry-run`、`--username`。本阶段 `--snapshot` 必填，缺省时提示“OpenAPI 读取尚未实现” |
+| `sources/management/commands/import_yuque.py` | `--manifest`、`--snapshot`、`--only`、`--dry-run`。本阶段 `--snapshot` 必填，缺省时提示“OpenAPI 读取尚未实现” |
 | [config/components.py](../../../config/components.py) | `CATEGORY_PIPELINES`，本阶段只有 `tutorial` |
 | `sources/yuque/manifests/itxia.toml` | 第一批 74 篇的清单初稿：原型生成后人工复核，只含知识库、slug、类别、跳过原因和可见性。三类都登记，知识和工具暂为“未接入” |
 
@@ -232,7 +232,7 @@ for c in doc.contexts:
    ```
 
    检查报告中每篇文档都有状态，判定依据（manifest、path_rule）正确，知识和工具显示“未接入”，汇总行数字与篇数一致。未配置 Embedding 时也能运行。
-3. 正式导入：去掉 `--dry-run`，加 `--username maintainer`。检查命令退出码为 0；检索 API 能查到导入的教程，且 `source_type` 为 `yuque`、`source_url` 指向语雀原文。
+3. 正式导入：去掉 `--dry-run`。检查命令退出码为 0；检索 API 能查到导入的教程，且 `source_type` 为 `yuque`、`source_url` 指向语雀原文。
 4. 再执行一次，所有导入的文档为 `reused`。
 5. 用普通账号检索 `textbook` 中的教程，查不到；用带 `read_internal` 的账号能查到。
 6. 故意在清单中写一个未知类别，命令启动即失败，不处理任何文档。

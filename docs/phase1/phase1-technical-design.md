@@ -10,7 +10,7 @@
 
 当前输入可以是标准化 JSON，也可以通过原文 API 提交 HTML、Markdown 或纯文本。维护者或外部程序负责获取获准资料、脱敏并选择文档类型；原文入口执行格式解析、类型分段与输入预算控制。系统不抓取公众号 URL、不执行 OCR，也不使用 LLM 识别文档类型或改写查询。
 
-保留 Token 认证、`maintain_source` 维护权限、`read_internal` 内部资料权限；文档范围仅为 `visibility=public/internal`；当前所有来源均为 public，internal 只作保留值。公开指对已认证普通调用方可见，不开放匿名接口。Embedding 可连接本地或获准的外部服务。
+保留 Token 认证、`maintain_source` 维护权限、`read_internal` 内部资料权限；文档范围仅为 `visibility=public/internal`；当前所有来源均为 public，internal 只作保留值。公开指对已认证普通调用方可见，不开放匿名接口。权限只在 HTTP 视图检查：导入接口要求 `maintain_source`（可写入两种可见性），检索按 `read_internal` 生成可见范围后交给检索服务；导入流水线、存储和检索服务不接收账号。命令行导入由能进入部署环境的维护者执行，不校验账号。Embedding 可连接本地或获准的外部服务。
 
 不实现审核、自动放行、系统发布账号、构建切换、撤回、审计、任务队列、retry/resume、健康探针、维护模式、生成模型、反馈或知识图谱。失败直接返回错误，修正后重新提交。
 
@@ -98,7 +98,7 @@ api → retrieval.service → MultiRouteRecall
 
 Embedding 在数据库事务外完成；全部向量有效后一次事务保存来源、父段、子块。任意写入失败回滚本次写入，已有文档保留。这个事务用于防止半份文档，与版本发布流程无关。正常导入返回 HTTP 200；没有持久任务状态。
 
-统一入口为 [import_processed](../../ingestion/pipeline.py)，通过注入 `embedder` 与 `store` 组合编码和保存。权限与内容校验未通过时不调用模型；[HTTP 适配器](../../embeddings/openai_compatible.py) 验证返回索引、数量、维度、有限值与非零向量后才交给存储。
+统一入口为 [import_processed](../../ingestion/pipeline.py)，通过注入 `embedder` 与 `store` 组合编码和保存。来源与内容校验未通过时不调用模型；[HTTP 适配器](../../embeddings/openai_compatible.py) 验证返回索引、数量、维度、有限值与非零向量后才交给存储。
 
 ### 4.2 配置身份
 
@@ -111,7 +111,7 @@ RRF 的 k 与路线权重、关键词路分词模式与同义扩展开关、每�
 ### 5.1 当前已实现流程
 
 1. 接收 `query` 原样作为检索文本，校验 `top_k` 与可选过滤条件；不做意图识别，只有关键词路按同义词表做查询端扩展（见第 3 步）。
-2. 根据当前账号生成不可由请求扩大权限的 `SearchScope`。来源 ID 过滤只缩小召回范围；两路使用同一 Scope。
+2. 视图根据当前账号得到可见范围，检索服务据此生成不可由请求扩大权限的 `SearchScope`。来源 ID 过滤只缩小召回范围；两路使用同一 Scope。
 3. 关键词路先按 Scope 从 PostgreSQL 读取全部可见子块，再对 `retrieval_text` 和查询使用同一套规则分词：jieba 中文分词（加载 [领域词典](../../retrieval/keyword-terms.txt)，品牌和术语不切成单字；`RETRIEVAL_KEYWORD_SEARCH_MODE` 默认 `document`，文档端用搜索模式另补复合词中的两字、三字词，查询端保持精确模式，使问题中的“恢复”能命中原文的“数据恢复”）、英文大小写统一、保留完整型号／错误码并补充字母段与数字段（`air14` 另产生 `air`、`14`，与正文“Air 14”对齐）、移除少量问句停用词。`RETRIEVAL_KEYWORD_SYNONYMS` 开启时，查询先按 [同义词表](../../retrieval/keyword-synonyms.txt) 追加同组词组再分词，文档端与向量路不扩展。Python BM25 根据词频、文档频率和长度评分，按本路线门槛过滤后取 top-N；同分按子块稳定键排序（见 5.2 节 Candidate）。
 4. 向量路调用 `embed_query`，过滤同一向量空间，计算余弦并应用可选门槛。`MultiRouteRecall` 依次收集两路结果，每路最多 100 个子块，保留原始分数与从 1 起算的名次。
 5. `PostRecallPipeline` 按组合根的步骤列表处理候选。默认 RRF 按子块 ID 合并：`score = Σ w/(k + rank)`，k 默认 20，路线权重 w 由 `RETRIEVAL_RRF_WEIGHTS` 配置、默认为 1，同一路重复候选只计最佳名次；再按最终子块顺序聚合父段，以最佳子块的位置确定父段排序；最后取 top_k 个父段。
@@ -247,7 +247,7 @@ Scope 查询、召回、RRF、分组或结果读取失败按现有错误契约�
 
 `contexts[]` 包含 `score_kind`，`matches[]` 包含 `score_kind/route_scores/ranks/key/locator`。默认 `score` 仍为 RRF 分数；以后启用重排时表示最终排序分数，由 `score_kind` 说明含义。`ranks` 始终保留召回路线原始名次；`matches` 中出现的子块就是实际参与最终结果的命中证据。
 
-输入未知字段或结构错误使用 DRF 400；认证失败 401，动作权限不足 403，范围外写入 404。领域或模型错误使用 `{error: {code, message}}`；配置缺失 503，模型失败／非法向量 502，意外服务异常 500。不返回 SQL、凭据或外部错误正文，不增加统一错误 Schema／OpenAPI 管理。
+输入未知字段或结构错误使用 DRF 400；认证失败 401，动作权限不足 403。领域或模型错误使用 `{error: {code, message}}`；配置缺失 503，模型失败／非法向量 502，意外服务异常 500。不返回 SQL、凭据或外部错误正文，不增加统一错误 Schema／OpenAPI 管理。
 
 ## 7. 验收与迁移
 

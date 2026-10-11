@@ -173,7 +173,7 @@ JSON
 
 ### 3.6 验证维护权限
 
-把 3.3 或 3.5 的 Token 换成 `$READER_TOKEN_FILE`，预期 `403`；普通账号可以检索公开来源，不能导入。公开／内部隔离和更新回归由下面的集成测试进一步验证。
+把 3.3 或 3.5 的 Token 换成 `$READER_TOKEN_FILE`，预期 `403`；普通账号可以检索公开来源，不能导入。权限只在 HTTP 接口检查：导入接口要求 `maintain_source`，检索按 `read_internal` 决定能否看到 internal 来源；命令行导入由能进入部署环境的维护者执行，不校验账号。公开／内部隔离和更新回归由下面的集成测试进一步验证。
 
 ### 3.7 语雀网页与快照导入
 
@@ -193,15 +193,15 @@ dc exec app python manage.py import_yuque \
   --save-snapshot /tmp/yuque-web-snapshot --dry-run
 dc cp app:/tmp/yuque-web-snapshot .runtime/yuque-web-snapshot
 
-# 从刚保存的快照正式导入第一批三类文档；需先创建具有 maintain_source、read_internal 的账号
+# 从刚保存的快照正式导入第一批三类文档
 dc exec app python manage.py import_yuque \
   --manifest sources/yuque/manifests/itxia.toml \
-  --snapshot /tmp/yuque-web-snapshot --username maintainer
+  --snapshot /tmp/yuque-web-snapshot
 
 # 再执行同一命令，正文、元数据与流水线配置不变时应全部 reused
 dc exec app python manage.py import_yuque \
   --manifest sources/yuque/manifests/itxia.toml \
-  --snapshot /tmp/yuque-web-snapshot --username maintainer
+  --snapshot /tmp/yuque-web-snapshot
 ```
 
 复制快照时使用新的宿主机目标目录，避免 `dc cp` 将目录嵌套到已存在的同名目录内。容器重建会丢失 `/tmp` 快照，后续离线运行可在宿主机按 README 的 `--snapshot` 命令读取，或把已保存的目录复制回 app。正式导入去掉 `--snapshot` 就直接读取网页；单篇重跑可加 `--only help/install_win10`，参数可以重复。
@@ -223,8 +223,7 @@ dc run --rm --no-deps -v "$PWD/.runtime/eval/corpus-v1:/import:ro" app \
 
 # 正式导入；正文、元数据与流水线配置不变的文章返回 reused
 dc run --rm --no-deps -v "$PWD/.runtime/eval/corpus-v1:/import:ro" app \
-  python manage.py import_wechat --manifest /import/wechat-manifest.toml --capture /import/capture \
-  --username maintainer
+  python manage.py import_wechat --manifest /import/wechat-manifest.toml --capture /import/capture
 ```
 
 `--no-deps` 复用已运行的 `db` 与 `embedding`，一次性容器与 app 使用同一网络和配置。语雀快照同样可以这样挂载导入，例如 `-v "$PWD/.runtime/yuque-snapshot:/snapshot:ro"` 后传 `--snapshot /snapshot`；不必先复制进 app 容器。2026-10-11 按本节试运行：公众号 78 篇、语雀快照 74 篇全部 preprocessed，0 失败。

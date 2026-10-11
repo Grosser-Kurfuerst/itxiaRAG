@@ -49,7 +49,7 @@
 
    ```sh
    dc exec app python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml \
-     --username maintainer --only help/install_win10
+     --only help/install_win10
    ```
 
    不加 `--only` 时处理清单里所有知识库，未改动的文档都返回 `reused`。
@@ -233,7 +233,7 @@ dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/retrieval:/app/retrie
 
 ### 7.1 账号与 Token
 
-用 `kb_account` 管理账号，命令见[部署与验收 3.1](deployment.md#31-创建维护者和普通调用账号)：
+账号只用于 HTTP 接口：导入接口要求 `maintain_source`，检索时有 `read_internal` 才能看到 internal 来源。命令行导入不需要账号。用 `kb_account` 管理账号，命令见[部署与验收 3.1](deployment.md#31-创建维护者和普通调用账号)：
 
 - **新增账号**：同时传 `--permissions` 和 `--token-file`，账号不存在时创建，并写出 Token。
 - **取回 Token**：对已有账号只传 `--token-file`，写出的是现有 Token，不会生成新的。

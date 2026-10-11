@@ -30,7 +30,7 @@
   → YUQUE_CATEGORY_PIPELINES：tutorial→tutorial@1，tool_card→tool_card@1，knowledge→knowledge@1   [组合根]
   → YuqueConnector.fetch：读取 Markdown，生成身份、链接、清洗后标题与平台元数据         [sources/yuque]
   → build_request：合并清单元数据补丁与可见性，组装原文导入请求                         [sources/importing.py，通用]
-  → preprocess_raw：权限与来源校验                                                   [ingestion.pipeline，已有]
+  → preprocess_raw：来源校验                                                         [ingestion.pipeline，已有]
   → PreprocessorRegistry.process(raw, schema, version)：按 schema 选择流水线          [已有]
       ParseStep(YuqueMarkdownParser)                                                [新解析器]
       → StructureStep(SectionedDocumentStrategy(profile))                           [新策略]
@@ -509,9 +509,9 @@ summary: imported=… reused=… skipped=… unregistered=… failed=…
 .venv/bin/python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml \
   --save-snapshot .runtime/yuque-web-snapshot --dry-run
 
-# 读取公开网页正式导入单篇：账号需 maintain_source（internal 文档另需 read_internal）
+# 读取公开网页正式导入单篇；命令行由维护者在部署环境执行，不需要账号
 .venv/bin/python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml \
-  --username maintainer --only help/install_win10
+  --only help/install_win10
 ```
 
 | 参数 | 说明 |
@@ -520,8 +520,7 @@ summary: imported=… reused=… skipped=… unregistered=… failed=…
 | `--snapshot DIR` | 从本地快照读取，不访问网络；缺省读取公开网页 |
 | `--save-snapshot DIR` | 仅网页模式，与 `--snapshot` 互斥；先保存后导入，可与 `--dry-run` 同时使用。保存目录应放在被忽略的 `.runtime/` 下 |
 | `--only` | 只导入指定文档（知识库/slug），可重复；通常只读取涉及的知识库。保存快照时始终读取清单全部知识库及已分类正文 |
-| `--dry-run` | 只预处理并输出报告，成功状态 `preprocessed`；不提供账号时无需数据库连接，提供账号时校验权限 |
-| `--username` | 非试运行时必填，以该账号的权限执行导入，与 API 权限校验一致 |
+| `--dry-run` | 只预处理并输出报告，成功状态 `preprocessed`；无需数据库连接 |
 
 保存快照采用先下载、再用 `YuqueSnapshotClient` 导入的方式。保存范围是清单内所有知识库的目录、完整文档列表与所有已分类正文（含目录规则命中和未接入类别），覆盖第一批 74 篇；跳过、未登记不保存正文。`--only` 只限制导入，不缩小保存范围。任何正文读取失败均进入报告，包括未接入类别和未被 `--only` 选中的文档，保存失败的旧正文会移除，其他文档继续；成功读取的未接入类别仍不会导入。保存期间发生 401／403 会在导入前终止，已下载的文件可能保留。文件写入失败终止整批；失败快照可能不完整，应重跑补齐。
 

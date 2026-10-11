@@ -59,7 +59,7 @@ Makefile 默认使用 `.venv/bin/python`。已在其他虚拟环境安装依赖�
 | [格式适配](../tests/unit/test_preprocessing_parsers.py) | 微信正文、嵌套粗体栏目、默认 alt“图片”视为缺失说明、BOM、表格与代码保真、显式解析器注册 |
 | [结构策略](../tests/unit/test_preprocessing_strategies.py) | 单／多机型边界与机型名必填、评测检索块合并与断点、购机卡预算与全局限制、经验案例 |
 | [长度预算](../tests/unit/test_preprocessing_chunking.py) | 计入父段标题、均分切分与过早断点、换行退回、表格按行切分与表头前缀、atomic 超限拒绝、tokenizer 替换和字符定位 |
-| [原文接线](../tests/unit/test_raw_import.py) | 请求校验、统一编码／保存接口、权限与失败时不调用模型或保存 |
+| [原文接线](../tests/unit/test_raw_import.py) | 请求校验、统一编码／保存接口、来源非法或预处理失败时不调用模型或保存 |
 
 2. 在上节准备好的隔离 PostgreSQL 环境运行原文 API 集成测试：
 

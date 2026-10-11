@@ -101,18 +101,18 @@ curl -H "Authorization: Token $(cat .runtime/maintainer.token)" \
 .venv/bin/python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml \
   --save-snapshot .runtime/yuque-web-snapshot --dry-run
 
-# 离线试运行：无需账号、Embedding 或数据库连接，只预处理、不保存
+# 离线试运行：无需 Embedding 或数据库连接，只预处理、不保存
 .venv/bin/python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml \
   --snapshot .runtime/yuque-snapshot --dry-run
 
 # 读取公开网页正式导入：可重复 --only；去掉 --only 时处理清单中所有知识库
 .venv/bin/python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml \
-  --username maintainer --only help/install_win10
+  --only help/install_win10
 ```
 
 `--snapshot` 与 `--save-snapshot` 互斥。保存快照时先读取清单内所有知识库的已分类文档正文（含未接入的排障和案例），再从快照执行导入；`--only` 只限制导入范围，不缩小保存范围。目录与完整分页列表也会保存，跳过和未登记的文档不保存正文。该范围覆盖清单中的第一批 74 篇，2026-10-10 实测读取 0 失败。保存时任一单篇读取失败均记为 `failed`，即使该类别未接入或不在 `--only` 中；失败正文不保留旧文件，快照可能不完整，应重跑补齐。
 
-仍需加载本地 Django 配置。正式导入需要 `maintain_source`，内部来源另需 `read_internal`；当前清单全部为 public，internal 保留备用。试运行若提供 `--username` 也会检查账号权限。报告区分 `preprocessed`（试运行成功）、`imported`、`reused`、`skipped`、`unregistered`、`failed`，列出父段／子块数与警告，不打印正文。排障和案例类别未接入，报告为“未接入”；清单错误或正式导入缺少 Embedding 配置会启动即失败；单篇失败继续处理，批次结束以非零状态退出。重复运行按现有主链更新或返回 `reused`。
+仍需加载本地 Django 配置。命令行导入由能进入部署环境的维护者执行，不需要账号；账号权限只用于 HTTP 接口。当前清单全部为 public，internal 保留备用。报告区分 `preprocessed`（试运行成功）、`imported`、`reused`、`skipped`、`unregistered`、`failed`，列出父段／子块数与警告，不打印正文。排障和案例类别未接入，报告为“未接入”；清单错误或正式导入缺少 Embedding 配置会启动即失败；单篇失败继续处理，批次结束以非零状态退出。重复运行按现有主链更新或返回 `reused`。
 
 401／403 会终止整批并提示确认知识库公开或稍后重跑；正文读取的 429、其他 HTTP／网络错误、超时和格式错误（含返回验证码页）记为单篇失败。目录或文档列表读取失败时整批终止，尚不处理任何正文。容器内配置和操作见[部署与验收](docs/deployment.md#37-语雀网页与快照导入)。
 
@@ -128,16 +128,16 @@ curl -H "Authorization: Token $(cat .runtime/maintainer.token)" \
 人工采集时把获准文章网页保存为 `<目录>/<账号目录>/<条目>.html`，同名 `.json` 旁注写 `title`（必填）、`url`、`date`、`author`、`account`。`url` 须是永久链接（含 `__biz`、`mid`、`idx`）或短链接，临时链接会报错；没有链接时以采集文件名作身份，入库后不要再改名或更换链接形式；采集目录含原文，放在被忽略的 `.runtime/` 下，不提交；清单只含标题、日期与分类。清单格式与身份规则见[来源连接器改造方案](docs/phase1/source-connector-design.md#5-清单)，评测须逐篇在 `metadata` 中登记 `entity_title`。
 
 ```sh
-# 试运行：无需账号、Embedding 或数据库连接
+# 试运行：无需 Embedding 或数据库连接
 .venv/bin/python manage.py import_wechat --manifest sources/wechat/manifests/bibar.toml \
   --capture .runtime/wechat-capture --dry-run
 
-# 正式导入：账号需 maintain_source，internal 来源另需 read_internal
+# 正式导入
 .venv/bin/python manage.py import_wechat --manifest sources/wechat/manifests/bibar.toml \
-  --capture .runtime/wechat-capture --username maintainer
+  --capture .runtime/wechat-capture
 ```
 
-`--only`、`--dry-run`、`--username` 与报告状态同语雀导入。旁注缺失或非法、账号目录不存在、同一文章重复采集时整批终止；单篇读取或预处理失败记为 `failed` 后继续。
+`--only`、`--dry-run` 与报告状态同语雀导入。旁注缺失或非法、账号目录不存在、同一文章重复采集时整批终止；单篇读取或预处理失败记为 `failed` 后继续。
 
 ## 验证
 

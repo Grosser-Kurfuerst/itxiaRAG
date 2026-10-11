@@ -4,7 +4,7 @@
 
 ## 1. 调用链与职责
 
-[PreprocessPipeline](../../ingestion/preprocessing.py) 实现 `DocumentPreprocessor` 协议。原文 API 校验请求和来源权限后，通过 [PreprocessorRegistry](../../ingestion/registry.py) 按 schema/version 选择流水线，最终输出公共 `ProcessedDocument`，复用 [import_processed](../../ingestion/pipeline.py) 的校验、Embedding 和事务保存流程。
+[PreprocessPipeline](../../ingestion/preprocessing.py) 实现 `DocumentPreprocessor` 协议。原文 API 校验 Token、维护权限和请求后，通过 [PreprocessorRegistry](../../ingestion/registry.py) 按 schema/version 选择流水线，最终输出公共 `ProcessedDocument`，复用 [import_processed](../../ingestion/pipeline.py) 的校验、Embedding 和事务保存流程。
 
 ```text
 RawDocument → ParseStep → StructureStep → ChunkStep → BuildDocumentStep → ValidateStep
@@ -178,7 +178,7 @@ tool_card@1 : Parse → Structure(ToolCard[TOOL_CARD])  → ToolIdentity → Cal
 
 ## 6. 原文导入 API
 
-`POST /api/v1/sources/raw/` 需要 Token 和 maintain_source，写入 internal 还需要 read_internal。请求仅提交文本和元数据，不传 URL 抓取命令或本机路径：
+`POST /api/v1/sources/raw/` 需要 Token 和 maintain_source；有维护权限即可写入 public 或 internal 来源。请求仅提交文本和元数据，不传 URL 抓取命令或本机路径：
 
 ```json
 {
@@ -198,7 +198,7 @@ metadata 的 title/source_date/entity_title/entity_key/entity_headings/collectio
 
 导入教程时将 `preprocess` 设为 `{"schema": "tutorial", "version": 1}`，知识、工具条目分别改用 `knowledge`、`tool_card`，在 `raw.metadata` 提供文档标题，可附 `"collection_path": ["合成目录"]`；语雀 Markdown 的 `media_type` 为 `text/x-yuque-markdown`。合成原文 API 样本及检索预期见[教程流水线验收](yuque-ingestion/implementation-phases.md#33-验收)。语雀批量导入使用 `import_yuque` 命令，按清单类别选择流水线，见[语雀导入](../../README.md#语雀导入)。
 
-权限与来源范围校验在解析之前执行，原文和公共 DTO 校验在创建模型适配器之前完成；解析失败不调用 Embedding 或保存。成功响应与标准导入一致 `{source_id, context_ids, reused}`。Python 调用方可用 import_raw；HTTP 先调用 preprocess_raw，再调用 import_processed，以便模型未配置时仍准确报告预处理输入错误。
+权限只在 HTTP 视图检查，流水线和存储不接收账号；来源校验在解析之前执行，原文和公共 DTO 校验在创建模型适配器之前完成；解析失败不调用 Embedding 或保存。成功响应与标准导入一致 `{source_id, context_ids, reused}`。Python 调用方可用 import_raw；HTTP 先调用 preprocess_raw，再调用 import_processed，以便模型未配置时仍准确报告预处理输入错误。
 
 PREPROCESS_MAX_INPUT_BYTES 默认为 2400，可在环境或 Compose 中调整。使用目标 tokenizer 时，在组合根构造 `preprocessors(counter=TokenizerCounter(encode), max_input_units=模型预算)`。此时 max_input_units 的单位为该 tokenizer 的 token 数，与字节环境变量区分；仅修改环境变量不会自动启用 tokenizer。
 

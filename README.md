@@ -93,6 +93,15 @@ curl -H "Authorization: Token $(cat .runtime/maintainer.token)" \
 
 关键词路使用 jieba 分词（含 [领域词典](retrieval/keyword-terms.txt)；子块另用搜索模式补复合词的子词，查询按[同义词表](retrieval/keyword-synonyms.txt)扩展）与 Python BM25，向量路继续编码完整查询；两路通过可编排流水线经 RRF 融合、父段聚合后返回。BM25 每次只读取当前可见子块并计算，内容更新立即生效；没有持久关键词索引或缓存，适合小规模验证。可通过 `RETRIEVAL_MIN_COSINE` 和 `RETRIEVAL_MIN_BM25` 配置独立路线门槛。
 
+机型推荐接口按原子条件过滤机型规格表，返回规格卡与评测结论；口语条件由上层 LLM 换算，契约见[首期技术设计第 6 节](docs/phase1/phase1-technical-design.md#6-api-与错误)。评测导入后再导入规格（`.venv/bin/python manage.py import_specs --file products/specs/bibar.json`），否则机型无法关联评测、推荐为空；维护流程见[维护手册](docs/maintenance.md)。
+
+```sh
+curl -H "Authorization: Token $(cat .runtime/maintainer.token)" \
+  -H 'Content-Type: application/json' \
+  -d '{"conditions":{"price_max":8000,"weight_max":1.5},"preference":"续航长","top_k":5}' \
+  http://127.0.0.1:8000/api/v1/products/recommend/
+```
+
 ## 语雀导入
 
 阶段 1～6 已实现，可匿名读取语雀公开网页或本机快照，批量处理教程、知识、工具条目，以及二期接入的排障指南与单案例记录；第一批 74 篇已导入开发环境，检索抽查结果见[概览](docs/phase1/yuque-ingestion/overview.md)。清单见 [itxia.toml](sources/yuque/manifests/itxia.toml)，快照格式见[技术方案 7.1](docs/phase1/yuque-ingestion/technical-design.md#71-平台读取)，快照与原文放在被忽略的 `.runtime/` 下。

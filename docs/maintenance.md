@@ -556,7 +556,7 @@ A～F 的答案在评测中。各版本数量与例子见[召回评测 9.3](phas
 | --- | --- | --- |
 | 语料版本 | 资料增删、分段规则或模型变化 | v5：171 个来源、442 个父段、1514 个子块 |
 | 查询集版本 | 查询或标注变化（含补标） | v6：170 条，164 条有答案 |
-| 结果编号 | 每次产生新的基线或实验结果 | 基线 v16，下一个 v17 |
+| 结果编号 | 每次产生新的基线或实验结果 | 基线 v17，下一个 v18 |
 
 版本号记录在[召回评测第 9 节](phase1/yuque-ingestion/retrieval-evaluation.md#9-初步评测执行记录)和[改进记录第 1 节](phase2/retrieval-improvement-log.md#1-记录规则)，不写在 `queries.json` 中。不同查询集或语料版本的结果不直接比较。
 
@@ -570,10 +570,10 @@ A～F 的答案在评测中。各版本数量与例子见[召回评测 9.3](phas
 mkdir -p .runtime/eval/corpus-v5
 dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/retrieval:/app/retrieval:ro" \
   -v "$PWD/config:/app/config:ro" -v "$PWD/.runtime/eval:/data" -e PYTHONPATH=/app app \
-  python eval/recall_eval.py eval/queries.json /data/corpus-v5/results-v17.json \
-  > .runtime/eval/corpus-v5/report-v17.txt
-.venv/bin/python eval/compare_runs.py .runtime/eval/corpus-v5/results-v16.json \
-  .runtime/eval/corpus-v5/results-v17.json --scope all
+  python eval/recall_eval.py eval/queries.json /data/corpus-v5/results-v18.json \
+  > .runtime/eval/corpus-v5/report-v18.txt
+.venv/bin/python eval/compare_runs.py .runtime/eval/corpus-v5/results-v17.json \
+  .runtime/eval/corpus-v5/results-v18.json --scope all
 ```
 
 - 不传参数时用 settings 的配置跑全部范围；`--scope all` 只跑指定范围。
@@ -581,7 +581,7 @@ dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/retrieval:/app/retrie
 - 挂载只覆盖检索代码；改了预处理、切分代码要先重建 app 并重新导入。
 - 对比输出汇总表（全部、A～F、D、T、X、K、U、R 的混合指标，召回／排序失败条数，奇偶分半 MRR 变化）和逐条变化（名次变化的查询、“新进前5未标注”的父段）。两份结果的查询或标注不同时拒绝对比。
 
-**当前基线** `.runtime/eval/corpus-v5/results-v16.json`：查询集 v6、语料 v5，k=20、不加权、文档端搜索模式、开启同义词；`all` 范围混合 Hit@1／Hit@5／MRR@10 为 0.77／0.95／0.851，见[评测 9.11](phase1/yuque-ingestion/retrieval-evaluation.md#911-池化补标与新基线f2-012026-10-12)。
+**当前基线** `.runtime/eval/corpus-v5/results-v17.json`：查询集 v6、语料 v5（2026-10-12 重导），k=20、不加权、文档端搜索模式、开启同义词；`all` 范围混合 Hit@1／Hit@5／MRR@10 为 0.77／0.95／0.852，见[评测 9.12](phase1/yuque-ingestion/retrieval-evaluation.md#912-评测子块记录栏目名后重导p112026-10-12)。重新编码会使向量有细微差异（9.12），比较时注意区分。
 
 ### 8.2 按改动类型回归
 

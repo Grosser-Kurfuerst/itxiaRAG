@@ -174,7 +174,8 @@ def _keeps_with(previous: ContentBlock, block: ContentBlock) -> bool:
 class ReviewStrategy:
     """单机一个父段，多机型通过 entity_headings 显式指定机型标题。
 
-    子块只服务召回，不解析小节语义：按原文顺序合并自然段，检索命中后返回整台电脑的父段。
+    子块按原文顺序合并自然段，检索命中后返回整台电脑的父段；子块 metadata.sections 记录覆盖的一级栏目名，
+    供推荐结果取评测结论。
     长度上限仍由 Chunker 按模型预算检查，超长块按段落/句子拆分。
     """
 
@@ -194,6 +195,7 @@ class ReviewStrategy:
         group: list[ContentBlock] = []
         section_level: int | None = None
         section = ""
+        block_sections: list[str] = []  # 与 blocks 一一对应：每个块所属的一级栏目，栏目前为空
         for block in blocks:
             # 更深的子标题（如“散热分析”下的“测试结果”）按普通段落处理，只在超出目标长度时断开。
             starts_section = _is_section_label(block) and (section_level is None or (block.level or 2) <= section_level)
@@ -211,6 +213,7 @@ class ReviewStrategy:
                 section_level = max(block.level or 2, 2)
                 section = _section_name(block)
             group.append(block)
+            block_sections.append(section)
         if group:
             groups.append(group)
         # 过短的块（包括短栏目）并回前一块，过短的首块并入后一块，避免无上下文的碎片单独生成向量。
@@ -223,13 +226,17 @@ class ReviewStrategy:
                 merged.append(group)
         if len(merged) > 1 and size(merged[0]) < self.min_chars and size(merged[0] + merged[1]) <= limit:
             merged[:2] = [merged[0] + merged[1]]
-        return [
-            SemanticEvidence(
+        # 合并后的块按原顺序覆盖全部块，依次取出各块的栏目名；短块合并可能使一个子块跨多个栏目。
+        remaining_sections = iter(block_sections)
+        chunks = []
+        for number, group in enumerate(merged, 1):
+            names = [next(remaining_sections) for _ in group]
+            chunks.append(SemanticEvidence(
                 key=f"evidence-chunk-{number}", body=_join(group),
                 locator={"block_start": group[0].ordinal, "block_end": group[-1].ordinal},
-            )
-            for number, group in enumerate(merged, 1)
-        ]
+                metadata={"sections": list(dict.fromkeys(name for name in names if name))},
+            ))
+        return chunks
 
     def build(self, blocks: list[ContentBlock], raw: RawDocument) -> list[SemanticContext]:
         # 只含无说明图片的段落只保留文档警告，不进入父段和检索文本。

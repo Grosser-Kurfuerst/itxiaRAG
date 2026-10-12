@@ -21,9 +21,10 @@ def test_review_requires_machine_title_and_builds_one_machine_parent():
     parent, = ReviewStrategy().build(blocks, raw)
     assert parent.title == "GT 16"
     assert "评测文章标题" not in parent.body and "CPU 80℃" in parent.body
-    # 短评测合并为一个检索块；子块不再标注小节语义或不可拆分。
+    # 短评测合并为一个检索块，不标注不可拆分，只记录覆盖的栏目名。
     child, = parent.children
     assert child.key == "evidence-chunk-1" and child.body == parent.body and not child.atomic
+    assert child.metadata == {"sections": ["配置", "优缺点", "散热分析"]}
     for metadata in [{}, {"title": "文章标题"}, {"entity_title": "  "}]:
         blocks, raw = parse(text, **metadata)
         with pytest.raises(DomainError) as error:
@@ -95,6 +96,21 @@ def test_review_lead_in_lines_start_chunks_and_cons_stay_with_pros():
     assert len(bodies) == 4
 
 
+def test_review_chunks_record_covered_sections_in_order():
+    text = ("开场介绍。\n\n【配置】\n\n处理器。\n\n**优点！**\n\n1，安静\n\n**缺点！**\n\n1，厚重\n\n"
+            "【散热分析】\n\n### 测试结果\n\nCPU 80℃。\n\n【购买建议】\n\n适合游戏玩家。")
+
+    def sections(**options):
+        blocks, raw = parse(text, entity_title="GT 16")
+        parent, = ReviewStrategy(**options).build(blocks, raw)
+        return [child.metadata["sections"] for child in parent.children]
+
+    # 栏目前的开场白没有栏目；紧跟优点的缺点和更深的子标题不算新栏目。
+    assert sections(min_chars=0) == [[], ["配置"], ["优点"], ["散热分析"], ["购买建议"]]
+    # 短块合并后，一个子块按出现顺序记录跨越的全部栏目。
+    assert sections(target_chars=40, min_chars=20) == [["配置", "优点"], ["散热分析", "购买建议"]]
+
+
 def test_review_nested_headings_stay_with_section_and_long_chunks_are_split_not_rejected():
     from ingestion.chunking import BudgetChunker
 
@@ -133,11 +149,13 @@ def test_review_drops_images_without_alt_but_keeps_described_images_and_warning(
 
 
 def test_explicit_multi_laptop_boundaries_do_not_mix_entities():
-    blocks, raw = parse("# 横评\n\n## Laptop A\n\n### 配置\n\n16GB\n\n## Laptop B\n\n### 配置\n\n32GB",
+    blocks, raw = parse("# 横评\n\n## Laptop A\n\n### 优点\n\n16GB\n\n## Laptop B\n\n第二台开场。\n\n### 配置\n\n32GB",
                         entity_headings=["Laptop A", "Laptop B"])
     result = ReviewStrategy().build(blocks, raw)
     assert [p.title for p in result] == ["Laptop A", "Laptop B"]
     assert "32GB" not in result[0].body and "16GB" not in result[1].body
+    # 栏目状态不跨机型：第二台的开场白不记为上一台的“优点”。
+    assert [child.metadata["sections"] for child in result[1].children] == [["配置"]]
     bad = RawDocument(raw.content, raw.media_type, {"entity_headings": ["Laptop C"]})
     with pytest.raises(DomainError, match="未在原文找到"):
         ReviewStrategy().build(blocks, bad)

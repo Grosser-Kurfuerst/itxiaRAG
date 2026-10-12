@@ -50,7 +50,8 @@ def query(text, user, embedder, **fields):
 
 def test_import_dedupe_and_update_keep_ids_without_job_or_publication(actor, embedder, document_payload):
     first = ingest(document_payload, embedder)
-    again = ingest(document_payload, embedder)
+    with patch.object(embedder, 'embed_documents', side_effect=AssertionError('内容未变不应调用 Embedding')):
+        again = ingest(document_payload, embedder)
     assert again.reused and again.context_ids == first.context_ids
     child_id = EvidenceUnit.objects.get(key='battery').pk
     parent = document_payload['document']['contexts'][0]
@@ -163,7 +164,7 @@ def test_real_token_api_import_search_errors_and_removed_routes(actor, embedder,
 
 def test_storage_adapter_can_be_replaced(actor, embedder, document_payload):
     from unittest.mock import Mock
-    store = Mock()
+    store = Mock(**{'find_unchanged.return_value': None})
     ingest(document_payload, embedder, store)
     source, document, vectors, space = store.save.call_args.args
     assert source.canonical_locator == 'example:laptop-a'

@@ -58,7 +58,7 @@ dc ps    # 应有 app（API，127.0.0.1:8000）、db（PostgreSQL，15432）、e
 
 同一来源由 `source_type` 与 `canonical_locator` 确定：语雀是 `doc:<文档 ID>`（改 slug、移动目录不影响）；公众号是永久链接，没有链接时用采集文件名；API 来源由提交的值决定。
 
-- 内容不变返回 `reused`；内容有变返回 `imported`，整篇替换，key 不变的父段和子块保留 ID。
+- 内容不变返回 `reused`：仍会读取原文、预处理，但不调用 Embedding、不写库；内容有变返回 `imported`，整篇替换，key 不变的父段和子块保留 ID。
 - **没有删除同步**：清单删掉某篇或改成 `skip`，已入库内容不会删除，下线按 2.6。
 - **没有变更通知**：定期全量重跑 `import_yuque`，有改动的自动更新。
 

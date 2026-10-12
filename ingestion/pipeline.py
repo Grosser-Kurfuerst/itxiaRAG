@@ -20,6 +20,9 @@ def import_processed(source: SourceSpec, document: ProcessedDocument, *,
                      embedder: EmbeddingProvider, store: DocumentStore):
     source = _validate_source(source)
     document = validate_document(document)
+    unchanged = store.find_unchanged(source, document, embedder.space_id)
+    if unchanged:
+        return unchanged
     texts = [evidence_input(parent.title, child.body, child.retrieval_prefix)
              for parent in document.contexts for child in parent.children]
     vectors = validate_vectors(embedder.embed_documents(texts), len(texts))

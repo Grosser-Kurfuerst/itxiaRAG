@@ -107,6 +107,9 @@ class ImportResult:
 
 
 class DocumentStore(Protocol):
+    def find_unchanged(self, source: SourceSpec, document: ProcessedDocument,
+                       embedding_space: str) -> ImportResult | None: ...
+
     def save(self, source: SourceSpec, document: ProcessedDocument,
              vectors: list[list[float]], embedding_space: str) -> ImportResult: ...
 

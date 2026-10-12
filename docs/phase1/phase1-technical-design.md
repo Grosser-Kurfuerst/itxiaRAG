@@ -88,11 +88,11 @@ api → retrieval.service → MultiRouteRecall
 
 一个子块对应一个 embedding，编码文本固定为 `父段标题 + 换行 + 子块正文`，子块带 `retrieval_prefix` 时为 `父段标题 + 换行 + 前缀 + 换行 + 子块正文`，同一文本也保存为关键词路的 `retrieval_text`。父段不单独编码。文档级 metadata 用于保留来源信息，不投影为召回条件，也不默认完整发送给调用方；父段 metadata 随结果返回，子块 metadata 和 warnings 保存供维护或后续扩展，不默认返回。回答所需的风险警告应写入文档或父段 warnings，不能只放在子块中。子块 locator 应保持简短，只记录章节、段落号或字符偏移等定位信息，不放正文或大型附加数据。
 
-保存采用 `DocumentStore.save(...)` 协议，默认 `DjangoDocumentStore`。现阶段向量保存在 PostgreSQL JSONB 数组；`VectorRetriever` 在数据库完成范围过滤后逐批读取向量，用余弦计算精确 top-N，不预截断候选。复杂度约 `O(N × D)`，适合小规模验证；无 ANN 索引，不承诺大规模性能。需要规模化时替换为 pgvector 字段和 Retriever，DTO、API、RRF 不变。
+保存采用 `DocumentStore` 协议（`find_unchanged` 与 `save`），默认 `DjangoDocumentStore`。现阶段向量保存在 PostgreSQL JSONB 数组；`VectorRetriever` 在数据库完成范围过滤后逐批读取向量，用余弦计算精确 top-N，不预截断候选。复杂度约 `O(N × D)`，适合小规模验证；无 ANN 索引，不承诺大规模性能。需要规模化时替换为 pgvector 字段和 Retriever，DTO、API、RRF 不变。
 
 ### 4.1 重复与更新
 
-同一来源、规范化 DTO 内容及 embedding_space 相同，返回 `reused=true`，不增加记录。最小实现先完成编码再由存储判断复用，因此重复提交仍可能调用 Embedding；当前不增加缓存或额外预检查。
+同一来源、规范化 DTO 内容及 embedding_space 相同，返回 `reused=true`，不增加记录。导入先用 `DocumentStore.find_unchanged` 按内容哈希判断复用，命中时直接返回，不调用 Embedding；未命中才编码并保存，`save` 在事务内再判断一次。
 
 内容更新时按稳定 key 更新父子行，保留仍存在段落的 ID；删除本次输入中不存在的段落。返回 ID 指向当前内容，不承诺不可变历史引用。没有版本表、候选、发布指针或旧引用统一失效机制。
 

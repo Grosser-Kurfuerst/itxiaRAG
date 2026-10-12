@@ -340,7 +340,7 @@ def test_command_only_reads_selected_books_and_only_reports_selected_docs(snapsh
 def test_command_formal_import_uses_raw_main_chain_once_per_doc_and_reports_counts(snapshot, embedder):
     directory, path = snapshot
     registry = components.preprocessors()
-    store = Mock()
+    store = Mock(**{"find_unchanged.return_value": None})
     store.save.side_effect = lambda *args: ImportResult(uuid4(), [uuid4()], False)
     output = StringIO()
     with patch("config.components.embedding_provider", return_value=embedder), \

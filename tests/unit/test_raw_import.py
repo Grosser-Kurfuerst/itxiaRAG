@@ -94,7 +94,7 @@ def test_import_raw_uses_registered_pipeline_and_standard_embedding_save_contrac
     source, raw, schema, version = import_raw_dtos(serializer.validated_data)
     embedder = Mock(space_id="test-space")
     embedder.embed_documents.side_effect = lambda texts: [[1.0, 0.0] for _ in texts]
-    store = Mock()
+    store = Mock(**{"find_unchanged.return_value": None})
     import_raw(source, raw, schema, version, registry=components.preprocessors(), embedder=embedder, store=store)
     saved_source, document, vectors, space = store.save.call_args.args
     assert saved_source == source and space == "test-space"
@@ -119,7 +119,7 @@ def test_tutorial_raw_import_removes_inline_images_before_embedding_and_keeps_wa
     source, raw, schema, version = import_raw_dtos(serializer.validated_data)
     embedder = Mock(space_id="test-space")
     embedder.embed_documents.side_effect = lambda texts: [[1.0, 0.0] for _ in texts]
-    store = Mock()
+    store = Mock(**{"find_unchanged.return_value": None})
     import_raw(source, raw, schema, version, registry=components.preprocessors(), embedder=embedder, store=store)
     document = store.save.call_args.args[1]
     parent, = document.contexts
@@ -128,6 +128,21 @@ def test_tutorial_raw_import_removes_inline_images_before_embedding_and_keeps_wa
     assert document.warnings == ["原文含未转写的截图，操作界面以原文链接为准"]
     assert all("未提供文字说明" not in child.body for child in parent.children)
     assert all("未提供文字说明" not in text for text in embedder.embed_documents.call_args.args[0])
+
+
+def test_unchanged_document_is_reused_without_model_call_or_save():
+    data = payload("# 经验\n\n## 黑屏案例\n\n续航约 9 小时。")
+    serializer = RawSourceImportSerializer(data=data)
+    serializer.is_valid(raise_exception=True)
+    source, raw, schema, version = import_raw_dtos(serializer.validated_data)
+    embedder, store = Mock(space_id="test-space"), Mock()
+    reused = store.find_unchanged.return_value
+    result = import_raw(source, raw, schema, version, registry=components.preprocessors(),
+                        embedder=embedder, store=store)
+    assert result is reused
+    assert store.find_unchanged.call_args.args[2] == "test-space"
+    embedder.embed_documents.assert_not_called()
+    store.save.assert_not_called()
 
 
 def test_invalid_source_blocks_preprocessing_and_model_calls():

@@ -17,6 +17,14 @@ def content_hash(source, document):
 
 
 class DjangoDocumentStore:
+    def find_unchanged(self, source_spec, document, embedding_space):
+        """内容和向量空间都未变时返回复用结果，导入据此跳过 Embedding。"""
+        source = KnowledgeSource.objects.filter(
+            source_type=source_spec.source_type, canonical_locator=source_spec.canonical_locator,
+            content_hash=content_hash(source_spec, document), embedding_space=embedding_space).first()
+        context_ids = list(source.contexts.values_list("id", flat=True)) if source else []
+        return ImportResult(source.pk, context_ids, True) if context_ids else None
+
     @transaction.atomic
     def save(self, source_spec, document, vectors, embedding_space):
         validate_vectors(vectors, sum(len(c.children) for c in document.contexts))

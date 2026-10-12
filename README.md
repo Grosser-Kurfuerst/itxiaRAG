@@ -75,7 +75,7 @@ curl -H "Authorization: Token $(cat .runtime/maintainer.token)" \
   http://127.0.0.1:8000/api/v1/sources/
 ```
 
-返回 `source_id`、`context_ids` 和 `reused`。更新同一来源时保留同 key 段落的 ID；相同内容返回 `reused=true`。Embedding 完成后才开启数据库事务，任意写入失败会回滚。
+返回 `source_id`、`context_ids` 和 `reused`。更新同一来源时保留同 key 段落的 ID；相同内容返回 `reused=true`，且不调用 Embedding。Embedding 完成后才开启数据库事务，任意写入失败会回滚。
 
 原文可以提交到 `POST /api/v1/sources/raw/`，选择 `product_review`、`purchase_guide`、`experience_case` 或 `tutorial`；请求示例、格式适配、分段策略、预算与扩展方式见[文档预处理](docs/phase1/preprocessing.md)。API 不抓取 URL 或执行 OCR，调用方提供原文。
 

@@ -1,4 +1,5 @@
-"""机型规格契约：规格文件的记录格式与取值口径，见机型规格库方案 5.1、5.3 节。"""
+"""机型规格契约：规格文件的记录格式与推荐请求，见机型规格库方案 5.1、5.3、6.1 节。"""
+import math
 import re
 
 from rest_framework import serializers
@@ -24,6 +25,16 @@ def compact_text(text):
     return re.sub(r"\s+", "", text)
 
 
+class FiniteFloatField(serializers.FloatField):
+    """DRF 的 FloatField 接受 "nan"、"inf"，它们会绕过取值范围检查。"""
+
+    def to_internal_value(self, data):
+        value = super().to_internal_value(data)
+        if not math.isfinite(value):
+            raise serializers.ValidationError("必须是有限数值")
+        return value
+
+
 class GpuField(serializers.CharField):
     def to_internal_value(self, data):
         return normalize_gpu(super().to_internal_value(data))
@@ -43,11 +54,11 @@ class WebEvidenceSerializer(StrictSerializer):
 class ProductSpecSerializer(StrictSerializer):
     key = TextField(max_length=200)
     brand = TextField(max_length=50)
-    price_cny = serializers.FloatField(min_value=1, allow_null=True, default=None)
+    price_cny = FiniteFloatField(min_value=1, allow_null=True, default=None)
     price_kind = serializers.ChoiceField(PRICE_KINDS, allow_null=True, default=None)
     price_date = serializers.DateField(allow_null=True, default=None)
-    weight_kg = serializers.FloatField(min_value=0.1, max_value=10, allow_null=True, default=None)
-    screen_inch = serializers.FloatField(min_value=5, max_value=30, allow_null=True, default=None)
+    weight_kg = FiniteFloatField(min_value=0.1, max_value=10, allow_null=True, default=None)
+    screen_inch = FiniteFloatField(min_value=5, max_value=30, allow_null=True, default=None)
     panel = serializers.ChoiceField(PANELS, allow_null=True, default=None)
     cpu = TextField(max_length=100, allow_null=True, default=None)
     has_dgpu = serializers.BooleanField(allow_null=True, default=None)
@@ -55,7 +66,7 @@ class ProductSpecSerializer(StrictSerializer):
     ram_gb = serializers.IntegerField(min_value=1, allow_null=True, default=None)
     ram_upgradable = serializers.ChoiceField(RAM_KINDS, allow_null=True, default=None)
     storage_gb = serializers.IntegerField(min_value=1, allow_null=True, default=None)
-    battery_hours = serializers.FloatField(min_value=0, max_value=48, allow_null=True, default=None)
+    battery_hours = FiniteFloatField(min_value=0, max_value=48, allow_null=True, default=None)
     is_gaming = serializers.BooleanField(allow_null=True, default=None)
     ports = PortsSerializer()
     ports_text = serializers.CharField(max_length=5000, allow_blank=True, default="")
@@ -85,3 +96,47 @@ class ProductSpecSerializer(StrictSerializer):
         if data["price_cny"] is None and data["price_kind"] is not None:
             raise serializers.ValidationError({"price_kind": "没有价格时不能填写价格口径"})
         return data
+
+
+def _known_options(values, options, label):
+    """可选值由调用方按规格库生成并放入 context；未知取值报错并列出可选值，供上层 LLM 修正。"""
+    unknown = [value for value in values if value not in options]
+    if unknown:
+        raise serializers.ValidationError(f"未知{label}：{'、'.join(unknown)}；可选：{'、'.join(options)}")
+    return values
+
+
+class ConditionsSerializer(StrictSerializer):
+    """只接受原子条件（方案 6.1 节）；“轻薄”“预算左右”等派生概念由上层换算。"""
+    price_min = FiniteFloatField(min_value=0, required=False)
+    price_max = FiniteFloatField(min_value=0, required=False)
+    weight_max = FiniteFloatField(min_value=0, required=False)
+    screen_min = FiniteFloatField(min_value=0, required=False)
+    screen_max = FiniteFloatField(min_value=0, required=False)
+    battery_min = FiniteFloatField(min_value=0, required=False)
+    gpu_in = serializers.ListField(child=GpuField(max_length=50), allow_empty=False, max_length=20, required=False)
+    has_dgpu = serializers.BooleanField(required=False)
+    is_gaming = serializers.BooleanField(required=False)
+    panel = serializers.ChoiceField(PANELS, required=False)
+    ports = serializers.ListField(child=serializers.ChoiceField(PORTS), allow_empty=False, max_length=len(PORTS),
+                                  required=False)
+    brands = serializers.ListField(child=TextField(max_length=50), allow_empty=False, max_length=20, required=False)
+
+    def validate_gpu_in(self, value):
+        return _known_options(value, self.context["gpus"], "显卡型号")
+
+    def validate_brands(self, value):
+        return _known_options(value, self.context["brands"], "品牌")
+
+    def validate(self, data):
+        for low, high in [("price_min", "price_max"), ("screen_min", "screen_max")]:
+            if low in data and high in data and data[low] > data[high]:
+                raise serializers.ValidationError({low: f"不能大于 {high}"})
+        return data
+
+
+class RecommendSerializer(StrictSerializer):
+    """推荐请求；context 需提供 {"gpus": [...], "brands": [...]}。"""
+    conditions = ConditionsSerializer(default=dict)
+    preference = serializers.CharField(max_length=500, allow_blank=True, default="")
+    top_k = serializers.IntegerField(min_value=1, max_value=20, default=5)

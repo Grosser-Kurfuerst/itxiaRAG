@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from contracts.products import PORTS, ProductSpecSerializer, normalize_gpu
+from contracts.products import PORTS, ProductSpecSerializer, RecommendSerializer, normalize_gpu
 
 SPEC_FILE = Path(__file__).resolve().parents[2] / "products/specs/bibar.json"
 
@@ -37,6 +37,7 @@ def test_spec_defaults_unknown_fields_to_null_and_normalizes_gpu():
     ({"panel": "ips"}, "panel"),
     ({"ports": {"usb_a": True}}, "ports"),
     ({"weight": 1.2}, "weight"),
+    ({"price_cny": "inf"}, "price_cny"),
     ({"evidence": {"weight": "重量 1.2kg"}}, "evidence"),
     ({"evidence": {"weight_kg": " "}}, "evidence"),
     ({"evidence": {"weight_kg": 2.23}}, "evidence"),
@@ -56,3 +57,36 @@ def test_committed_spec_file_is_valid():
     errors = {record["key"]: s.errors for record in records if not (s := ProductSpecSerializer(data=record)).is_valid()}
     assert errors == {}
     assert len({record["key"] for record in records}) == len(records)
+
+
+OPTIONS = {"gpus": ["RTX 5060", "RTX 5070Ti"], "brands": ["联想", "华为"]}
+
+
+def validate_request(data):
+    serializer = RecommendSerializer(data=data, context=OPTIONS)
+    return serializer.validated_data if serializer.is_valid() else serializer.errors
+
+
+def test_recommend_request_defaults_and_normalizes_gpu():
+    assert validate_request({}) == {"conditions": {}, "preference": "", "top_k": 5}
+    data = validate_request({"conditions": {"gpu_in": ["rtx5070 ti"], "ports": ["hdmi"], "panel": "oled"}})
+    assert data["conditions"] == {"gpu_in": ["RTX 5070Ti"], "ports": ["hdmi"], "panel": "oled"}
+
+
+def test_recommend_request_lists_options_for_unknown_gpu_and_brand():
+    errors = validate_request({"conditions": {"gpu_in": ["RTX 4090"], "brands": ["苹果"]}})["conditions"]
+    assert "RTX 4090" in str(errors["gpu_in"]) and "RTX 5060、RTX 5070Ti" in str(errors["gpu_in"])
+    assert "联想、华为" in str(errors["brands"])
+
+
+@pytest.mark.parametrize("data", [
+    {"conditions": {"thin_light": True}},
+    {"conditions": {"price_min": 9000, "price_max": 8000}},
+    {"conditions": {"ports": ["usb4"]}},
+    {"conditions": {"gpu_in": []}},
+    {"conditions": {"price_max": "nan"}},
+    {"top_k": 21},
+    {"query": "游戏本"},
+])
+def test_recommend_request_rejects_invalid_values(data):
+    assert not RecommendSerializer(data=data, context=OPTIONS).is_valid()

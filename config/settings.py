@@ -9,7 +9,7 @@ DEBUG = boolean("DEBUG")
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 INSTALLED_APPS = [
     "django.contrib.auth", "django.contrib.contenttypes",
-    "rest_framework", "rest_framework.authtoken", "catalog", "sources",
+    "rest_framework", "rest_framework.authtoken", "catalog", "sources", "products",
 ]
 MIDDLEWARE = ["django.middleware.security.SecurityMiddleware", "django.middleware.common.CommonMiddleware"]
 ROOT_URLCONF = "config.urls"

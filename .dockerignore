@@ -8,6 +8,7 @@
 !contracts/
 !embeddings/
 !ingestion/
+!products/
 !retrieval/
 !sources/
 # 评测脚本与查询集：测试会导入对比脚本，也便于在容器内评测

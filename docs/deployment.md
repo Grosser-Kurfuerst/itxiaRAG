@@ -177,7 +177,7 @@ JSON
 
 ### 3.7 语雀网页与快照导入
 
-`.dockerignore` 白名单包含 `sources/` 与 `eval/`，镜像内提供语雀导入命令、`sources/yuque/manifests/itxia.toml` 清单和召回评测脚本，另放行 `docs/phase1/yuque-ingestion/requirements-analysis.md`，供清单测试核对第一批文档清单；同时继续排除 `__pycache__` 和 `*.py[cod]`。
+`.dockerignore` 白名单包含 `sources/`、`products/` 与 `eval/`，镜像内提供语雀导入命令、`sources/yuque/manifests/itxia.toml` 清单、规格文件 `products/specs/bibar.json` 与 `import_specs` 命令和召回评测脚本，另放行 `docs/phase1/yuque-ingestion/requirements-analysis.md`，供清单测试核对第一批文档清单；同时继续排除 `__pycache__` 和 `*.py[cod]`。
 
 导入命令匿名读取语雀公开网页，不需要 Token 或额外环境变量，只要求 app 容器能访问 `www.yuque.com`：
 

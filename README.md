@@ -30,6 +30,7 @@
 - [第二阶段需求](docs/phase2/requirements.md)：检索质量与维修类内容
 - [召回改进方案](docs/phase2/retrieval-improvement-plan.md)与[改进记录](docs/phase2/retrieval-improvement-log.md)：改进项、实验结果与取舍
 - [第三阶段需求](docs/phase3/requirements.md)：计划接入大模型后实现的功能（草案）
+- [机型规格库方案](docs/phase3/product-spec-design.md)：按条件推荐的结构化规格库与分阶段计划
 
 每项契约或操作只在对应文档维护，其他文档保留概述和链接；实现变化时同步对应文档。
 

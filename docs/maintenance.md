@@ -161,8 +161,88 @@ dc ps    # 应有 app（API，127.0.0.1:8000）、db（PostgreSQL，15432）、e
    ```
 
    `ENTITY_TITLE_REQUIRED` 表示漏了 `entity_title`。
-4. **补属性表**：在 [attributes.json](../eval/attributes.json) 按已有条目格式补属性，键为 `entity_title`，字段有 `entry`（清单键）、`price`、`weight`、`screen`、`oled`、`gpu`、`battery_hours`、`ports`（八种接口布尔值）、`ports_text`、`gaming`，原文没有的填 `null`。D 类答案由属性表按规则生成，不补就不会计为答案；属性表只能包含已入库的评测，否则评测器报错。
+4. **补属性表**：在 [attributes.json](../eval/attributes.json) 按已有条目格式补属性，键为 `entity_title`，字段有 `entry`（清单键）、`price`、`weight`、`screen`、`oled`、`gpu`、`battery_hours`、`ports`（八种接口布尔值）、`ports_text`、`gaming`，原文没有的填 `null`。D 类答案由属性表按规则生成，不补就不会计为答案；属性表只能包含已入库的评测，否则评测器报错。规格库上线后（[机型规格库方案](phase3/product-spec-design.md) P1），这一步改为按下方[规格填写](#规格填写)补规格文件，属性表不再更新。
 5. **评测**：语料版本加 1，核对 D、G 类并跑回归（第 7、8 节）。
+
+#### 规格填写
+
+规格库上线后适用，取代第 4 步的属性表。项目不自动提取规格：由维护者人工填写，或把本节连同评测正文交给外部 LLM 生成草稿，再核对。只把公开的笔吧评测发给外部 LLM，不要发送语雀内部文档或 `.runtime/` 中的其他内容。
+
+评测正文从库中导出，导入规格时按这份正文自动校验引用：
+
+```sh
+mkdir -p .runtime/specs
+dc exec -T app python manage.py shell -c "
+from catalog.models import ContextUnit
+print(ContextUnit.objects.get(source__document_schema='product_review', title='联想 来酷GT 16 酷睿版').body)
+" > .runtime/specs/laiku-gt16.txt
+```
+
+填写规则：
+
+- 一台机器一条记录。`key` 与清单中的 `entity_title` 完全一致，`brand` 取它的第一个词。
+- 先从评测原文取值；原文有多个配置时只取评测机。
+- 原文缺失的字段，可以联网搜索补充，优先官网参数页，其次电商官方旗舰店详情页、其他评测媒体，配置必须与评测机一致。价格只补官方首发价或建议零售价，`price_date` 写该价格的日期；续航不从别处补，见下表。查不到的填 `null`，不推算。
+- 规格字段在 `evidence` 中附引用，键为字段名，一句话能证明几个相关字段时写在其中一个下即可。引用逐字复制，不改写、不拼接：
+  - 来自评测原文的，值直接写引用，如 `"weight_kg": "重量 2.23kg"`。导入时会自动检查它确实出现在评测正文中。
+  - 联网补充的，写成 `{"source": "网页链接", "quote": "网页上的原文"}`。导入时只检查格式，内容由人点开链接核对。
+
+| 字段 | 口径 |
+| --- | --- |
+| `price_cny`、`price_kind`、`price_date` | 单位元。优先取参考价或首发价，只有补贴价时取补贴价，其他价格写进 `note`。`price_kind` 为 `launch`（首发）、`reference`（参考、建议零售）、`subsidy`（补贴、国补）、`predicted`（预测）；日期原文没写时用评测日期 |
+| `weight_kg` | 机身重量，不含适配器；二合一按含键盘称重时在 `note` 注明 |
+| `screen_inch`、`panel` | 英寸；`panel` 为 `oled`、`lcd`（IPS 等液晶屏）或 `miniled` |
+| `cpu` | 完整型号，如 `Core Ultra 9 275HX` |
+| `has_dgpu`、`gpu` | 只有核显时为 `false`、`null`；独显写成 `RTX 5060`、`RTX 5070Ti`，Ti 紧跟数字 |
+| `ram_gb`、`ram_upgradable` | 单位 GB；有内存插槽为 `slots`，板载为 `soldered` |
+| `storage_gb` | 单位 GB，1TB 记为 1024 |
+| `battery_hours` | 只取笔吧“日常应用仿真”的成绩，单位小时，保留两位小数（8 小时 29 分钟记为 8.48）。官网续航和其他测试的口径不同，不能用来补 |
+| `is_gaming` | 定位为游戏本且有 RTX 独显为 `true`；创作本、双屏本或没有独显为 `false` |
+| `ports` | 8 个布尔值，接口介绍里没提到的为 `false`：`usb_a`；`usb_c`（含雷电、USB4）；`video_out`（有 HDMI、DP 或支持视频输出的 USB-C）；`hdmi`；`rj45`；`card_reader`（SD 或 microSD）；`thunderbolt`（雷电或 USB4）；`oculink` |
+| `ports_text` | 原文介绍接口的段落，逐字复制；评测没有介绍接口时，复制补充来源中的接口说明 |
+| `extra` | 可选，只用 `refresh_hz`、`resolution`、`battery_wh` 三个键 |
+| `note` | 计价、称重口径等说明，没有就写空字符串 |
+
+示例（联想 来酷GT 16 酷睿版，评测日期 2026-09-28）。原文只有参考售价和国补价，没有日常应用仿真续航：
+
+```json
+{
+  "key": "联想 来酷GT 16 酷睿版", "brand": "联想",
+  "price_cny": 5999, "price_kind": "reference", "price_date": "2026-09-28",
+  "weight_kg": 2.23, "screen_inch": 16.0, "panel": "lcd",
+  "cpu": "Core 5 205H", "has_dgpu": true, "gpu": "RTX 3050",
+  "ram_gb": 16, "ram_upgradable": "slots", "storage_gb": 512,
+  "battery_hours": null, "is_gaming": true,
+  "ports": {"usb_a": true, "usb_c": true, "video_out": true, "hdmi": true,
+            "rj45": true, "card_reader": false, "thunderbolt": false, "oculink": false},
+  "ports_text": "接口方面，机身左侧有两个USB-A 5Gbps以及一个3.5mm音频接口；机身右侧有两个USB-A 5Gbps接口；机身后侧有一个USB-C 10Gbps（支持100W PD充电和DP1.4独显视频输出）、HDMI2.1 FRL（独显输出）、电源接口以及RJ45网口（1GbE）。",
+  "extra": {"refresh_hz": 165, "resolution": "1920x1200"},
+  "evidence": {
+    "price_cny": "参考售价5999元",
+    "weight_kg": "重量 2.23kg",
+    "screen_inch": "16英寸 1920×1200分辨率 100%sRGB色域 165Hz刷新率 IPS雾面屏",
+    "cpu": "Core 5 205H 处理器",
+    "gpu": "RTX 3050 4GB 独立显卡（95W）",
+    "ram_gb": "16GB DDR4 3200MT/s 内存",
+    "ram_upgradable": "机器有两个内存插槽",
+    "storage_gb": "512GB 固态硬盘",
+    "is_gaming": "正式成为新时代的主流价位游戏本"
+  },
+  "note": "原文另有国补后到手价5099.15元"
+}
+```
+
+填好后：
+
+1. **核对**：不论谁填写，都对照 `evidence` 检查，重点是价格口径、续航是否来自日常应用仿真、`ports` 与 `ports_text` 是否一致；联网补充的字段要点开链接，确认引用存在、配置与评测机一致。
+2. **合入并导入**：记录加入 `products/specs/bibar.json`，合入即视为已审核。试运行后去掉 `--dry-run` 正式导入：
+
+   ```sh
+   dc exec app python manage.py import_specs --file products/specs/bibar.json --dry-run
+   ```
+
+   有任何一条字段或引用校验不通过，整个文件都不写库。报告中“失去关联”表示找不到 `key` 对应的评测，通常是 `entity_title` 拼写不一致。
+3. **评测**：D 类答案由规格文件生成，补规格后按第 7、8 节跑回归。
 
 ### 2.5 单篇资料（API）
 

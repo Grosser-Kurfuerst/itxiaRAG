@@ -14,6 +14,8 @@ def scoped_contexts(scope):
                                       source__embedding_space=scope.embedding_space)
     if scope.source_ids is not None:
         rows = rows.filter(source_id__in=scope.source_ids)
+    if scope.context_ids is not None:
+        rows = rows.filter(pk__in=scope.context_ids)
     return rows
 
 

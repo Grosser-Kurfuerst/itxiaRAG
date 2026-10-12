@@ -6,14 +6,17 @@ from rest_framework.views import APIView
 
 from catalog.policies import require_permission, visible_scopes
 from config import components
+from contracts.products import RecommendSerializer
 from contracts.query import QuerySerializer
 from contracts.serializers import RawSourceImportSerializer, SourceImportSerializer, import_dtos, import_raw_dtos
 from ingestion.pipeline import import_processed, preprocess_raw
+from products.selectors import condition_options
+from products.service import recommend
 from retrieval.service import search
 
 
-def validated(serializer_class, data):
-    serializer = serializer_class(data=data)
+def validated(serializer_class, data, context=None):
+    serializer = serializer_class(data=data, context=context or {})
     serializer.is_valid(raise_exception=True)
     return serializer.validated_data
 
@@ -45,4 +48,15 @@ class SearchView(APIView):
                         pipeline=components.post_recall_pipeline(),
                         reader=components.context_reader(), embedding_space=embedder.space_id,
                         candidate_limit=settings.RETRIEVAL_CANDIDATE_LIMIT)
+        return Response(result)
+
+
+class ProductRecommendView(APIView):
+    def post(self, request):
+        visibilities = visible_scopes(request.user)
+        data = validated(RecommendSerializer, request.data, condition_options(visibilities))
+        embedder = components.embedding_provider()
+        result = recommend(data, visibilities, collector=components.recall_collector(embedder),
+                           pipeline=components.post_recall_pipeline(), embedding_space=embedder.space_id,
+                           candidate_limit=settings.RETRIEVAL_CANDIDATE_LIMIT)
         return Response(result)

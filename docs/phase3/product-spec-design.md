@@ -112,7 +112,7 @@ D 类失败的原因是检索只能字面匹配，不理解价格、重量、续
 用户 ⇄ 上层系统（LLM：判断问题、换算条件、生成回答）
           ├─ 知识检索工具 → POST /api/v1/search/ → 现有混合检索（不变）
           └─ 机型推荐工具 → POST /api/v1/products/recommend/
-                              → products.RecommendationService
+                              → products.service.recommend
                                   ① products.conditions：按原子条件逐台判定 → 候选机型
                                   ② 复用 MultiRouteRecall + PostRecallPipeline，范围限定为候选机型的评测父段 → 按 preference 排序
                                   ③ 读取规格卡、评测结论子块、软条件命中子块
@@ -125,10 +125,9 @@ D 类失败的原因是检索只能字面匹配，不理解价格、重量、续
 | `products/`（新增） | 规格表、规格文件导入、条件过滤、推荐编排、工具定义 | 召回算法、条件换算、规格提取 |
 | [contracts/](../../contracts/) | 规格记录与推荐请求的 Serializer（[products.py](../../contracts/products.py)），条件以校验后的 dict 传递，不另设 DTO | 实现 |
 | [catalog/](../../catalog/) | `scoped_contexts` 增加按父段过滤 | 规格数据 |
-| [api/](../../api/) | 新增推荐接口，与现有接口共用认证与可见范围 | 推荐逻辑 |
-| [config/components.py](../../config/components.py) | 注入推荐服务 | 业务规则 |
+| [api/](../../api/) | 新增推荐接口，与现有接口共用认证与可见范围；与 `search/` 一样在视图中从 [components](../../config/components.py) 取召回器与流水线注入推荐服务 | 推荐逻辑 |
 
-依赖方向：`products` 依赖 `catalog` 和 `contracts`。推荐服务通过协议使用召回器与流水线，不直接导入 `retrieval`。[retrieval/service.py](../../retrieval/service.py) 的 `search()` 不改动。
+依赖方向：`products` 依赖 `catalog` 和 `contracts`。推荐服务（[service.py](../../products/service.py)）使用注入的召回器与流水线，不直接导入 `retrieval`，也不另设推荐器协议。[retrieval/service.py](../../retrieval/service.py) 的 `search()` 不改动。
 
 ## 5. 数据设计
 
@@ -290,7 +289,7 @@ python manage.py import_specs --file products/specs/bibar.json --dry-run
   "products": [{
     "key": "…", "spec": {"price_cny": 0, "price_kind": "launch", "price_date": "…", "weight_kg": 0, "…": "…"},
     "review": {"context_id": "…", "title": "…",
-               "source": {"title": "…", "url": "…", "source_date": "…"},
+               "source": {"id": "…", "title": "…", "url": "…", "source_date": "…"},
                "conclusions": [{"evidence_id": "…", "key": "…", "sections": ["优缺点"], "text": "…"}],
                "highlights": [{"evidence_id": "…", "key": "…", "sections": ["散热分析"], "text": "…", "score": 0.05}]}
   }],
@@ -299,7 +298,7 @@ python manage.py import_specs --file products/specs/bibar.json --dry-run
 }
 ```
 
-需要整篇评测时，上层可以用 `context_id` 调用知识检索，或者由后续版本另提供读取接口。本方案不在推荐响应中返回评测全文，避免响应过大。接口契约要同步到[一期技术设计第 6 节](../phase1/phase1-technical-design.md#6-api-与错误)。
+需要深入了解某台机器时，上层可以把 `review.source.id` 作为 `filters.source_ids` 调用知识检索，或者由后续版本另提供读取接口。本方案不在推荐响应中返回评测全文，避免响应过大。接口契约要同步到[一期技术设计第 6 节](../phase1/phase1-technical-design.md#6-api-与错误)。
 
 ## 7. 规格填写
 
@@ -352,11 +351,11 @@ P3 的评测脚本放在 `eval/`，用一个 LLM 加两个工具定义模拟上�
 | P1.1 | 评测子块记录 `sections`（5.4）；重新导入 78 篇评测 | 单测覆盖跨栏目合并；子块检索文本与重导前逐条相同，170 条查询的关键词路名次与 v16 相同；抽查 10 篇评测的结论子块。已完成（2026-10-12），新基线 v17 |
 | P1.2 | `products` 模块：模型、迁移、Serializer；按 5.1 的对应关系把 attributes.json 转为规格文件；`import_specs` 命令与引用校验 | 78 台全部关联到评测父段；重复导入结果为全部“未变”；改动 `entity_title` 后报告“失去关联”；引用不在正文中时整个文件不写库（集成测试）。已完成（2026-10-12）：正式库导入 78 台、全部关联，重复导入全部“未变” |
 | P1.3 | 推荐请求 Serializer（含显卡型号写法规范化与可选值报错）、条件判定、未知统计 | 单测覆盖每个条件与空值语义。已完成（2026-10-12）：候选最多几百台，改为在内存中逐台判定（[conditions.py](../../products/conditions.py)），空值语义只实现一处；条件以 dict 传递，不设 `ProductFilter` DTO |
-| P1.4 | `SearchScope.context_ids`；推荐服务；推荐接口；组合根注入 | 集成测试：可见范围、空条件、结果为空时的诊断、未知显卡型号报 400 |
+| P1.4 | `SearchScope.context_ids`；推荐服务；推荐接口；视图注入召回器与流水线 | 集成测试：可见范围、空条件、结果为空时的诊断、未知显卡型号报 400。已完成（2026-10-12）：注入在视图中完成，组合根不改；正式库用真实模型冒烟通过，170 条查询结果与 v17 逐条相同 |
 | P1.5 | 评测器：D 类读规格文件，增加推荐路径评测；新增软条件查询集；跑 8.2 中的 P1 指标 | 结果写入[召回效果评测](../phase1/yuque-ingestion/retrieval-evaluation.md)；按软条件排序的结果确定 `preference` 为空时的默认排序 |
 | P1.6 | 文档：接口契约；[维护手册](../maintenance.md)中去掉规格附录的“上线后适用”说明，2.4 第 4 步改为补规格；[第三阶段需求](requirements.md)中 F2-08 的状态 | — |
 
-规模估计：新增约 400 行业务代码与 300 行测试，修改已有代码约 50 行（`SearchScope`、`scoped_contexts`、`ReviewStrategy`、评测器、组合根与路由）。
+规模估计：新增约 400 行业务代码与 300 行测试，修改已有代码约 50 行（`SearchScope`、`scoped_contexts`、`ReviewStrategy`、评测器、视图与路由）。
 
 ### P2：规格补全（不改代码）
 

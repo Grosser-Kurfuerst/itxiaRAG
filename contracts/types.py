@@ -128,6 +128,7 @@ class SearchScope:
     visibilities: tuple[str, ...]
     embedding_space: str
     source_ids: tuple[UUID, ...] | None = None
+    context_ids: tuple[UUID, ...] | None = None  # 推荐时限定为候选机型的评测父段
 
 
 @dataclass(frozen=True)

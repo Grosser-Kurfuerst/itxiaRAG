@@ -33,7 +33,7 @@ dc ps    # 应有 app（API，127.0.0.1:8000）、db（PostgreSQL，15432）、e
 | 检索参数 | [settings.py](../config/settings.py)、环境变量门槛 | 重建 app | 评测，写入改进记录 |
 | Embedding 模型 | `.env.docker` | **全量重新导入** | 全量评测 |
 | 机型规格 | [bibar.json](../products/specs/bibar.json) | 重建 app 后运行 `import_specs` | 导入报告；评测 |
-| 评测集 | [queries.json](../eval/queries.json)、[recommend-queries.json](../eval/recommend-queries.json) | 下次评测 | 评测脚本能加载 |
+| 评测集 | [queries.json](../eval/queries.json)、[recommend-queries.json](../eval/recommend-queries.json)、[llm-queries.json](../eval/llm-queries.json) | 下次评测 | 评测脚本能加载 |
 | 账号与 Token | 数据库 | 立即生效 | 401／403 检查 |
 
 - 改清单、词表、参数和代码都要重建：`dc up -d --build app`。`dc exec app` 用的是镜像里的清单和代码，改了清单不重建，导入用的还是旧清单。
@@ -587,6 +587,14 @@ dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/retrieval:/app/retrie
   ```sh
   dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/.runtime/eval:/data" -e PYTHONPATH=/app app \
     python eval/recommend_eval.py eval/queries.json eval/recommend-queries.json /data/corpus-v5/recommend-v2.json
+  ```
+
+- 改了[工具定义](../products/tool-definitions.md)时，用对话模型跑上层 LLM 模拟评测（镜像中的 `products/` 要先重建），输出工具选择、条件换算差异和端到端 P@5，方法见[评测 9.14](phase1/yuque-ingestion/retrieval-evaluation.md#914-上层-llm-模拟评测p322026-10-13)。模型通过 `EVAL_LLM_BASE_URL`、`EVAL_LLM_MODEL`、`EVAL_LLM_API_KEY` 配置，只在当前 shell 设置，不写入 env 文件：
+
+  ```sh
+  dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/.runtime/eval:/data" -e PYTHONPATH=/app \
+    -e EVAL_LLM_BASE_URL -e EVAL_LLM_MODEL -e EVAL_LLM_API_KEY app \
+    python eval/llm_eval.py eval/queries.json eval/llm-queries.json /data/corpus-v5/llm-v1.json
   ```
 
 **当前基线** `.runtime/eval/corpus-v5/results-v17.json`：查询集 v6、语料 v5（2026-10-12 重导），k=20、不加权、文档端搜索模式、开启同义词；`all` 范围混合 Hit@1／Hit@5／MRR@10 为 0.77／0.95／0.852，见[评测 9.12](phase1/yuque-ingestion/retrieval-evaluation.md#912-评测子块记录栏目名后重导p112026-10-12)。重新编码会使向量有细微差异（9.12），比较时注意区分。

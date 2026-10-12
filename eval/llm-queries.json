@@ -1,0 +1,41 @@
+{
+ "version": "l1",
+ "note": "上层 LLM 模拟评测的补充样例（机型规格库方案 P3.2）：口语化选购与多轮追问。messages 为 OpenAI 格式的对话，最后一条是待评测的用户问题；conditions 按工具定义的参考口径给出标准原子条件，答案为满足标准条件的全部机型",
+ "queries": [
+  {"id": "L01", "messages": [{"role": "user", "content": "打游戏不卡的本子，六千五以内"}],
+   "tool": "recommend_laptops", "conditions": {"price_max": 6500, "is_gaming": true}},
+  {"id": "L02", "messages": [{"role": "user", "content": "五千左右、背着不累的大学生笔记本"}],
+   "tool": "recommend_laptops", "conditions": {"price_min": 4500, "price_max": 5500, "weight_max": 1.5}},
+  {"id": "L03", "messages": [{"role": "user", "content": "七千以内，要能直接插网线和U盘的"}],
+   "tool": "recommend_laptops", "conditions": {"price_max": 7000, "ports": ["rj45", "usb_a"]}},
+  {"id": "L04", "messages": [{"role": "user", "content": "屏幕大点的游戏本，16 寸起步，一万二以内"}],
+   "tool": "recommend_laptops", "conditions": {"price_max": 12000, "is_gaming": true, "screen_min": 16}},
+  {"id": "L05", "messages": [{"role": "user", "content": "想接显卡坞，有雷电口的本子推荐一下"}],
+   "tool": "recommend_laptops", "conditions": {"ports": ["thunderbolt"]}},
+  {"id": "L06", "messages": [{"role": "user", "content": "背着不累、续航 10 小时以上的笔记本"}],
+   "tool": "recommend_laptops", "conditions": {"weight_max": 1.5, "battery_min": 10}},
+  {"id": "L07", "messages": [{"role": "user", "content": "笔记本合上盖子不休眠，怎么设置"}],
+   "tool": "search_knowledge"},
+  {"id": "M01", "messages": [
+    {"role": "user", "content": "预算 7000 左右，推荐个轻薄本"},
+    {"role": "assistant", "content": "按 6300～7700 元、重量 1.5kg 以内，推荐了 5 台轻薄本。"},
+    {"role": "user", "content": "要 OLED 屏的"}],
+   "tool": "recommend_laptops", "conditions": {"price_min": 6300, "price_max": 7700, "weight_max": 1.5, "panel": "oled"}},
+  {"id": "M02", "messages": [
+    {"role": "user", "content": "一万以内的游戏本有哪些"},
+    {"role": "assistant", "content": "按 1 万元以内的游戏本，推荐了 5 台。"},
+    {"role": "user", "content": "显卡要 5070 以上"}],
+   "tool": "recommend_laptops",
+   "conditions": {"price_max": 10000, "is_gaming": true, "gpu_in": ["RTX 5070", "RTX 5070Ti", "RTX 5080", "RTX 5090"]}},
+  {"id": "M03", "messages": [
+    {"role": "user", "content": "预算 9000 推荐游戏本"},
+    {"role": "assistant", "content": "按 6750～9900 元的游戏本，推荐了 5 台。"},
+    {"role": "user", "content": "算了不要游戏本，换成轻一点的"}],
+   "tool": "recommend_laptops", "conditions": {"price_min": 6750, "price_max": 9900, "weight_max": 1.5}},
+  {"id": "M04", "messages": [
+    {"role": "user", "content": "推荐 6000 以内的轻薄本"},
+    {"role": "assistant", "content": "按 6000 元以内、重量 1.5kg 以内，推荐了 5 台，第一台是机械革命 星耀14。"},
+    {"role": "user", "content": "第一台能自己加内存吗"}],
+   "tool": "search_knowledge"}
+ ]
+}

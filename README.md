@@ -6,31 +6,32 @@
 
 ## 文档导航
 
-| 文档 | 负责维护的内容 |
-| --- | --- |
-| [总体需求](docs/requirements.md) | 业务场景、当前范围、P1 扩展与 P2 自进化 |
-| [技术选型与研究参考](docs/technology-selection.md) | 当前选择理由、替代方案、开源与论文依据 |
-| [首期技术设计](docs/phase1/phase1-technical-design.md) | 模块、公共 DTO、存储、检索、API 响应与错误、迁移 |
-| [来源接入说明](docs/phase1/source-ingestion-plan.md) | 资料获取与准备、提交方式选择、更新与后续平台连接器 |
-| [来源连接器改造方案](docs/phase1/source-connector-design.md) | 通用连接器协议、清单与导入服务的拆分，平台差异与迁移步骤；已实现 |
-| [语雀文档导入方案](docs/phase1/yuque-ingestion/overview.md) | 语雀解析、教程／知识／工具条目流水线、排障指南与单案例流水线、公开网页读取与快照导入已实现；93 篇已导入开发环境 |
-| [文档预处理](docs/phase1/preprocessing.md) | 原文请求、格式适配器、父子段策略、长度预算与步骤扩展 |
-| [Docker 部署与验收](docs/deployment.md) | Compose 配置、启动、账号、标准／原文导入冒烟检查和日常操作 |
-| [维护手册](docs/maintenance.md) | 资料导入方式与分类登记、新增类别、评测扩充与回归、检索词表与参数、账号 Token 与备份等人工维护流程 |
-| [第二阶段需求](docs/phase2/requirements.md) | 第二阶段目标、范围、功能点与里程碑：检索质量与维修类内容；M2 低成本检索改进与池化补标（F2-01）已完成，F2-12～F2-14 维修类内容已接入并评测；选购条件解析移入第三阶段，其余未实现 |
-| [召回改进方案](docs/phase2/retrieval-improvement-plan.md) | 依据评测结果的召回改进项、采纳条件与实施顺序；分词模式、同义词表与 RRF k=20 已采纳 |
-| [召回改进记录](docs/phase2/retrieval-improvement-log.md) | 每项召回改进的方法、实验结果与是否保留 |
-| [第三阶段需求](docs/phase3/requirements.md) | 草案：从第二阶段移入、计划接入大模型后实现的功能（选购条件识别等） |
-| [项目测试规则](docs/unit-testing-guidelines.md) | 测试环境、预处理专项、回归命令与完成定义 |
+**了解项目**
 
-建议按任务阅读：
+- [总体需求](docs/requirements.md)：业务场景与范围
+- [技术选型](docs/technology-selection.md)：选型理由与研究参考
+- [首期技术设计](docs/phase1/phase1-technical-design.md)：模块、DTO、存储、检索与 API
 
-- 了解项目：总体需求 → 技术选型 → 首期技术设计。
-- 接入资料：来源接入说明 → 文档预处理 → 专项测试。
-- 运行与验收：下方本地运行或 Docker 部署 → 项目测试规则。
-- 日常维护：维护手册（资料、词表、评测集与账号）。
+**资料接入**
 
-每项契约或操作在对应文档维护，其他文档保留概述和链接；实现变化时同步对应文档。外部资料与历史验证记录注明日期和适用范围，不作为当前实现状态或测试结果。
+- [来源接入说明](docs/phase1/source-ingestion-plan.md)：各类资料的获取与提交方式
+- [来源连接器](docs/phase1/source-connector-design.md)：连接器协议与清单格式
+- [语雀导入](docs/phase1/yuque-ingestion/overview.md)：语雀各类文档的流水线与导入结果
+- [文档预处理](docs/phase1/preprocessing.md)：原文请求、父子分段策略与扩展方式
+
+**运行与维护**
+
+- [部署与验收](docs/deployment.md)：Docker 部署、账号与冒烟检查
+- [维护手册](docs/maintenance.md)：资料导入与分类、新增类别、评测回归、账号 Token
+- [测试规则](docs/unit-testing-guidelines.md)：测试环境、回归命令与完成定义
+
+**迭代计划与记录**
+
+- [第二阶段需求](docs/phase2/requirements.md)：检索质量与维修类内容
+- [召回改进方案](docs/phase2/retrieval-improvement-plan.md)与[改进记录](docs/phase2/retrieval-improvement-log.md)：改进项、实验结果与取舍
+- [第三阶段需求](docs/phase3/requirements.md)：计划接入大模型后实现的功能（草案）
+
+每项契约或操作只在对应文档维护，其他文档保留概述和链接；实现变化时同步对应文档。
 
 ## Docker 运行
 

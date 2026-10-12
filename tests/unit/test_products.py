@@ -1,11 +1,16 @@
 import json
+import re
 from pathlib import Path
 
 import pytest
 
-from contracts.products import PORTS, ProductSpecSerializer, RecommendSerializer, normalize_gpu
+from contracts.products import (PANELS, PORTS, ConditionsSerializer, ProductSpecSerializer, RecommendSerializer,
+                                normalize_gpu)
+from contracts.query import QuerySerializer
 
-SPEC_FILE = Path(__file__).resolve().parents[2] / "products/specs/bibar.json"
+ROOT = Path(__file__).resolve().parents[2]
+SPEC_FILE = ROOT / "products/specs/bibar.json"
+TOOL_FILE = ROOT / "products/tool-definitions.md"
 
 
 def validate_spec(**fields):
@@ -90,3 +95,23 @@ def test_recommend_request_lists_options_for_unknown_gpu_and_brand():
 ])
 def test_recommend_request_rejects_invalid_values(data):
     assert not RecommendSerializer(data=data, context=OPTIONS).is_valid()
+
+
+def test_tool_definitions_match_contracts_and_spec_file():
+    text = TOOL_FILE.read_text(encoding="utf-8")
+    prompt, = re.findall(r"```text\n(.*?)\n```", text, re.S)  # 评测脚本按这个约定读取提示词和工具定义
+    blocks = re.findall(r"```json\n(.*?)\n```", text, re.S)
+    tools = {tool["name"]: tool["parameters"]["properties"] for tool in map(json.loads, blocks)}
+    assert len(blocks) == 2
+    assert set(tools["search_knowledge"]) == set(QuerySerializer().fields)
+    assert set(tools["search_knowledge"]["filters"]["properties"]) == set(QuerySerializer().fields["filters"].fields)
+    assert set(tools["recommend_laptops"]) == set(RecommendSerializer().fields)
+
+    conditions = tools["recommend_laptops"]["conditions"]["properties"]
+    assert set(conditions) == set(ConditionsSerializer().fields)
+    assert conditions["ports"]["items"]["enum"] == PORTS and conditions["panel"]["enum"] == PANELS
+    records = json.loads(SPEC_FILE.read_text(encoding="utf-8"))
+    gpus = conditions["gpu_in"]["items"]["enum"]
+    assert set(gpus) == {normalize_gpu(record["gpu"]) for record in records if record.get("gpu")}
+    assert " < ".join(gpus) in prompt  # 提示词中的显卡档次与 enum 顺序一致
+    assert set(conditions["brands"]["items"]["enum"]) == {record["brand"] for record in records}

@@ -31,6 +31,7 @@
 - [召回改进方案](docs/phase2/retrieval-improvement-plan.md)与[改进记录](docs/phase2/retrieval-improvement-log.md)：改进项、实验结果与取舍
 - [第三阶段需求](docs/phase3/requirements.md)：计划接入大模型后实现的功能（草案）
 - [机型规格库方案](docs/phase3/product-spec-design.md)：按条件推荐的结构化规格库与分阶段计划
+- [工具定义](products/tool-definitions.md)：上层 LLM 调用知识检索与机型推荐的提示词、JSON Schema 与示例
 
 每项契约或操作只在对应文档维护，其他文档保留概述和链接；实现变化时同步对应文档。
 

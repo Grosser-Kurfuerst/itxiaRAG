@@ -513,7 +513,7 @@
  },
  {
   "key": "小米 REDMI Book Pro 14 2026",
-  "brand": "小米",
+  "brand": "红米",
   "price_cny": 9499.0,
   "price_kind": "reference",
   "price_date": "2026-04-25",
@@ -545,7 +545,7 @@
  },
  {
   "key": "小米 REDMI Book Pro 16 2026",
-  "brand": "小米",
+  "brand": "红米",
   "price_cny": 9699.0,
   "price_kind": "reference",
   "price_date": "2026-07-19",
@@ -1633,7 +1633,7 @@
  },
  {
   "key": "联想 ThinkPad X14",
-  "brand": "联想",
+  "brand": "ThinkPad",
   "price_cny": 12499.0,
   "price_kind": "reference",
   "price_date": "2026-08-26",

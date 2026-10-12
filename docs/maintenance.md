@@ -181,7 +181,7 @@ print(ContextUnit.objects.get(source__document_schema='product_review', title='�
 
 填写规则：
 
-- 一台机器一条记录。`key` 与清单中的 `entity_title` 完全一致，`brand` 取它的第一个词。
+- 一台机器一条记录。`key` 与清单中的 `entity_title` 完全一致，`brand` 取它的第一个词；子品牌 ROG、ThinkPad、红米单列（如“联想 ThinkPad X14”记为 ThinkPad，“小米 REDMI Book”记为红米），以便按品牌筛选时不漏机。
 - 先从评测原文取值；原文有多个配置时只取评测机。
 - 原文缺失的字段，可以联网搜索补充，优先官网参数页，其次电商官方旗舰店详情页、其他评测媒体，配置必须与评测机一致。价格只补官方首发价或建议零售价，`price_date` 写该价格的日期；续航不从别处补，见下表。查不到的填 `null`，不推算。
 - 规格字段在 `evidence` 中附引用，键为字段名，一句话能证明几个相关字段时写在其中一个下即可。引用逐字复制，不改写、不拼接：
@@ -244,6 +244,7 @@ print(ContextUnit.objects.get(source__document_schema='product_review', title='�
 
    有任何一条字段或引用校验不通过，整个文件都不写库。报告中“失去关联”表示找不到 `key` 对应的评测，通常是 `entity_title` 拼写不一致。
 3. **评测**：D 类答案由规格文件生成，补规格后按第 7、8 节跑回归。
+4. **工具定义**：新增显卡型号或品牌时，按[工具定义 3.1 节](../products/tool-definitions.md#31-可选值)更新可选值与显卡档次；单元测试会检查工具定义与规格文件是否一致。
 
 ### 2.5 单篇资料（API）
 

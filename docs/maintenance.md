@@ -1,84 +1,218 @@
 # 维护手册
 
-本文汇总部署后需要人工维护的内容：库中资料、检索词表与参数、评测集、账号和备份。部署与首次验收见[部署与验收](deployment.md)，下文命令沿用其中定义的 `dc` 函数，从仓库根目录执行。
+本文写给维护知识库的人或 LLM 代理，覆盖资料导入与分类、新增类别、评测与回归、账号与备份。部署与首次验收见[部署与验收](deployment.md)。
+
+## 0. 操作约定
+
+所有命令在仓库根目录执行，先定义 `dc` 函数：
+
+```sh
+ITXIA_ENV="$PWD/.env.docker"
+dc() { docker compose --env-file "$ITXIA_ENV" -p itxia "$@"; }
+dc ps    # 应有 app（API，127.0.0.1:8000）、db（PostgreSQL，15432）、embedding（Ollama）在运行
+```
+
+规则：
+
+- 不打印、不提交 `.env.docker`、`.env.local` 的内容。
+- 不提交 `.runtime/`：快照、采集原文、正式公众号清单、Token、备份和评测结果都在其中。
+- 用 `git add <文件>` 按文件名暂存，提交信息用 Conventional Commits，如 `chore(sources): 登记语雀新增文档`。
+- 删除来源、全量重导、换模型前先备份（9.2）。
+- 批量导入先加 `--dry-run`，`failed` 为 0 再正式导入。
 
 ## 1. 总览
 
-| 维护对象 | 位置 | 什么时候改 | 生效方式 | 改后验证 |
-| --- | --- | --- | --- | --- |
-| 语雀文档 | 清单 [itxia.toml](../sources/yuque/manifests/itxia.toml) | 新增、改类别、原文更新 | 重新运行导入 | 导入报告；涉及评测答案时跑评测 |
-| 公众号评测 | `.runtime/eval/corpus-v1/` 下的清单与采集目录（被忽略） | 新增评测、修正机型名 | 重新运行导入 | 导入报告；评测 |
-| 单篇资料 | 标准 JSON 或原文 API | 零散补充 | 提交即生效 | 检索抽查 |
-| 领域词典 | [keyword-terms.txt](../retrieval/keyword-terms.txt) | 专有名词被切碎 | 重建 app | 评测 |
-| 同义词表 | [keyword-synonyms.txt](../retrieval/keyword-synonyms.txt) | 问法与原文用词对不上 | 重建 app | 评测 |
-| 停用词 | [tokenization.py](../retrieval/tokenization.py) 的 `_STOPWORDS` | 问句虚词影响排序 | 改代码、重建 app | 单测与评测 |
-| 检索参数 | [settings.py](../config/settings.py)、环境变量门槛 | 评测表明有更优配置 | 重建 app | 评测，写入改进记录 |
-| Embedding 模型 | `.env.docker` | 更换模型或 query prefix | **全量重新导入** | 全量评测 |
-| 评测集 | [queries.json](../eval/queries.json)、[attributes.json](../eval/attributes.json) | 新增查询、补标、资料变化 | 下次评测 | 评测脚本能加载 |
-| 账号与 Token | 数据库 | 新增调用方、Token 泄露 | 立即生效 | 401／403 检查 |
+| 维护对象 | 位置 | 生效方式 | 改后验证 |
+| --- | --- | --- | --- |
+| 语雀文档 | 清单 [itxia.toml](../sources/yuque/manifests/itxia.toml) | 重建 app 后运行 `import_yuque` | 导入报告；清单单测；评测 |
+| 公众号评测 | `.runtime/eval/corpus-v1/` 下的正式清单与采集目录 | 运行 `import_wechat` | 导入报告；评测 |
+| 单篇资料 | 原文 API 或标准 API | 提交即生效 | 检索抽查 |
+| 文档类别 | 组合根 [components.py](../config/components.py) 等 | 改代码、重建 app、导入 | 全量测试；评测 |
+| 领域词典、同义词表 | [keyword-terms.txt](../retrieval/keyword-terms.txt)、[keyword-synonyms.txt](../retrieval/keyword-synonyms.txt) | 重建 app | 评测 |
+| 停用词 | [tokenization.py](../retrieval/tokenization.py) 的 `_STOPWORDS` | 改代码、重建 app | 单测与评测 |
+| 检索参数 | [settings.py](../config/settings.py)、环境变量门槛 | 重建 app | 评测，写入改进记录 |
+| Embedding 模型 | `.env.docker` | **全量重新导入** | 全量评测 |
+| 评测集 | [queries.json](../eval/queries.json)、[attributes.json](../eval/attributes.json) | 下次评测 | 评测脚本能加载 |
+| 账号与 Token | 数据库 | 立即生效 | 401／403 检查 |
 
-几条通用规则：
+- 改清单、词表、参数和代码都要重建：`dc up -d --build app`。`dc exec app` 用的是镜像里的清单和代码，改了清单不重建，导入用的还是旧清单。
+- 评测命令挂载宿主机的 `eval/`、`retrieval/`、`config/`，检索改动可以先评测，确认后再重建上线。
 
-- **三种生效方式**：
-  - 改资料要重新导入；
-  - 改词表、参数和代码要重建应用容器：`dc up -d --build app`；
-  - 只有换模型需要全量重新导入。
-- **评测不用重建**：评测命令挂载宿主机的 `eval/`、`retrieval/`、`config/`，所以改完可以先评测，确认后再重建上线。
-- **先备份**：会删除或覆盖数据的操作（删除来源、全量重导）之前先备份，见第 7 节。
-- **不提交原文**：快照、采集目录、正式公众号清单、Token 和评测结果都在被忽略的 `.runtime/` 下，不提交。
+## 2. 导入资料
 
-## 2. 库中资料
+### 2.1 选择导入方式
 
-### 2.1 更新机制
+**系统不能直接接收链接**：没有按语雀或公众号链接自动抓取的接口或命令，原文 API 也不接受 URL。
 
-同一来源由 `source_type` 与 `canonical_locator` 确定，不同平台的取值如下：
+| 资料 | 方式 | 命令或接口 |
+| --- | --- | --- |
+| IT 侠语雀公开文档 | 链接换成清单键，登记类别后批量导入 | `import_yuque` |
+| 公众号评测推文 | 下载或人工保存网页，登记清单后批量导入 | `fetch_wechat`（可选）、`import_wechat` |
+| 其他零散资料 | 保存正文后提交原文 | `POST /api/v1/sources/raw/` |
+| 已切好父段和子块的 JSON | 提交 `ProcessedDocument` | `POST /api/v1/sources/` |
 
-- 语雀是 `doc:<文档 ID>`；
-- 公众号是永久链接，没有链接时用采集文件名。
+- 批量命令不校验账号；两个 API 需要有 `maintain_source` 权限的 Token（9.1）。
+- 评测答案按 `entity_title`（评测）或语雀 `库/slug` 定位，经 API 导入的非评测资料不能作为评测答案。需要长期维护、参与评测的资料都走清单。
 
-重新导入同一来源时，按内容分两种情况：
+### 2.2 更新机制与导入报告
 
-- **内容不变**：返回 `reused`，不改数据库。
-- **内容有变**：返回 `imported`，整篇替换。key 不变的父段和子块保留 ID，消失的段落会被删除。
+同一来源由 `source_type` 与 `canonical_locator` 确定：语雀是 `doc:<文档 ID>`（改 slug、移动目录不影响）；公众号是永久链接，没有链接时用采集文件名；API 来源由提交的值决定。
 
-**没有删除同步**：清单里删掉某篇或改成 `skip`，不会删除已入库的内容，下线要按 2.4 手动删除。
+- 内容不变返回 `reused`；内容有变返回 `imported`，整篇替换，key 不变的父段和子块保留 ID。
+- **没有删除同步**：清单删掉某篇或改成 `skip`，已入库内容不会删除，下线按 2.6。
+- **没有变更通知**：定期全量重跑 `import_yuque`，有改动的自动更新。
 
-### 2.2 语雀文档
+| 报告状态 | 含义与处理 |
+| --- | --- |
+| `preprocessed` | 试运行成功，可以正式导入 |
+| `imported`／`reused` | 已写入／内容不变 |
+| `skipped` | 清单写了 `skip`，或类别没有接入流水线；确认是预期结果 |
+| `unregistered` | 清单里没有这篇，按第 3 节登记类别或 `skip` |
+| `failed` | 读取、预处理或保存失败；按原因修正后重跑，批次以非零状态退出 |
 
-1. **原文更新**：重跑导入。可以只跑指定文档：
+### 2.3 语雀文档
+
+链接 `https://www.yuque.com/itxia/<库>/<slug>` 对应清单键 `<库>/<slug>`，去掉末尾的 `#锚点`、`?参数`。例如 `https://www.yuque.com/itxia/help/install_win10` 是 `help/install_win10`。命令匿名读取公开网页，不需要语雀 Token，只要 app 容器能访问 `www.yuque.com`；非公开文档返回 401／403 会终止整批。
+
+**新增文档**：
+
+1. （可选）对整个清单试运行，报告中的 `unregistered` 就是还没登记的文档：
 
    ```sh
-   dc exec app python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml \
-     --only help/install_win10
+   dc exec app python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml --dry-run
    ```
 
-   不加 `--only` 时处理清单里所有知识库，未改动的文档都返回 `reused`。
-2. **新增文档**：导入报告把清单里没有的文档列为 `unregistered`。在清单中登记：
+2. 按第 3 节判断类别，在 [itxia.toml](../sources/yuque/manifests/itxia.toml) 加条目，并同步开头注释中的篇数；所在库未登记时先加 `[collections.<库>]`：
 
    ```toml
    [docs."help/new_slug"]
-   category = "tutorial"        # tutorial、knowledge、tool_card、troubleshooting、case
-
-   [docs."help/old_note"]
-   skip = "过时内容"            # 不导入时必须写原因
+   category = "tutorial"
    ```
 
-   新知识库还要在清单中加 `[collections.<库名>]` 和 `visibility`；工具大全这类按目录统一分类的，可以用 `[[path_rules]]`。清单格式见[来源连接器方案](phase1/source-connector-design.md#5-清单)。
-3. **先试运行**：加 `--dry-run` 检查父段、子块数和警告，无失败后再正式导入。
-4. **需要可复现时用快照**：用 `--save-snapshot` 保存快照，再用 `--snapshot` 离线导入，见[部署与验收 3.7](deployment.md#37-语雀网页与快照导入)。清单改动要提交，快照不提交。
+3. 更新清单单测：[test_source_manifest.py](../tests/unit/test_source_manifest.py) 断言了 `len(manifest.docs) == 91` 和 `manifest.collections` 列表。`[docs]` 条目数（含 `skip`）或集合变化时同步修改；由 `path_rules` 覆盖的文档不计入条目数。
 
-### 2.3 公众号评测
+   ```sh
+   .venv/bin/python -m pytest tests/unit/test_source_manifest.py -q
+   ```
 
-1. **采集**：把获准文章保存到采集目录，格式是 `<账号>/<条目>.html` 加同名 `.json` 旁注。可以用 `fetch_wechat` 下载，也可以人工保存。规则见 [README](../README.md#公众号采集导入)。
-2. **登记清单**：在正式清单中登记 `category`。评测必须填 `metadata.entity_title`，也就是完整机型名：
-   - 不能与已有评测重名；
-   - 同系列不同配置要加区分后缀，如“RTX 5070 Ti 版”。
-3. **试运行后导入**：用一次性容器挂载 `.runtime/eval/corpus-v1/`，命令见[部署与验收 3.8](deployment.md#38-公众号采集导入)。
-4. **D 类属性（可选）**：新评测要参与按条件找机器（D 类）评测时，在 [attributes.json](../eval/attributes.json) 中补价格、重量、接口等属性，键为 `entity_title`。
+4. 重建 app 后试运行，`--only` 可重复：
 
-### 2.4 下线或删除来源
+   ```sh
+   dc up -d --build app
+   dc exec app python manage.py import_yuque --manifest sources/yuque/manifests/itxia.toml \
+     --only help/new_slug --only article/another --dry-run
+   ```
 
-目前没有删除命令。确实需要下线时，先备份，再按标题或定位查出来源，确认后删除。删除来源会级联删除它的父段和子块：
+   状态应为 `preprocessed`，父段、子块数合理，警告（截图、风险、时效）符合原文。
+5. 去掉 `--dry-run` 正式导入，应为 `imported`；再跑一次应为 `reused`。
+6. 用新文档能回答的问题抽查检索（命令见 2.5 末尾），再按第 7、8 节评测：语料版本加 1，确认原有查询没有回归，新主题没有查询覆盖时补充查询。
+7. 提交清单与单测。
+
+**其他情况**：
+
+- **原文更新**：直接重跑，可加 `--only 库/slug`；清单没改就不用重建。
+- **改类别**：改 `category` 后按第 4、5 步执行，因流水线变化会返回 `imported`。
+- **快照**：需要可复现的离线导入时，用 `--save-snapshot` 保存、`--snapshot` 导入（两者互斥），见[部署与验收 3.7](deployment.md#37-语雀网页与快照导入)。旧快照没有新登记的文档，需重新保存；快照含正文，不提交。
+
+### 2.4 公众号评测
+
+公众号文章不能在线批量读取，先把网页保存到本地采集目录，再离线导入。正式清单是 `.runtime/eval/corpus-v1/wechat-manifest.toml`（78 篇 `product_review`），采集目录是 `.runtime/eval/corpus-v1/capture/bibar/`，每篇一个 `<条目>.html` 加同名 `.json`。仓库中的 [bibar.toml](../sources/wechat/manifests/bibar.toml) 只是格式样例，不写正式条目。
+
+1. **定条目名并登记**：条目名用 `<发布日期>-<简短英文名>`，入库后不要改（没有链接时它就是身份）。`entity_title` 必填，格式为“品牌 系列型号 区分后缀”，不能与已有评测重名（`grep entity_title` 正式清单核对），同系列不同配置加“酷睿版”“RTX 5070 Ti 版”等后缀：
+
+   ```toml
+   [docs."bibar/2026-09-28-laiku-gt16"]
+   category = "product_review"
+   metadata = { entity_title = "联想 来酷GT 16 酷睿版" }
+   ```
+
+2. **保存网页**，二选一：
+   - **自动下载**：在正式清单登记账号和文章的标题、日期（条目须已在 `docs` 中），用 `fetch_wechat` 经搜狗微信搜索下载：
+
+     ```toml
+     [connector.accounts]
+     bibar = "笔吧评测室"
+
+     [connector.articles]
+     "bibar/2026-09-28-laiku-gt16" = { title = "未来已来！聊一款新上市的主流游戏本", date = "2026-09-28" }
+     ```
+
+     ```sh
+     dc run --rm --no-deps --user "$(id -u):$(id -g)" -v "$PWD/.runtime/eval/corpus-v1:/import" app \
+       python manage.py fetch_wechat --manifest /import/wechat-manifest.toml --capture /import/capture \
+       --only bibar/2026-09-28-laiku-gt16
+     ```
+
+     `--user` 让文件归当前用户。账号、标题（忽略全角半角）、日期都一致才算找到，找不到或多篇一致记为失败；已下载的跳过，`--force` 重下；遇到验证码整批终止，稍后重跑续传。下载结果的链接缺少 `sn`，打不开但身份稳定。每期同名的文章通常搜不到，需人工保存。
+   - **人工保存**：浏览器保存完整网页为 `capture/bibar/<条目>.html`，再写同名 `.json` 旁注：
+
+     ```json
+     {"title": "未来已来！聊一款新上市的主流游戏本", "url": "https://mp.weixin.qq.com/s?__biz=xxxx&mid=2654664745&idx=1", "date": "2026-09-28", "author": "作者", "account": "笔吧评测室"}
+     ```
+
+     `title` 必填。`url` 用含 `__biz`、`mid`、`idx` 的永久链接，或短链接 `https://mp.weixin.qq.com/s/xxxx`，两种身份不互通，同一篇不要换用；只有 `timestamp`、`signature` 的临时链接会报错；没有合适链接就不写，以文件名作身份。
+3. **试运行与导入**：
+
+   ```sh
+   # 试运行；去掉 --dry-run 即正式导入，不加 --only 时处理全部条目
+   dc run --rm --no-deps -v "$PWD/.runtime/eval/corpus-v1:/import:ro" app \
+     python manage.py import_wechat --manifest /import/wechat-manifest.toml --capture /import/capture \
+     --only bibar/2026-09-28-laiku-gt16 --dry-run
+   ```
+
+   `ENTITY_TITLE_REQUIRED` 表示漏了 `entity_title`。
+4. **补属性表**：在 [attributes.json](../eval/attributes.json) 按已有条目格式补属性，键为 `entity_title`，字段有 `entry`（清单键）、`price`、`weight`、`screen`、`oled`、`gpu`、`battery_hours`、`ports`（八种接口布尔值）、`ports_text`、`gaming`，原文没有的填 `null`。D 类答案由属性表按规则生成，不补就不会计为答案；属性表只能包含已入库的评测，否则评测器报错。
+5. **评测**：语料版本加 1，核对 D、G 类并跑回归（第 7、8 节）。
+
+### 2.5 单篇资料（API）
+
+适合不在语雀、也不是笔吧评测的零散资料。先把正文存成本地文件，用脚本生成请求体以免手工转义，再提交：
+
+```sh
+TOKEN_FILE="$PWD/.runtime/maintainer.token"
+mkdir -p .runtime/manual
+python3 - <<'PY' > .runtime/manual/request.json
+import json, pathlib
+content = pathlib.Path(".runtime/manual/article.md").read_text(encoding="utf-8")
+print(json.dumps({
+    "source": {"source_type": "manual", "canonical_locator": "manual:win11-skip-network",
+               "visibility": "public", "source_url": "https://example.com/original"},
+    "preprocess": {"schema": "tutorial", "version": 1},
+    "raw": {"content": content, "media_type": "text/markdown",
+            "metadata": {"title": "Win11 跳过联网激活", "source_date": "2026-09-01",
+                         "collection_path": ["系统安装"]}},
+}, ensure_ascii=False))
+PY
+curl -sS --fail-with-body -w '\nHTTP %{http_code}\n' \
+  -H "Authorization: Token $(cat "$TOKEN_FILE")" -H 'Content-Type: application/json' \
+  --data-binary @.runtime/manual/request.json http://127.0.0.1:8000/api/v1/sources/raw/
+```
+
+| 字段 | 规则 |
+| --- | --- |
+| `source.source_type` | 小写字母开头，可含数字和下划线，如 `manual` |
+| `source.canonical_locator` | 唯一标识，最多 200 字；以后更新必须用同一个值，否则变成两份，建议记在 `.runtime/manual/` |
+| `source.visibility` | `public` 或 `internal`（只有 `read_internal` 账号能检索到） |
+| `preprocess` | `{schema, version}`，取值见 3.1 |
+| `raw.media_type` | `text/html`、`text/markdown`、`text/plain`、`text/x-yuque-markdown`；UTF-8，请求不超过 2 MiB |
+| `raw.metadata` | `title`；`source_date`（`YYYY-MM-DD`，未知不填）；评测必填 `entity_title`，多机型填 `entity_headings`；可选 `collection_path`（最多 10 项，拼进检索前缀） |
+
+返回 `{source_id, context_ids, reused}`。`ENTITY_TITLE_REQUIRED` 是评测缺机型名，`SEMANTIC_UNIT_TOO_LARGE` 是某节超预算、需在原文补小标题，`503` 是模型未配置。详见[文档预处理第 6 节](phase1/preprocessing.md#6-原文导入-api)。
+
+标准 API 的格式见样例 [basic.json](../fixtures/iteration1/basic.json) 和[部署与验收 3.3](deployment.md#33-导入标准化合成样本)，日常很少用到。
+
+**检索抽查**（通用）：
+
+```sh
+curl -sS --fail-with-body \
+  -H "Authorization: Token $(cat "$TOKEN_FILE")" -H 'Content-Type: application/json' \
+  -d '{"query":"Win11 安装时怎么跳过联网","top_k":5}' http://127.0.0.1:8000/api/v1/search/ \
+  | python3 -c "import json,sys; [print(c['title']) for c in json.load(sys.stdin)['contexts']]"
+```
+
+### 2.6 下线或删除来源
+
+没有删除命令。先备份，再查出来源，确认后删除；父段和子块级联删除：
 
 ```sh
 dc exec app python manage.py shell -c "
@@ -89,81 +223,174 @@ print(list(qs.values_list('id', 'canonical_locator', 'title')))
 "
 ```
 
-删除后要同步两处：
+删除后同步：清单条目改为 `skip` 并写原因；修正 [queries.json](../eval/queries.json) 中指向它的答案；删除的是评测时，从 [attributes.json](../eval/attributes.json) 删除该机型。
 
-- 把清单中对应条目改为 `skip` 并注明原因，以免下次批量导入又导进来；
-- 检查 [queries.json](../eval/queries.json) 中有没有答案指向它（见第 5 节）。
+### 2.7 更换 Embedding 模型
 
-### 2.5 更换 Embedding 模型
+地址、模型、维度、revision 或 query prefix 任一改变，旧向量都不能用：备份 → 改 `.env.docker` 并重建 app → 按 2.3、2.4 不加 `--only` 全量重导 → 全量评测，语料版本加 1。
 
-地址、模型、维度、revision 或 query prefix 任何一项改变，旧向量都不能再用，按以下步骤处理：
+## 3. 分类与清单
 
-1. 备份数据库。
-2. 修改 `.env.docker`，然后重建 app。
-3. 按 2.2、2.3 全量重新导入。
-4. 跑全量评测，并在评测文档中把语料版本号加 1。
+### 3.1 现有类别
 
-## 3. 检索词表
+清单的 `category` 决定预处理流水线，映射在 [components.py](../config/components.py) 的 `YUQUE_CATEGORY_PIPELINES`、`WECHAT_CATEGORY_PIPELINES`：
 
-三个词表都只作用于关键词路，查询时实时分词，所以改动不需要重新导入。
+| 平台 | 类别 | schema@版本 | 父段切法 | 判定标准与典型文档 |
+| --- | --- | --- | --- | --- |
+| 语雀 | `tutorial` | `tutorial@1` | 按章节树，超长下钻、过短合并 | 按步骤完成一件**已知要做**的事：装系统、改用户名、连校园网 |
+| 语雀 | `knowledge` | `knowledge@1` | 同上 | 解释概念、比较、速查表、FAQ：激活详解、C 盘文件夹、硬件科普 |
+| 语雀 | `tool_card` | `tool_card@1` | 单工具整篇一个父段；合集按工具小节 | 介绍软件的用途、下载、注意事项，标题多为“用途：工具名” |
+| 语雀 | `troubleshooting` | `troubleshooting@1` | 同教程 | 从**故障现象**出发逐步排查，常带风险分级：蓝屏排查、网络问题 |
+| 语雀 | `case` | `experience_case@2` | 整篇一个父段 | 记录**一次具体事件**的现象、原因、解决 |
+| 公众号 | `product_review` | `product_review@1` | 一台机型一个父段 | 一篇评测一台机器（多机型需 `entity_headings`） |
+| 公众号 | `purchase_guide` | `purchase_guide@1` | 预算段与推荐卡 | 选购指南；2026-10-12 已从库中删除，当前不导入 |
 
-### 3.1 先判断问题类型
+`experience_case@1`（按 `##` 切分）只供原文 API 使用。策略细节见[文档预处理第 3 节](phase1/preprocessing.md#3-内容结构策略)。
 
-先看问题和原文分别被切成什么词：
+### 3.2 如何判断类别
+
+按顺序判断，命中即停：
+
+1. **不导入**：写 `skip` 和原因。已有原因：`索引导航`、`已废弃`、`仅含链接或附件`、`说明或前言`、`内容过少`、`内容过时`、`非维修参考主题`；重复副本写 `duplicate` 并用 `canonical` 指向保留的那篇。
+2. **工具**：主体是介绍软件本身 → `tool_card`。
+3. **案例**：只讲一次具体的事，有明确机型、时间或经历 → `case`。
+4. **排障**：从“出了什么问题”出发定位原因 → `troubleshooting`。
+5. **知识**：以解释、比较、查表为主，没有贯穿全文的操作流程 → `knowledge`。
+6. **教程**：主体是操作步骤 → `tutorial`。
+
+易混情况：标题含“指南”的，目标明确是教程、从故障出发是排障；【日常维修】前缀讲通用方法的是排障（如 `article/kbg5vc`）；一篇只能有一个类别，按主体判断，评测标注可以跨类别。拿不准时选最接近的类别并在提交说明写理由，不要为此新建类别。逐篇依据见[第一批需求分析附录](phase1/yuque-ingestion/requirements-analysis.md#附录第一批文档清单初稿)。
+
+### 3.3 清单语法
+
+清单是 TOML，由 [manifest.py](../sources/manifest.py) 校验，写错时命令启动即失败并指出字段：
+
+```toml
+version = 2                    # 固定为 2
+source_type = "yuque"          # 公众号清单为 wechat
+
+[connector]
+group = "itxia"                # 语雀团队标识，必须且只能有这一项
+
+[collections.help]             # 库名即链接中 itxia/ 后面那段；公众号为账号目录
+visibility = "public"          # public 或 internal，库内文档默认继承
+
+[[path_rules]]                 # 可选，按语雀目录统一分类
+collection = "help"
+path_prefix = ["IT侠常用工具大全"]   # 1～10 项
+category = "tool_card"
+
+[docs."help/install_win10"]    # 单篇登记，键为 <库>/<slug>
+category = "tutorial"
+visibility = "internal"        # 可选，覆盖库的可见性
+
+[docs."article/partition-resize"]
+skip = "duplicate"             # 不导入必须写原因
+canonical = "help/partition-resize"   # 只用于 skip
+
+[docs."bibar/2026-09-28-laiku-gt16"]   # 公众号清单
+category = "product_review"
+metadata = { entity_title = "联想 来酷GT 16 酷睿版" }   # 只用于 category 条目
+```
+
+- `[docs]` 优先于 `path_rules`，多条规则匹配时取最长前缀。
+- 每个 `[docs]` 条目必须且只能写 `category` 或 `skip`；`category` 必须在 [yuque/connector.py](../sources/yuque/connector.py) 或 [wechat/connector.py](../sources/wechat/connector.py) 的 `CATEGORIES` 中；键中的库必须已登记。
+- `metadata` 只能是文本、数字、布尔、数组和表，日期写成文本，不能覆盖 `yuque`、`wechat` 平台字段。
+- 新增库要同步清单单测的集合列表（2.3 第 3 步）。
+
+## 4. 新增文档类别
+
+### 4.1 是否需要
+
+| 情况 | 做法 |
+| --- | --- |
+| 结构与现有某类相同，只是主题不同 | 不加类别 |
+| 想单独统计，但切分方式与现有某类相同 | 新增清单类别并映射到现有 schema，如 `"faq": ("knowledge", 1)`，只做 4.2 第 1、2 步 |
+| 现有切分会拆开完整答案或混入无关内容 | 新增 schema，做 4.2 全部步骤 |
+| 改变已有 schema 的切分结果 | 注册新版本（如 `experience_case@2`），映射改指向新版本，旧版本不改 |
+
+先用现有类别试运行几篇样本，看父段是否完整、长度是否合适再决定。完整先例见[排障与案例方案](phase2/troubleshooting-and-case-design.md)：样本分析（第 2 节）、设计（第 3 节）、测试与实施（第 5、6 节）、验收（第 8 节）。
+
+### 4.2 代码改动
+
+以语雀类别 `<cat>`、schema `<schema>@1` 为例：
+
+1. 把 `<cat>` 加入 [yuque/connector.py](../sources/yuque/connector.py) 的 `CATEGORIES`（公众号改 [wechat/connector.py](../sources/wechat/connector.py)）。
+2. 在 [components.py](../config/components.py) 的 `YUQUE_CATEGORY_PIPELINES` 加 `"<cat>": ("<schema>", 1)`。映射到未注册的 schema 时导入报 `skipped`。
+3. 结构策略优先复用，见[文档预处理第 5 节](phase1/preprocessing.md#5-扩展与步骤编排)：只调父段上限、合并规则时，在 [sections.py](../ingestion/sections.py) 新增 profile（参考 `TUTORIAL`、`TROUBLESHOOTING`、`CASE`）传给 `SectionedDocumentStrategy` 或 `WholeDocumentStrategy`；结构确实不同时实现新策略 `build(blocks, raw) -> list[SemanticContext]`，不调用模型。
+4. 在 `components.preprocessors()` 注册：`registry.register("<schema>", 1, pipeline("<schema>", 策略, [增强步骤...], image_warning=screenshot_warning))`。增强步骤从 `CalloutWarningStep`、`TimeExpressionStep`、`SourceDateNoticeStep`、`ToolIdentityStep`、`RetrievalPrefixStep` 中选；版本不是 1 时传 `version=`。
+5. 评测报告：[metrics.py](../eval/metrics.py) 的 `SCHEMA_NAMES` 加中文简称，[recall_eval.py](../eval/recall_eval.py) 的 `LABEL_PREFIXES` 加报告前缀。文档不来自语雀或公众号时，`resolve_alias` 无法定位答案，需另行扩展。
+
+### 4.3 测试
+
+单测不能访问真实数据库、网络或模型。参照排障与案例补齐：
+
+- 策略单测（[test_sections.py](../tests/unit/test_sections.py) 或 [test_preprocessing_strategies.py](../tests/unit/test_preprocessing_strategies.py)）：合成 Markdown 验证父段边界、标题、长度上限、警告位置。
+- 组合根单测（参考 [test_enrichment_steps.py](../tests/unit/test_enrichment_steps.py) 的 `test_yuque_later_categories_map_to_registered_repair_schemas`）：新类别映射到已注册的 schema。
+- 清单单测：按 2.3 第 3 步更新条目数。
+- 集成测试（参考 [test_yuque_ingestion.py](../tests/integration/test_yuque_ingestion.py)）：合成快照导入一篇，验证父段数、schema 和警告。
+- 全量测试，命令见 8.4。
+
+### 4.4 导入验收
+
+1. 登记文档、重建 app、试运行：新文档全部 `preprocessed`，其他文档父段数不变。
+2. 正式导入，再跑一次全部 `reused`。
+3. 抽查 2～4 篇：父段是否完整回答一个问题，标题和章节路径是否正确，警告是否落在对应父段。列出某篇的父段：
+
+   ```sh
+   dc exec -T app python manage.py shell -c "
+   from catalog.models import ContextUnit
+   for c in ContextUnit.objects.filter(source__metadata__yuque__book='help', source__metadata__yuque__slug='new_slug').order_by('ordinal'):
+       print(c.ordinal, repr(c.title), len(c.body), c.warnings)
+   "
+   ```
+
+4. 结果写进本次方案文档（参照排障与案例方案第 8 节）。
+
+### 4.5 扩充评测集
+
+1. 把新 schema 加入 [queries.json](../eval/queries.json) 的 `scopes.all`。
+2. 问题风格与现有类别不同时新增类别字母（已用 A～G、T、X、K、U、R，见 7.1），并加入 [compare_runs.py](../eval/compare_runs.py) 的 `CAT_COLUMNS`，对比表才有这一列。
+3. 每篇新文档至少写 1 条查询（7.3）。
+4. 重新核对旧标注：G 类负例可能有了答案；新文档能回答的已有问题要补进 `rel`。
+5. 按第 8 节运行、补标，并在[召回评测第 9 节](phase1/yuque-ingestion/retrieval-evaluation.md#9-初步评测执行记录)记录语料与查询集版本、新类别结果、原有类别的变化与原因。
+
+### 4.6 文档同步与提交
+
+| 文档 | 要改的内容 |
+| --- | --- |
+| [文档预处理](phase1/preprocessing.md) | 第 3 节策略表、第 5 节流水线顺序、第 6 节已注册 schema |
+| [README](../README.md) | 语雀导入一节的类别说明 |
+| 本文 | 3.1 类别表、3.2 判定顺序、7.1 类别字母 |
+| [召回评测](phase1/yuque-ingestion/retrieval-evaluation.md) | 9.2 语料、9.3 查询集与类别、新的执行记录 |
+| [召回改进记录](phase2/retrieval-improvement-log.md) | 第 1 节基线说明 |
+| 阶段需求 | 对应功能状态，如[第二阶段需求](phase2/requirements.md) |
+
+建议分三次提交：`feat(ingestion)` 流水线代码、测试与预处理文档；`chore(sources)` 清单与清单单测；`test(eval)` 查询集、评测脚本与评测文档。
+
+## 5. 检索词表
+
+三个词表只作用于关键词路，查询时实时分词，改动不需要重新导入。先看问题和原文被切成什么词：
 
 ```bash
 .venv/bin/python -c "from retrieval.tokenization import tokenize, tokenize_for_search; print(tokenize('问题原文')); print(tokenize_for_search('文档中的说法'))"
 ```
 
-再按现象处理：
-
 | 现象 | 处理 |
 | --- | --- |
-| 两边已有相同的词 | 不用改，问题在别处（排序、标注） |
-| 专有名词被切成单字（品牌、系列名） | 加进领域词典 |
+| 两边已有相同的词 | 不用改，问题在排序或标注 |
+| 品牌、系列名被切成单字 | 加进领域词典 |
 | 两边是完全不同的说法 | 加进同义词表 |
-| 问句里的虚词干扰排序 | 调停用词 |
+| 问句虚词干扰排序 | 调停用词 |
 
-评测结果里每条都记了 `keyword_terms`（关键词路实际检索的词），可以直接和原文对照。
+评测结果每条都有 `keyword_terms`（关键词路实际检索的词），可直接和原文对照。
 
-### 3.2 领域词典
+- **领域词典**：每行一个词。只收 jieba 会切成单字的品牌、系列名和术语（如“拯救者”“灵耀”）；不收能切成有意义词语的词（如收了“游戏本”，问“游戏”就匹配不到）。新系列可从公众号清单的 `entity_title` 中找。
+- **同义词表**：每行一组可互换的说法，空格分开，`#` 后注明来源查询，如 `流氓软件 垃圾软件  # U09：…`。只收评测或真实提问中遇到、分词解决不了的错配；组内双向等价，不放上下位关系；按子串匹配，太短太通用的（“电脑 / 笔记本”）不收；每个词至少两个字（启动和单测 `test_bundled_synonym_table_is_valid` 都会检查）；控制在几十条以内。
+- **停用词**：写在代码里，改动要补单测、跑全量测试和评测。现在会移除“能”“用”“多久”等，删减前确认不影响“能加内存吗”“续航多久”这类问题。
 
-- **格式**：每行一个词。
-- **收什么**：jieba 默认会切成单字的品牌、系列名和术语，如“拯救者”“灵耀”。
-- **不收什么**：能切成有意义词语的词，如“游戏本”。如果收了，问“游戏”就匹配不到“游戏本”。
-- 新机型系列可以从公众号清单的 `entity_title` 中找。
+上线：可以攒几条改动一起，按第 8 节对比基线，看目标查询是否改善、其他查询是否因误触发变差、新进前 5 的父段是否要补标；在[召回改进记录](phase2/retrieval-improvement-log.md)记录改动、效果和是否保留；提交后重建 app。
 
-### 3.3 同义词表
-
-**格式**：每行一组可以互换的说法，用空格分开；`#` 后写注释，注明来源查询：
-
-```
-流氓软件 垃圾软件  # U09：问题说“流氓软件”，SoftCnKiller 工具条目写“垃圾软件”
-```
-
-**收录规则**：
-
-- **有来源**：只收评测或真实提问中实际遇到、分词解决不了的错配。
-- **双向等价**：问题含组里任何一个词，其余词都会被追加，所以不放上下位关系，如“软件 / 流氓软件”。
-- **不太短、不太通用**：按子串匹配，“内存”在“内存条”里也会触发；“电脑 / 笔记本”这类会给大量查询加噪声，不收。
-- **每个词至少两个字**：程序启动时检查，单测 `test_bundled_synonym_table_is_valid` 也会检查。
-- **规模**：控制在几十条以内。
-
-### 3.4 停用词
-
-停用词写在代码里，改动属于代码修改：要补单测，并跑全量测试和评测。现在会移除“能”“用”“多久”等词，删减前要确认不会影响“能加内存吗”“续航多久”这类问题。
-
-### 3.5 验证与上线
-
-1. 可以攒几条改动再验证，不必每加一个词跑一次。
-2. 按第 6 节跑评测并对比当前基线，检查三点：
-   - 目标查询有没有改善；
-   - 有没有其他查询因误触发而变差；
-   - 新进前 5 的父段要不要补标。
-3. 在[召回改进记录](phase2/retrieval-improvement-log.md)中记录改动、效果和是否保留。
-4. 提交后重建 app：`dc up -d --build app`。
-
-## 4. 检索参数
+## 6. 检索参数
 
 | 参数 | 位置 | 当前值 |
 | --- | --- | --- |
@@ -173,89 +400,275 @@ print(list(qs.values_list('id', 'canonical_locator', 'title')))
 | `RETRIEVAL_KEYWORD_SYNONYMS` | settings.py | `True` |
 | `RETRIEVAL_MIN_COSINE`、`RETRIEVAL_MIN_BM25` | 环境变量 | 不过滤、0 |
 
-调整流程：
+先用评测参数 `--rrf-k`、`--vector-weight`、`--search-mode`、`--synonyms` 试，不改配置；满足[改进方案](phase2/retrieval-improvement-plan.md)的采纳条件和 8.2 的底线后再改默认值，同步[改进记录](phase2/retrieval-improvement-log.md)和[技术设计 5.1](phase1/phase1-technical-design.md)，重建 app。
 
-1. 先用评测参数试，不改配置。可用参数有 `--rrf-k`、`--vector-weight`、`--search-mode`、`--synonyms`。
-2. 按[改进方案](phase2/retrieval-improvement-plan.md)中的采纳条件筛选，通用底线见[改进记录第 1 节](phase2/retrieval-improvement-log.md#1-记录规则)。
-3. 通过后再改默认值。
-4. 同步[改进记录](phase2/retrieval-improvement-log.md)和[技术设计 5.1](phase1/phase1-technical-design.md)。
-5. 重建 app。
+## 7. 评测集
 
-## 5. 评测集
+[queries.json](../eval/queries.json) 含 `scopes`（范围名 → `document_schema` 列表，`reviews` 只含评测，`all` 含全部）、`aliases`（答案别名）、`attributes`（D 类属性表文件名）和 `queries`。用脚本修改时保持原格式，避免无关差异：
 
-[queries.json](../eval/queries.json) 由四部分组成：
-
-| 部分 | 内容 |
-| --- | --- |
-| `scopes` | 检索范围，即范围名对应的 `document_schema` 列表 |
-| `aliases` | 答案别名，可写两种形式：评测的 `entity_title`；或语雀的 `{"doc": "库/slug", "titles": [父段标题...]}`，不写 `titles` 时表示整篇 |
-| `attributes` | D 类属性表文件名 |
-| `queries` | 查询，字段有 `id`、`cat`、`q`、`rel`（答案别名）和 `facts` |
-
-日常维护有四种情况：
-
-- **资料变化后**：评测器加载时会检查每个别名都能唯一对应到父段。如果语雀小节改了标题、评测改了机型名或来源被删除，评测会直接报断言错误，需要按新标题更新 `aliases`。
-- **新增查询**：
-  - 先写问题，再去原文找答案；
-  - 编号按类别续写，类别含义见[评测 9.3](phase1/yuque-ingestion/retrieval-evaluation.md#93-查询集与标注)；
-  - 真实提问要先脱敏，再加 `"origin": "real"`；不提交未脱敏的原文。
-- **补标**：
-  - 对比脚本会列出“新进前5未标注”的父段，逐条看原文判断；
-  - 只有直接回答问题的父段才补进答案，只有背景介绍、链接或其他型号的不补；
-  - 补标后要重跑基线，对比脚本拒绝把标注不同的结果放在一起比。
-- **版本**：查询集或语料变化时升级版本号，并记在评测文档第 9 节或改进记录中。不同版本的结果不直接比较。
-
-## 6. 运行召回评测
-
-评测只读正式库，不改数据。镜像里已有 `eval/`，但用一次性容器挂载宿主机的 `eval/`、`retrieval/`、`config/`，可以在不重建镜像的情况下评测最新改动。每次全量约需 3～6 分钟：
-
-```sh
-mkdir -p .runtime/eval/corpus-v3
-dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/retrieval:/app/retrieval:ro" \
-  -v "$PWD/config:/app/config:ro" -v "$PWD/.runtime/eval:/data" -e PYTHONPATH=/app app \
-  python eval/recall_eval.py eval/queries.json /data/corpus-v3/results-v10.json \
-  > .runtime/eval/corpus-v3/report-v10.txt
+```python
+json.dump(spec, f, ensure_ascii=False, indent=1); f.write("\n")
 ```
 
-使用说明：
+### 7.1 类别字母
 
-- 不传参数时用 settings 的当前配置，跑全部范围；`--scope all` 只跑指定范围。
-- 与基线对比在宿主机上运行，只读结果文件：
+| 字母 | 含义 | 字母 | 含义 |
+| --- | --- | --- | --- |
+| A | 型号 + 属性，如“GT 16 噪音多大” | G | 无答案（负例），`rel` 为空 |
+| B | 简写、别名，如“7000P 噪音” | T | 语雀教程 |
+| C | 口语，不用原文用词 | X | 跨来源：带机型名，答案在教程或评测 + 教程 |
+| D | 按条件找机器，答案由属性表生成 | K | 语雀知识 |
+| E | 两台对比，两个答案都要进前 5 | U | 语雀工具条目 |
+| F | 同名区分：同系列不同配置或相近型号 | R | 维修：排障与案例 |
 
-  ```sh
-  .venv/bin/python eval/compare_runs.py .runtime/eval/corpus-v3/results-v9.json \
-    .runtime/eval/corpus-v3/results-v10.json --scope all
-  ```
+A～F 的答案在评测中。各版本数量与例子见[召回评测 9.3](phase1/yuque-ingestion/retrieval-evaluation.md#93-查询集与标注)。
 
-- 当前基线是语料 v4 上的 `.runtime/eval/corpus-v4/results-v15.json`（查询集 v5、k=20、文档端搜索模式、开启同义词），见[排障与案例方案 8.4](phase2/troubleshooting-and-case-design.md#84-维修类评测f2-142026-10-11)。
+### 7.2 查询与别名格式
 
-## 7. 账号、备份与例行检查
+```json
+{"id": "R01", "cat": "R", "q": "电脑经常死机蓝屏，应该按什么顺序排查", "rel": ["语雀:蓝屏排查顺序"], "facts": [], "origin": "manual"}
+```
 
-### 7.1 账号与 Token
+| 字段 | 说明 |
+| --- | --- |
+| `id` | 类别字母 + 两位序号，按类别续写，不重用已删除的编号 |
+| `q` | 用户口吻的问题 |
+| `rel` | 答案别名列表；G 类为空 |
+| `facts` | 答案子块须包含的原文片段，如 `["55.4dB"]`，用于统计答案子块名次 |
+| `origin` | `manual` 或 `real`（真实提问脱敏后） |
+| `pair` | E 类写 `true` |
+| `constraints` | D 类写条件，不写 `rel`；可用键见 [recall_eval.py](../eval/recall_eval.py) 的 `CONSTRAINTS` |
 
-账号只用于 HTTP 接口：导入接口要求 `maintain_source`，检索时有 `read_internal` 才能看到 internal 来源。命令行导入不需要账号。用 `kb_account` 管理账号，命令见[部署与验收 3.1](deployment.md#31-创建维护者和普通调用账号)：
+别名有两种：
 
-- **新增账号**：同时传 `--permissions` 和 `--token-file`，账号不存在时创建，并写出 Token。
-- **取回 Token**：对已有账号只传 `--token-file`，写出的是现有 Token，不会生成新的。
-- **更换 Token（如泄露）**：先用 `--revoke-token` 吊销，旧 Token 立即失效；再用 `--token-file` 生成新的。
-- **权限不能修改**：已有账号再传不同的 `--permissions` 会报 `ACCOUNT_PERMISSION_CONFLICT`，不会覆盖。需要不同权限时新建账号，再吊销旧账号的 Token。
+- **评测**：短名 → `entity_title`，如 `"GT16": "联想 来酷GT 16 酷睿版"`。
+- **语雀**：以 `语雀:` 开头，值为 `{"doc": "库/slug", "titles": [父段标题...]}`。省略 `titles` 表示整篇；标题须与库中父段标题完全一致，含 ` > ` 拼接的章节路径，可用 4.4 的命令列出。“教程:”“排障:”等前缀只用于报告中未标注的父段，别名不要用。
 
-Token 文件放在 `.runtime/` 下，权限设为 600。
+评测器加载时检查每个别名都能唯一定位父段；小节改标题、机型改名或来源被删除时会报断言错误，按提示更新别名。
 
-### 7.2 备份与恢复
+### 7.3 新增查询与标注核对
 
-删除来源、全量重新导入或升级数据库前，先备份：
+1. 先不看检索结果，按用户口吻写问题，避免照抄原文。
+2. 在原文中找能直接回答的父段，可按关键词搜全库：
+
+   ```sh
+   dc exec -T app python manage.py shell -c "
+   from catalog.models import ContextUnit
+   for c in ContextUnit.objects.filter(body__icontains='关键词').select_related('source'):
+       y = c.source.metadata.get('yuque') or {}
+       print(c.source.document_schema, y.get('book'), y.get('slug'), repr(c.title))
+   "
+   ```
+
+3. 直接回答问题的父段算答案，可以有多个、可以跨类别；只有背景、只有外链、只在列表中顺带提及、讲其他型号的不算。G 类负例要用上面的命令确认确实没有答案。
+4. 真实提问先脱敏，再标 `"origin": "real"`，不提交未脱敏原文。
+5. 校验 JSON 合法、编号不重复：
+
+   ```sh
+   python3 -c "import json,collections; d=json.load(open('eval/queries.json')); c=collections.Counter(q['id'] for q in d['queries']); print(len(d['queries']), [k for k,v in c.items() if v>1])"
+   ```
+
+**资料变化后**：每次扩充语料都要重新核对 D、G 类（新评测补属性表，负例可能有了答案）；新资料能回答已有问题时要补标，否则计为排序下降；资料删除或改标题时按报错修正别名。
+
+### 7.4 版本
+
+| 对象 | 何时加 1 | 当前 |
+| --- | --- | --- |
+| 语料版本 | 资料增删、分段规则或模型变化 | v5：171 个来源、442 个父段、1514 个子块 |
+| 查询集版本 | 查询或标注变化（含补标） | v6：170 条，164 条有答案 |
+| 结果编号 | 每次产生新的基线或实验结果 | 基线 v16，下一个 v17 |
+
+版本号记录在[召回评测第 9 节](phase1/yuque-ingestion/retrieval-evaluation.md#9-初步评测执行记录)和[改进记录第 1 节](phase2/retrieval-improvement-log.md#1-记录规则)，不写在 `queries.json` 中。不同查询集或语料版本的结果不直接比较。
+
+## 8. 评测与回归
+
+### 8.1 运行与对比
+
+评测只读正式库，全量约 3～6 分钟，结果放在 `.runtime/eval/corpus-v<语料版本>/`：
 
 ```sh
+mkdir -p .runtime/eval/corpus-v5
+dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/retrieval:/app/retrieval:ro" \
+  -v "$PWD/config:/app/config:ro" -v "$PWD/.runtime/eval:/data" -e PYTHONPATH=/app app \
+  python eval/recall_eval.py eval/queries.json /data/corpus-v5/results-v17.json \
+  > .runtime/eval/corpus-v5/report-v17.txt
+.venv/bin/python eval/compare_runs.py .runtime/eval/corpus-v5/results-v16.json \
+  .runtime/eval/corpus-v5/results-v17.json --scope all
+```
+
+- 不传参数时用 settings 的配置跑全部范围；`--scope all` 只跑指定范围。
+- 报告第一行是检索配置和语料规模，核对规模与预期一致才能确认导入完整。
+- 挂载只覆盖检索代码；改了预处理、切分代码要先重建 app 并重新导入。
+- 对比输出汇总表（全部、A～F、D、T、X、K、U、R 的混合指标，召回／排序失败条数，奇偶分半 MRR 变化）和逐条变化（名次变化的查询、“新进前5未标注”的父段）。两份结果的查询或标注不同时拒绝对比。
+
+**当前基线** `.runtime/eval/corpus-v5/results-v16.json`：查询集 v6、语料 v5，k=20、不加权、文档端搜索模式、开启同义词；`all` 范围混合 Hit@1／Hit@5／MRR@10 为 0.77／0.95／0.851，见[评测 9.11](phase1/yuque-ingestion/retrieval-evaluation.md#911-池化补标与新基线f2-012026-10-12)。
+
+### 8.2 按改动类型回归
+
+| 改动 | 做法 | 通过条件 |
+| --- | --- | --- |
+| 词表、停用词、检索参数或代码 | 同一查询集、同一语料对比基线 | 通用底线，加[改进方案](phase2/retrieval-improvement-plan.md)中该项的条件 |
+| 新增或更新资料 | 先用旧查询集在新语料上跑，对比基线 | 有答案查询 Hit@5 不下降、不新增召回失败；MRR 下降逐条解释（多为新资料竞争，能回答的补标） |
+| 新增类别 | 先按上一行，再加新查询建立新基线 | 同上；新类别每篇至少一条查询，结果写入评测文档 |
+| 更换模型 | 全量重导后全量评测 | 与旧模型对比，结论写入评测文档 |
+| 只改评测集 | 重跑当前配置作为新基线 | 评测器能加载，变化都来自标注 |
+
+**通用底线**（[改进记录第 1 节](phase2/retrieval-improvement-log.md#1-记录规则)）：全部 MRR@10 提升至少 0.01；A～F 类 Hit@5、MRR@10 下降不超过 0.02；D 类 Hit@5 不下降、MRR@10 下降不超过 0.02；按编号奇偶分两半，MRR@10 都提升。每次只改一个变量。
+
+### 8.3 补标与新基线
+
+对比脚本只比较标注相同的结果，所以先在旧标注下对比得出结论，再更新标注重跑：
+
+1. 逐条看“新进前5未标注”的父段，按 7.3 判断，是答案就加进 `rel`，需要时新增别名。
+2. 语料或类别变化较大时，按三路前 10 池化复核（方法见[评测 9.11](phase1/yuque-ingestion/retrieval-evaluation.md#911-池化补标与新基线f2-012026-10-12)，脚本见附录）。
+3. 用新标注重跑，查询集版本和结果编号各加 1。
+4. 在评测文档第 9 节写方法、补标清单和新旧指标；更新[改进记录第 1 节](phase2/retrieval-improvement-log.md#1-记录规则)和本文 8.1 的基线。
+5. 提交 `queries.json`、`attributes.json` 和文档，结果文件不提交。
+
+### 8.4 测试
+
+只改资料、清单、查询集时跑清单单测即可；改了代码要跑全量测试（[部署与验收第 4 节](deployment.md#4-在-docker-中运行自动测试)）：
+
+```sh
+.venv/bin/python -m pytest tests/unit -q     # 离线单测，不需要数据库和模型
+dct() { DB_PORT=25432 docker compose --env-file "$ITXIA_ENV" -p itxia-tests --profile test "$@"; }
+dct run --build --rm test && dct down -v     # Docker 中的全量测试
+```
+
+已有本地测试库时也可以用 `make test`，见[项目测试规则](unit-testing-guidelines.md)。
+
+## 9. 账号、备份与例行检查
+
+### 9.1 账号与 Token
+
+账号只用于 HTTP 接口，命令行导入不需要。`maintain_source` 允许调用两个导入接口；`read_internal` 允许检索 internal 来源，没有时只能看到 public。
+
+账号用 `kb_account` 管理，输出只有 `account_id=<编号> token_revoked=<True/False>`，不打印 Token。Token 先写到容器内，再复制到宿主机 `.runtime/`；复制后要删除容器中的副本，否则下次写同名文件会因内容不同报 `TOKEN_FILE_CONFLICT`。先定义：
+
+```sh
+NAME=maintainer   # 账号名：字母、数字和 @.+-_，最多 150 字
+fetch_token() {
+  dc cp "app:/tmp/$NAME.token" ".runtime/$NAME.token" && dc exec app rm "/tmp/$NAME.token" \
+    && chmod 600 ".runtime/$NAME.token"
+}
+```
+
+| 操作 | 命令 |
+| --- | --- |
+| 新建账号 | `dc exec app python manage.py kb_account --username "$NAME" --permissions maintain_source,read_internal --token-file "/tmp/$NAME.token" && fetch_token` |
+| 取回现有 Token | `dc exec app python manage.py kb_account --username "$NAME" --token-file "/tmp/$NAME.token" && fetch_token` |
+| 吊销（停用） | `dc exec app python manage.py kb_account --username "$NAME" --revoke-token` |
+| 更换 | 先吊销，再执行“取回”，会生成新 Token |
+
+- `--permissions` 写法：维护者 `maintain_source,read_internal`，只检索公开资料 `''`，能检索内部资料 `read_internal`。
+- 取回时如果账号不存在，会新建一个没有权限的账号，先核对账号名。
+- 吊销后旧 Token 立即失效（401）；不再发放即为停用。
+- **权限不能修改**：给已有账号传不同的 `--permissions` 会报 `ACCOUNT_PERMISSION_CONFLICT`。需要不同权限时，用新账号名新建、把新 Token 交给调用方，再吊销旧账号。
+
+查看现有账号：
+
+```sh
+dc exec -T app python manage.py shell -c "
+from django.contrib.auth import get_user_model
+from rest_framework.authtoken.models import Token
+for u in get_user_model().objects.order_by('username'):
+    print(u.username, sorted(u.user_permissions.values_list('codename', flat=True)), '有 Token' if Token.objects.filter(user=u).exists() else '无 Token')
+"
+```
+
+验证：
+
+```sh
+TOKEN_FILE="$PWD/.runtime/$NAME.token"
+# 不带 Token：401
+curl -sS -o /dev/null -w '%{http_code}\n' -H 'Content-Type: application/json' \
+  -d '{"query":"续航"}' http://127.0.0.1:8000/api/v1/search/
+# 带 Token 检索：200
+curl -sS -o /dev/null -w '%{http_code}\n' -H "Authorization: Token $(cat "$TOKEN_FILE")" \
+  -H 'Content-Type: application/json' -d '{"query":"续航"}' http://127.0.0.1:8000/api/v1/search/
+# 提交空请求体：有 maintain_source 返回 400，无权限 403，已吊销 401
+curl -sS -o /dev/null -w '%{http_code}\n' -H "Authorization: Token $(cat "$TOKEN_FILE")" \
+  -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:8000/api/v1/sources/
+```
+
+Token 文件只放在 `.runtime/` 下、权限 600，不要粘贴到提交、文档或对话中。
+
+### 9.2 备份与恢复
+
+```sh
+mkdir -p .runtime/backup
 dc exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' > .runtime/backup/itxia-$(date +%F).sql
 ```
 
-恢复时停掉 app，把备份导入一个空库，再启动。不要对正式项目执行 `down -v`，它会删除数据卷。
+恢复时停掉 app，把备份导入空库再启动。不要对正式项目执行 `down -v`，它会删除数据卷。
 
-### 7.3 每次维护后的检查
+### 9.3 每次维护后的检查
 
-1. 导入报告中 `failed` 为 0，`unregistered` 都已处理（登记类别或标 `skip`）。
-2. 改了词表、参数或资料的，评测没有回归，结果已记录。
-3. 改了代码或打包文件的，全量测试已通过，命令见[部署与验收第 4 节](deployment.md#4-在-docker-中运行自动测试)。
-4. app 已重建，抽查一两条查询。
-5. 清单、词表、查询集已提交；`.runtime/` 下的内容没有被提交。
+1. 导入报告 `failed` 为 0，`unregistered` 都已登记类别或标 `skip`。
+2. 改了清单的，清单单测通过、app 已重建。
+3. 改了资料、词表或参数的，评测没有回归，结果和版本号已记录。
+4. 改了代码的，全量测试通过。
+5. 抽查一两条查询。
+6. 清单、词表、查询集、属性表和文档已提交，`.runtime/` 没有被提交。
+
+## 附录：池化候选清单脚本
+
+列出每条查询在混合、关键词、向量三路前 10 中尚未标为答案的父段，供人工判断。脚本不在仓库中，需要时保存为被忽略的 `.runtime/eval/pool.py`：
+
+```python
+"""列出每条查询三路前 10 个父段中尚未标为答案的候选。参数：查询集 输出文件 [类别,类别]"""
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, "/app/eval")
+import recall_eval as ev  # noqa: E402  导入时完成 Django 初始化
+from config import components  # noqa: E402
+from contracts.types import SearchRequest  # noqa: E402
+
+POOL = 10
+spec_path, out_path = Path(sys.argv[1]), Path(sys.argv[2])
+cats = set(sys.argv[3].split(",")) if len(sys.argv) > 3 else None
+spec = json.loads(spec_path.read_text(encoding="utf-8"))
+corpus = ev.load_corpus(spec, spec_path.parent)
+embedder = components.embedding_provider()
+collector = components.recall_collector(embedder)
+pipeline = components.post_recall_pipeline()
+
+lines = []
+for item in spec["queries"]:
+    if "constraints" in item or (cats and item["cat"] not in cats):
+        continue  # D 类按属性表生成标注，不池化
+    scopes = ["all", "reviews"] if item["cat"] in "ABCEFG" else ["all"]
+    pool = {}
+    for name in scopes:
+        scope = ev.build_scope(spec["scopes"][name], embedder.space_id)
+        routes = collector.collect(item["q"], scope, ev.CANDIDATES_PER_ROUTE)
+        fused = pipeline.run(SearchRequest(item["q"], scope, ev.TOP_PARENTS), routes)
+        orders = {"H": [c.context_id for c in fused.contexts],
+                  "K": ev.parent_order(routes.routes.get("keyword", [])),
+                  "V": ev.parent_order(routes.routes.get("vector", []))}
+        for route, order in orders.items():
+            for rank, cid in enumerate(order[:POOL], 1):
+                pool.setdefault(cid, {}).setdefault(f"{name[0]}{route}", rank)
+    rel_ids = {cid for alias in item.get("rel", []) for cid in corpus.alias_ctx[alias]}
+    lines.append(f"\n## {item['id']} [{item['cat']}] {item['q']}  rel={item.get('rel', [])}")
+    for cid, ranks in sorted(pool.items(), key=lambda kv: min(kv[1].values())):
+        if cid in rel_ids:
+            continue
+        c = corpus.contexts[cid]
+        rank_text = " ".join(f"{k}{v}" for k, v in sorted(ranks.items()))
+        lines.append(f"- [{c.source.document_schema}] {ev.yuque_doc(c) or ''} | {c.title} | {rank_text} | "
+                     + " ".join(c.body.split())[:160])
+out_path.write_text("\n".join(lines), encoding="utf-8")
+```
+
+运行方式与评测相同，最后一个参数可选部分类别：
+
+```sh
+dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/retrieval:/app/retrieval:ro" \
+  -v "$PWD/config:/app/config:ro" -v "$PWD/.runtime/eval:/data" -e PYTHONPATH=/app app \
+  python /data/pool.py eval/queries.json /data/corpus-v5/pool-v16.md R,K
+```
+
+名次标记如 `aH3`：首字母是范围（`a` 为 all，`r` 为 reviews），第二个字母是路线（`H` 混合、`K` 关键词、`V` 向量），数字是名次。

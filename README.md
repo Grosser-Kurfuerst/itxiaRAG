@@ -16,7 +16,7 @@
 | [语雀文档导入方案](docs/phase1/yuque-ingestion/overview.md) | 语雀解析、教程／知识／工具条目流水线、排障指南与单案例流水线、公开网页读取与快照导入已实现；93 篇已导入开发环境 |
 | [文档预处理](docs/phase1/preprocessing.md) | 原文请求、格式适配器、父子段策略、长度预算与步骤扩展 |
 | [Docker 部署与验收](docs/deployment.md) | Compose 配置、启动、账号、标准／原文导入冒烟检查和日常操作 |
-| [维护手册](docs/maintenance.md) | 资料更新与下线、检索词表与参数、评测集、账号与备份等人工维护流程 |
+| [维护手册](docs/maintenance.md) | 资料导入方式与分类登记、新增类别、评测扩充与回归、检索词表与参数、账号 Token 与备份等人工维护流程 |
 | [第二阶段需求](docs/phase2/requirements.md) | 第二阶段目标、范围、功能点与里程碑：检索质量与维修类内容；M2 低成本检索改进与池化补标（F2-01）已完成，F2-12～F2-14 维修类内容已接入并评测；选购条件解析移入第三阶段，其余未实现 |
 | [召回改进方案](docs/phase2/retrieval-improvement-plan.md) | 依据评测结果的召回改进项、采纳条件与实施顺序；分词模式、同义词表与 RRF k=20 已采纳 |
 | [召回改进记录](docs/phase2/retrieval-improvement-log.md) | 每项召回改进的方法、实验结果与是否保留 |

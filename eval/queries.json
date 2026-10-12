@@ -1005,7 +1005,7 @@
    ]
   }
  },
- "attributes": "attributes.json",
+ "specs": "../products/specs/bibar.json",
  "queries": [
   {
    "id": "A01",

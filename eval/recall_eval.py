@@ -1,5 +1,5 @@
 """初步召回评测：父段级 Hit/MRR、分路排名、事实子块排名、负例分数；
-D 类按属性条件生成分级标注，另报 P@5、nDCG@5、R@10。
+D 类按机型规格文件中的条件生成分级标注，另报 P@5、nDCG@5、R@10。
 
 答案按来源类别分别报三路名次，区分召回失败（两路候选中都没有）与排序失败（已召回但未进入混合前 5）。
 查询集的 scopes 定义若干检索范围（范围名 -> document_schema 列表），每个范围各跑一遍；
@@ -7,7 +7,7 @@ D 类按属性条件生成分级标注，另报 P@5、nDCG@5、R@10。
 别名可指向评测标题（字符串），或指向语雀文档（教程、知识、工具条目、排障指南、案例）的父段
 {"doc": "book/slug", "titles": [...]}，省略 titles 表示整篇。
 
-查询集 queries.json 与属性表 attributes.json 在本目录；语料原文与评测结果放在被忽略的 .runtime/eval/。
+查询集 queries.json 在本目录，规格文件由查询集的 specs 指定（products/specs/）；语料原文与评测结果放在被忽略的 .runtime/eval/。
 评测只读正式库，镜像不含本目录，运行时挂载：
 
     docker compose --env-file .env.docker -p itxia run --rm --no-deps \
@@ -54,7 +54,7 @@ class Corpus:
     evidence: dict    # 子块 id -> (父段 id, 正文)
     alias_ctx: dict   # 查询集别名 -> 父段 id 元组
     title_ctx: dict   # 评测标题 -> 父段 id
-    attributes: dict  # 评测标题 -> 机型属性
+    specs: dict       # 评测标题（规格 key）-> 规格记录
 
     def label(self, context_id):
         for alias, ids in self.alias_ctx.items():
@@ -95,14 +95,15 @@ def load_corpus(spec, spec_dir):
     yuque = [c for c in contexts.values() if c.source.source_type == "yuque"]
     alias_ctx = {alias: resolve_alias(target, reviews, yuque) for alias, target in spec["aliases"].items()}
     title_ctx = {c.title: c.id for c in reviews}
-    attributes = json.loads((spec_dir / spec["attributes"]).read_text(encoding="utf-8")) if "attributes" in spec else {}
-    assert set(attributes) <= set(title_ctx), set(attributes) - set(title_ctx)
+    records = json.loads((spec_dir / spec["specs"]).read_text(encoding="utf-8")) if "specs" in spec else []
+    specs = {record["key"]: record for record in records}
+    assert set(specs) <= set(title_ctx), set(specs) - set(title_ctx)
     return Corpus(
         contexts=contexts,
         evidence={eid: (cid, body) for eid, cid, body in EvidenceUnit.objects.values_list("id", "context_id", "body")},
         alias_ctx=alias_ctx,
         title_ctx=title_ctx,
-        attributes=attributes,
+        specs=specs,
     )
 
 
@@ -122,16 +123,16 @@ def at_most(value, high):
 
 
 CONSTRAINTS = {
-    "price": lambda a, v: at_least(a["price"], v[0]) and at_most(a["price"], v[1]),
-    "weight_max": lambda a, v: at_most(a["weight"], v),
-    "screen_min": lambda a, v: at_least(a["screen"], v),
-    "battery_min": lambda a, v: at_least(a["battery_hours"], v),
-    "gpu": lambda a, v: a["gpu"] in v,
-    "ports": lambda a, v: all(a["ports"][p] for p in v),
-    "ports_rich": lambda a, _: all(a["ports"][p] for p in RICH_PORTS),
-    "thin_light": lambda a, _: at_most(a["weight"], THIN_LIGHT_MAX_KG),
-    "oled": lambda a, v: a["oled"] is v,
-    "gaming": lambda a, v: a["gaming"] is v,
+    "price": lambda s, v: at_least(s["price_cny"], v[0]) and at_most(s["price_cny"], v[1]),
+    "weight_max": lambda s, v: at_most(s["weight_kg"], v),
+    "screen_min": lambda s, v: at_least(s["screen_inch"], v),
+    "battery_min": lambda s, v: at_least(s["battery_hours"], v),
+    "gpu": lambda s, v: s["gpu"] in v,
+    "ports": lambda s, v: all(s["ports"][p] for p in v),
+    "ports_rich": lambda s, _: all(s["ports"][p] for p in RICH_PORTS),
+    "thin_light": lambda s, _: at_most(s["weight_kg"], THIN_LIGHT_MAX_KG),
+    "oled": lambda s, v: s["panel"] is not None and (s["panel"] == "oled") is v,
+    "gaming": lambda s, v: s["is_gaming"] is v,
 }
 
 
@@ -140,8 +141,8 @@ def grades_of(item, corpus):
     if "constraints" not in item:
         return {cid: 2 for a in item["rel"] for cid in corpus.alias_ctx[a]}
     grades = {}
-    for title, attr in corpus.attributes.items():
-        passed = [CONSTRAINTS[key](attr, value) for key, value in item["constraints"].items()]
+    for title, spec in corpus.specs.items():
+        passed = [CONSTRAINTS[key](spec, value) for key, value in item["constraints"].items()]
         if all(passed):
             grades[corpus.title_ctx[title]] = 2
         elif len(passed) > 1 and sum(passed) == len(passed) - 1:

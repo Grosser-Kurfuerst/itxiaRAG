@@ -1,0 +1,174 @@
+{
+ "version": "s1",
+ "note": "软条件排序查询集（机型规格库方案 8.2 节）：条件为原子条件，grades 按评测原文测试数据分级，未列出的机型为 0。",
+ "queries": [
+  {
+   "id": "S01",
+   "q": "一万以内性能释放强的游戏本",
+   "conditions": {
+    "price_max": 10000,
+    "is_gaming": true
+   },
+   "preference": "性能释放强",
+   "basis": "最强模式双烤 CPU+GPU 功耗：≥210W 为 2，195～209W 为 1",
+   "grades": {
+    "七彩虹 将星X16 Pro": 1,
+    "机械师 曙光16S": 1,
+    "机械革命 极光X 2026": 1,
+    "机械革命 耀世16 Ultra RTX 5070 Ti版": 2,
+    "机械革命 苍龙16X Pro": 2,
+    "神舟 战神T10 Pro": 2,
+    "联想 来酷 斗战者 战7000P": 2,
+    "联想 来酷 斗战者 战7000P 锐龙版": 2,
+    "荣耀 WIN游戏本 H7": 1,
+    "雷神 猎刃S": 1
+   }
+  },
+  {
+   "id": "S02",
+   "q": "续航长、屏幕好的轻薄本",
+   "conditions": {
+    "weight_max": 1.5
+   },
+   "preference": "续航长、屏幕好",
+   "basis": "日常应用仿真续航 ≥12 小时、屏幕为 OLED 或 DCI-P3 覆盖 ≥98%，两项都满足为 2，满足一项为 1",
+   "grades": {
+    "LG gram Pro 2026": 1,
+    "华为 MateBook Pro S": 1,
+    "华硕 a豆14 Air 2026": 1,
+    "华硕 灵耀14 Air": 1,
+    "华硕 灵耀16 Air 骁龙版": 2,
+    "华硕 破晓 Ultra": 1,
+    "小米 REDMI Book Pro 14 2026": 1,
+    "小米 Xiaomi Book Pro 14": 1,
+    "微软 Surface Pro 11": 1,
+    "惠普 战66 锐龙版": 1,
+    "惠普 星Book Pro Air 14": 1,
+    "机械革命 星耀14": 1,
+    "机械革命 星耀14 PTL酷睿版": 2,
+    "机械革命 星耀15": 1,
+    "联想 ThinkBook Plus Auto Twist": 1,
+    "联想 ThinkPad X14": 1,
+    "联想 YOGA Air 14 Ultra Aura": 2,
+    "联想 小新Air 14 2026": 1,
+    "苹果 MacBook Air 13": 1,
+    "荣耀 MagicBook 14 2026": 1,
+    "荣耀 MagicBook Pro 14": 2,
+    "荣耀 MagicBook Pro 14 2025 Ultra 5版": 2,
+    "荣耀 MagicBook Pro 14 2025 Ultra 9版": 2
+   }
+  },
+  {
+   "id": "S03",
+   "q": "一万以内噪音小的游戏本",
+   "conditions": {
+    "price_max": 10000,
+    "is_gaming": true
+   },
+   "preference": "噪音小、安静",
+   "basis": "最强模式日常环境满载人位噪音：≤54dB 为 2，≤55.5dB 为 1（环境噪音各篇略有不同）",
+   "grades": {
+    "机械师 曙光16S": 2,
+    "机械革命 蛟龙16 Pro 潮玩版": 1,
+    "联想 来酷 斗战者 战7000P": 1,
+    "联想 来酷GT 16 酷睿版": 1,
+    "雷神 猎刃S": 2
+   }
+  },
+  {
+   "id": "S04",
+   "q": "6000元以内色域广、适合修图的笔记本",
+   "conditions": {
+    "price_max": 6000
+   },
+   "preference": "屏幕色域广、色准好，适合修图",
+   "basis": "实测色域覆盖：DCI-P3 ≥98% 为 2，sRGB ≥99% 为 1",
+   "grades": {
+    "惠普 战66 锐龙版": 2,
+    "机械革命 无界15X": 1,
+    "机械革命 无界15X Pro 暴风雪": 1,
+    "机械革命 星耀14": 2,
+    "机械革命 蛟龙16 Pro": 1,
+    "联想 ThinkBook 14+ 锐龙版 2026": 2
+   }
+  },
+  {
+   "id": "S05",
+   "q": "一万以内屏幕亮度高的游戏本",
+   "conditions": {
+    "price_max": 10000,
+    "is_gaming": true
+   },
+   "preference": "屏幕亮度高",
+   "basis": "实测屏幕最大亮度：≥600nits 为 2，≥570nits 为 1",
+   "grades": {
+    "机械师 曙光16S": 2,
+    "机械革命 耀世16 Ultra RTX 5070 Ti版": 1,
+    "机械革命 苍龙16X Pro": 1,
+    "机械革命 蛟龙16 Pro": 1,
+    "雷神 猎刃S": 2
+   }
+  },
+  {
+   "id": "S06",
+   "q": "接口丰富的轻薄本",
+   "conditions": {
+    "weight_max": 1.5
+   },
+   "preference": "接口丰富、扩展性好",
+   "basis": "规格中具备的接口种类：≥6 种或 5 种且含网口或读卡器为 2，5 种为 1",
+   "grades": {
+    "LG gram Pro 2026": 1,
+    "华硕 a豆14 Air 2026": 1,
+    "华硕 天选Air 2026": 2,
+    "华硕 灵耀14 Air": 1,
+    "华硕 灵耀16 Air 骁龙版": 2,
+    "华硕 破晓 Ultra": 1,
+    "小米 REDMI Book Pro 14 2026": 1,
+    "小米 Xiaomi Book Pro 14": 1,
+    "惠普 战66 锐龙版": 2,
+    "机械革命 无界14 2026": 1,
+    "机械革命 星耀14": 1,
+    "机械革命 星耀14 PTL酷睿版": 1,
+    "机械革命 星耀15": 1,
+    "红米 REDMI Book Pro 14 2025": 1,
+    "联想 ThinkBook Plus Auto Twist": 1,
+    "联想 ThinkPad X14": 1,
+    "荣耀 MagicBook Pro 14": 1
+   }
+  },
+  {
+   "id": "D01",
+   "q": "一万元以内、机身轻薄、性能释放强的游戏本",
+   "conditions": {
+    "price_max": 10000,
+    "weight_max": 2.3,
+    "is_gaming": true,
+    "gpu_in": [
+     "RTX 5060",
+     "RTX 5070",
+     "RTX 5070Ti",
+     "RTX 5080",
+     "RTX 5090"
+    ]
+   },
+   "preference": "性能释放强",
+   "basis": "同 S01，候选只有 3 台，以候选中功耗最高者为 2",
+   "grades": {
+    "荣耀 WIN游戏本 H7": 2
+   }
+  },
+  {
+   "id": "D04",
+   "q": "用石墨烯导热的游戏本",
+   "conditions": {
+    "is_gaming": true
+   },
+   "preference": "石墨烯导热",
+   "basis": "评测原文写明使用石墨烯导热",
+   "grades": {
+    "荣耀 WIN游戏本 H9": 2
+   }
+  }
+ ]
+}

@@ -32,7 +32,8 @@ dc ps    # 应有 app（API，127.0.0.1:8000）、db（PostgreSQL，15432）、e
 | 停用词 | [tokenization.py](../retrieval/tokenization.py) 的 `_STOPWORDS` | 改代码、重建 app | 单测与评测 |
 | 检索参数 | [settings.py](../config/settings.py)、环境变量门槛 | 重建 app | 评测，写入改进记录 |
 | Embedding 模型 | `.env.docker` | **全量重新导入** | 全量评测 |
-| 评测集 | [queries.json](../eval/queries.json)、[attributes.json](../eval/attributes.json) | 下次评测 | 评测脚本能加载 |
+| 机型规格 | [bibar.json](../products/specs/bibar.json) | 重建 app 后运行 `import_specs` | 导入报告；评测 |
+| 评测集 | [queries.json](../eval/queries.json)、[recommend-queries.json](../eval/recommend-queries.json) | 下次评测 | 评测脚本能加载 |
 | 账号与 Token | 数据库 | 立即生效 | 401／403 检查 |
 
 - 改清单、词表、参数和代码都要重建：`dc up -d --build app`。`dc exec app` 用的是镜像里的清单和代码，改了清单不重建，导入用的还是旧清单。
@@ -161,12 +162,12 @@ dc ps    # 应有 app（API，127.0.0.1:8000）、db（PostgreSQL，15432）、e
    ```
 
    `ENTITY_TITLE_REQUIRED` 表示漏了 `entity_title`。
-4. **补属性表**：在 [attributes.json](../eval/attributes.json) 按已有条目格式补属性，键为 `entity_title`，字段有 `entry`（清单键）、`price`、`weight`、`screen`、`oled`、`gpu`、`battery_hours`、`ports`（八种接口布尔值）、`ports_text`、`gaming`，原文没有的填 `null`。D 类答案由属性表按规则生成，不补就不会计为答案；属性表只能包含已入库的评测，否则评测器报错。规格库上线后（[机型规格库方案](phase3/product-spec-design.md) P1），这一步改为按下方[规格填写](#规格填写)补规格文件，属性表不再更新。
+4. **补规格**：按下方[规格填写](#规格填写)在规格文件中补一条记录并导入。机型推荐只返回有规格的机型，D 类答案也由规格文件按规则生成，不补就不会被推荐、不会计为答案。[attributes.json](../eval/attributes.json) 已冻结，不再更新。
 5. **评测**：语料版本加 1，核对 D、G 类并跑回归（第 7、8 节）。
 
 #### 规格填写
 
-规格库上线后适用，取代第 4 步的属性表。项目不自动提取规格：由维护者人工填写，或把本节连同评测正文交给外部 LLM 生成草稿，再核对。只把公开的笔吧评测发给外部 LLM，不要发送语雀内部文档或 `.runtime/` 中的其他内容。
+项目不自动提取规格：由维护者人工填写，或把本节连同评测正文交给外部 LLM 生成草稿，再核对。只把公开的笔吧评测发给外部 LLM，不要发送语雀内部文档或 `.runtime/` 中的其他内容。
 
 评测正文从库中导出，导入规格时按这份正文自动校验引用：
 
@@ -235,7 +236,7 @@ print(ContextUnit.objects.get(source__document_schema='product_review', title='�
 填好后：
 
 1. **核对**：不论谁填写，都对照 `evidence` 检查，重点是价格口径、续航是否来自日常应用仿真、`ports` 与 `ports_text` 是否一致；联网补充的字段要点开链接，确认引用存在、配置与评测机一致。
-2. **合入并导入**：记录加入 `products/specs/bibar.json`，合入即视为已审核。试运行后去掉 `--dry-run` 正式导入：
+2. **合入并导入**：记录加入 `products/specs/bibar.json`，合入即视为已审核。命令读取镜像中的文件，先重建 app（`dc up -d --build app`），试运行后去掉 `--dry-run` 正式导入：
 
    ```sh
    dc exec app python manage.py import_specs --file products/specs/bibar.json --dry-run
@@ -303,7 +304,7 @@ print(list(qs.values_list('id', 'canonical_locator', 'title')))
 "
 ```
 
-删除后同步：清单条目改为 `skip` 并写原因；修正 [queries.json](../eval/queries.json) 中指向它的答案；删除的是评测时，从 [attributes.json](../eval/attributes.json) 删除该机型。
+删除后同步：清单条目改为 `skip` 并写原因；修正 [queries.json](../eval/queries.json) 中指向它的答案；删除的是评测时，从规格文件删除该机型并重新导入规格（`import_specs` 会删除文件中没有的机型）。
 
 ### 2.7 更换 Embedding 模型
 
@@ -484,7 +485,7 @@ metadata = { entity_title = "联想 来酷GT 16 酷睿版" }   # 只用于 categ
 
 ## 7. 评测集
 
-[queries.json](../eval/queries.json) 含 `scopes`（范围名 → `document_schema` 列表，`reviews` 只含评测，`all` 含全部）、`aliases`（答案别名）、`attributes`（D 类属性表文件名）和 `queries`。用脚本修改时保持原格式，避免无关差异：
+[queries.json](../eval/queries.json) 含 `scopes`（范围名 → `document_schema` 列表，`reviews` 只含评测，`all` 含全部）、`aliases`（答案别名）、`specs`（D 类标注用的规格文件，相对查询集的路径）和 `queries`。用脚本修改时保持原格式，避免无关差异：
 
 ```python
 json.dump(spec, f, ensure_ascii=False, indent=1); f.write("\n")
@@ -578,8 +579,14 @@ dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/retrieval:/app/retrie
 
 - 不传参数时用 settings 的配置跑全部范围；`--scope all` 只跑指定范围。
 - 报告第一行是检索配置和语料规模，核对规模与预期一致才能确认导入完整。
-- 挂载只覆盖检索代码；改了预处理、切分代码要先重建 app 并重新导入。
+- 挂载只覆盖检索代码；改了预处理、切分代码要先重建 app 并重新导入。D 类标注读镜像中的规格文件，改了规格文件也要先重建。
 - 对比输出汇总表（全部、A～F、D、T、X、K、U、R 的混合指标，召回／排序失败条数，奇偶分半 MRR 变化）和逐条变化（名次变化的查询、“新进前5未标注”的父段）。两份结果的查询或标注不同时拒绝对比。
+- 改了规格文件、条件判定或推荐服务时，另跑推荐评测（镜像中的 `products/` 要先重建），输出 D 类链路集合核对与 P@5、软条件排序 nDCG@5 和结论附带率，方法见[评测 9.13](phase1/yuque-ingestion/retrieval-evaluation.md#913-d-类改读规格文件与推荐接口评测p152026-10-12)：
+
+  ```sh
+  dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/.runtime/eval:/data" -e PYTHONPATH=/app app \
+    python eval/recommend_eval.py eval/queries.json eval/recommend-queries.json /data/corpus-v5/recommend-v2.json
+  ```
 
 **当前基线** `.runtime/eval/corpus-v5/results-v17.json`：查询集 v6、语料 v5（2026-10-12 重导），k=20、不加权、文档端搜索模式、开启同义词；`all` 范围混合 Hit@1／Hit@5／MRR@10 为 0.77／0.95／0.852，见[评测 9.12](phase1/yuque-ingestion/retrieval-evaluation.md#912-评测子块记录栏目名后重导p112026-10-12)。重新编码会使向量有细微差异（9.12），比较时注意区分。
 
@@ -592,6 +599,7 @@ dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/retrieval:/app/retrie
 | 新增类别 | 先按上一行，再加新查询建立新基线 | 同上；新类别每篇至少一条查询，结果写入评测文档 |
 | 更换模型 | 全量重导后全量评测 | 与旧模型对比，结论写入评测文档 |
 | 只改评测集 | 重跑当前配置作为新基线 | 评测器能加载，变化都来自标注 |
+| 规格文件、推荐逻辑 | 召回评测对比基线（D 类标注变化时按“只改评测集”重跑作为新基线），再跑推荐评测 | D 类链路集合全部相同；软条件排序与结论附带率不下降，变化写入评测文档 |
 
 **通用底线**（[改进记录第 1 节](phase2/retrieval-improvement-log.md#1-记录规则)）：全部 MRR@10 提升至少 0.01；A～F 类 Hit@5、MRR@10 下降不超过 0.02；D 类 Hit@5 不下降、MRR@10 下降不超过 0.02；按编号奇偶分两半，MRR@10 都提升。每次只改一个变量。
 
@@ -603,7 +611,7 @@ dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/retrieval:/app/retrie
 2. 语料或类别变化较大时，按三路前 10 池化复核（方法见[评测 9.11](phase1/yuque-ingestion/retrieval-evaluation.md#911-池化补标与新基线f2-012026-10-12)，脚本见附录）。
 3. 用新标注重跑，查询集版本和结果编号各加 1。
 4. 在评测文档第 9 节写方法、补标清单和新旧指标；更新[改进记录第 1 节](phase2/retrieval-improvement-log.md#1-记录规则)和本文 8.1 的基线。
-5. 提交 `queries.json`、`attributes.json` 和文档，结果文件不提交。
+5. 提交 `queries.json`、规格文件和文档，结果文件不提交。
 
 ### 8.4 测试
 

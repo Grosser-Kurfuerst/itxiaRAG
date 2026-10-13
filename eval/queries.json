@@ -1202,21 +1202,14 @@
   {
    "id": "D01",
    "cat": "D",
-   "q": "一万元以内、机身轻薄、性能释放强的游戏本",
+   "q": "一万五以内、机身轻薄、性能释放强的游戏本",
    "constraints": {
     "gaming": true,
     "price": [
      null,
-     10000
+     15000
     ],
-    "weight_max": 2.3,
-    "gpu": [
-     "RTX 5060",
-     "RTX 5070",
-     "RTX 5070Ti",
-     "RTX 5080",
-     "RTX 5090"
-    ]
+    "weight_max": 2.0
    },
    "facts": []
   },

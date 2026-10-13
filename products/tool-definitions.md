@@ -18,12 +18,12 @@
 - 既要挑机型、又要了解候选机型的细节时，先调用 recommend_laptops，再把感兴趣机型的 review.source.id 放进 search_knowledge 的 filters.source_ids 查细节。例：“一万二左右的轻薄本，哪台散热好、能自己换硬盘”。
 
 【把说法换算成原子条件】recommend_laptops 只接受原子条件，下面是参考口径，可以按语境调整：
-- 预算 X：price_min = 0.75X，price_max = 1.1X。
+- 预算 X：price_min = 0.75X，price_max = 1.1X；和其他条件一起出现时也这样换算，“预算 X”不等于“X 以内”。
 - X 以内：price_max = X；X 左右：0.9X～1.1X；X 多：X～X+999；X 以上：price_min = X。
-- 轻薄：weight_max = 1.5。
+- 轻薄：weight_max = 1.5；轻薄游戏本：weight_max = 2。
 - 游戏本：is_gaming = true。
 - 显卡 N 以上：gpu_in 列出档次不低于 N 的型号。档次由低到高为 RTX 3050 < RTX 5060 < RTX 5070 < RTX 5070Ti < RTX 5080 < RTX 5090。
-- 接口丰富：ports = ["usb_a", "usb_c", "video_out"]。能接网线：ports = ["rj45"]。
+- 接口丰富：ports = ["usb_a", "usb_c", "video_out"]。能接网线：ports = ["rj45"]。TGX 接口即 OCuLink：ports = ["oculink"]。
 - OLED 屏：panel = "oled"。
 - 续航 N 小时以上：battery_min = N。
 - “性能释放强”“散热好”“屏幕素质好”等无法换算成条件的诉求，写进 preference。
@@ -107,7 +107,7 @@
             "items": {"type": "string", "enum": ["usb_a", "usb_c", "video_out", "hdmi", "rj45", "card_reader", "thunderbolt", "oculink"]},
             "minItems": 1,
             "maxItems": 8,
-            "description": "必须全部具备的接口：usb_a、usb_c；video_out 为任一视频输出（HDMI、DP 或支持 DP 的 USB-C）；hdmi；rj45 网口；card_reader 读卡器；thunderbolt 雷电或 USB4；oculink。"
+            "description": "必须全部具备的接口：usb_a、usb_c；video_out 为任一视频输出（HDMI、DP 或支持 DP 的 USB-C）；hdmi；rj45 网口；card_reader 读卡器；thunderbolt 雷电或 USB4；oculink，TGX 接口也是 OCuLink。"
           },
           "brands": {
             "type": "array",

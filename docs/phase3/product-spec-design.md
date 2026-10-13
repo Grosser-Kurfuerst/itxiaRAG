@@ -248,7 +248,7 @@ python manage.py import_specs --file products/specs/bibar.json --dry-run
 ### 6.1 请求与条件
 
 ```json
-{"conditions": {"price_max": 10000, "weight_max": 2.3, "is_gaming": true,
+{"conditions": {"price_max": 10000, "weight_max": 2, "is_gaming": true,
                 "gpu_in": ["RTX 5060", "RTX 5070"]},
  "preference": "性能释放强、散热好",
  "top_k": 5}
@@ -376,8 +376,8 @@ P2 依赖 P1 的规格文件与导入命令，可与 P3 并行。P2.3 只在上�
 | 步骤 | 内容 | 验收 |
 | --- | --- | --- |
 | P3.1 | 编写 `products/tool-definitions.md`：两个工具的 JSON Schema、参数说明、参考口径、选择工具的说明与调用示例；显卡与品牌的可选值由规格文件生成 | 上层系统的开发者确认可以直接使用。已编写（2026-10-13），见[工具定义](../../products/tool-definitions.md)，待上层开发者确认：提示词、两个工具的 JSON 与示例分开放置；可选值用 jq 从规格文件生成，单测检查与规格文件、接口字段一致 |
-| P3.2 | `eval/` 中的模拟评测脚本：LLM 加工具定义，对全部查询记录工具选择、条件与推荐结果；补充口语化选购查询（如“背着不累”“打游戏不卡”）和多轮追问样例 | 跑出 8.2 中的 P3 指标并写入评测文档；D 类端到端 P@5、nDCG@5 明显高于 v17 的 0.311／0.436。脚本与样例已完成（2026-10-13）：[llm_eval.py](../../eval/llm_eval.py)、[llm-queries.json](../../eval/llm-queries.json)，用返回标准答案的替身验证了评测链路（[评测 9.14](../phase1/yuque-ingestion/retrieval-evaluation.md#914-上层-llm-模拟评测p322026-10-13)）；开发环境没有对话模型，P3 指标待接入模型后运行 |
-| P3.3 | 根据评测结果修订工具定义 | 修订前后的指标对比写入评测文档 |
+| P3.2 | `eval/` 中的模拟评测脚本：LLM 加工具定义，对全部查询记录工具选择、条件与推荐结果；补充口语化选购查询（如“背着不累”“打游戏不卡”）和多轮追问样例 | 跑出 8.2 中的 P3 指标并写入评测文档；D 类端到端 P@5、nDCG@5 明显高于 v17 的 0.311／0.436。脚本与样例已完成（2026-10-13）：[llm_eval.py](../../eval/llm_eval.py)、[llm-queries.json](../../eval/llm-queries.json)，用返回标准答案的替身验证了评测链路（[评测 9.14](../phase1/yuque-ingestion/retrieval-evaluation.md#914-上层-llm-模拟评测p322026-10-13)）。已完成（2026-10-14）：用 deepseek-flash 运行，D 类 19 条 P@5／nDCG@5 为 0.863／0.796，工具选择 169/170，条件换算一致 14/18（[评测 9.16](../phase1/yuque-ingestion/retrieval-evaluation.md#916-真实模型运行与工具定义修订p32p332026-10-14)） |
+| P3.3 | 根据评测结果修订工具定义 | 修订前后的指标对比写入评测文档。已完成（2026-10-14）：参考口径补充“预算 X”不等于“X 以内”、轻薄游戏本 2kg、TGX 即 OCuLink；D01 标注改为与口径一致（查询集 v8、新基线 v19）。修订后 D 类 P@5／nDCG@5 为 1.000／0.922，条件换算一致 16/18，工具选择 166/170，选错的 4 条都是同一轮调用两个工具（[评测 9.16](../phase1/yuque-ingestion/retrieval-evaluation.md#916-真实模型运行与工具定义修订p32p332026-10-14)） |
 
 规模估计：工具定义文档加约 200 行评测脚本。检索系统的线上代码不变。P3 依赖 P1，不依赖 P2，78 台的初始数据已经够用。
 

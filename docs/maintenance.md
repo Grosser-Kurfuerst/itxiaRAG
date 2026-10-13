@@ -575,8 +575,8 @@ A～F 的答案在评测中。各版本数量与例子见[召回评测 9.3](phas
 | 对象 | 何时加 1 | 当前 |
 | --- | --- | --- |
 | 语料版本 | 资料增删、分段规则或模型变化 | v5：171 个来源、442 个父段、1514 个子块 |
-| 查询集版本 | 查询或标注变化（含补标；D 类标注随规格文件变化） | v7：170 条，164 条有答案 |
-| 结果编号 | 每次产生新的基线或实验结果 | 基线 v18，下一个 v19 |
+| 查询集版本 | 查询或标注变化（含补标；D 类标注随规格文件变化） | v8：170 条，164 条有答案 |
+| 结果编号 | 每次产生新的基线或实验结果 | 基线 v19，下一个 v20 |
 
 版本号记录在[召回评测第 9 节](phase1/yuque-ingestion/retrieval-evaluation.md#9-初步评测执行记录)和[改进记录第 1 节](phase2/retrieval-improvement-log.md#1-记录规则)，不写在 `queries.json` 中。不同查询集或语料版本的结果不直接比较。
 
@@ -590,10 +590,10 @@ A～F 的答案在评测中。各版本数量与例子见[召回评测 9.3](phas
 mkdir -p .runtime/eval/corpus-v5
 dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/retrieval:/app/retrieval:ro" \
   -v "$PWD/config:/app/config:ro" -v "$PWD/.runtime/eval:/data" -e PYTHONPATH=/app app \
-  python eval/recall_eval.py eval/queries.json /data/corpus-v5/results-v19.json \
-  > .runtime/eval/corpus-v5/report-v19.txt
-.venv/bin/python eval/compare_runs.py .runtime/eval/corpus-v5/results-v18.json \
-  .runtime/eval/corpus-v5/results-v19.json --scope all
+  python eval/recall_eval.py eval/queries.json /data/corpus-v5/results-v20.json \
+  > .runtime/eval/corpus-v5/report-v20.txt
+.venv/bin/python eval/compare_runs.py .runtime/eval/corpus-v5/results-v19.json \
+  .runtime/eval/corpus-v5/results-v20.json --scope all
 ```
 
 - 不传参数时用 settings 的配置跑全部范围；`--scope all` 只跑指定范围。
@@ -604,7 +604,7 @@ dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/retrieval:/app/retrie
 
   ```sh
   dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/.runtime/eval:/data" -e PYTHONPATH=/app app \
-    python eval/recommend_eval.py eval/queries.json eval/recommend-queries.json /data/corpus-v5/recommend-v3.json
+    python eval/recommend_eval.py eval/queries.json eval/recommend-queries.json /data/corpus-v5/recommend-v4.json
   ```
 
 - 改了[工具定义](../products/tool-definitions.md)时，用对话模型跑上层 LLM 模拟评测（镜像中的 `products/` 要先重建），输出工具选择、条件换算差异和端到端 P@5，方法见[评测 9.14](phase1/yuque-ingestion/retrieval-evaluation.md#914-上层-llm-模拟评测p322026-10-13)。模型通过 `EVAL_LLM_BASE_URL`、`EVAL_LLM_MODEL`、`EVAL_LLM_API_KEY` 配置，只在当前 shell 设置，不写入 env 文件：
@@ -612,10 +612,10 @@ dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/retrieval:/app/retrie
   ```sh
   dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/.runtime/eval:/data" -e PYTHONPATH=/app \
     -e EVAL_LLM_BASE_URL -e EVAL_LLM_MODEL -e EVAL_LLM_API_KEY app \
-    python eval/llm_eval.py eval/queries.json eval/llm-queries.json /data/corpus-v5/llm-v1.json
+    python eval/llm_eval.py eval/queries.json eval/llm-queries.json /data/corpus-v5/llm-v3.json
   ```
 
-**当前基线** `.runtime/eval/corpus-v5/results-v18.json`：查询集 v7、语料 v5（2026-10-12 重导），k=20、不加权、文档端搜索模式、开启同义词；`all` 范围混合 Hit@1／Hit@5／MRR@10 为 0.77／0.95／0.852，见[评测 9.12](phase1/yuque-ingestion/retrieval-evaluation.md#912-评测子块记录栏目名后重导p112026-10-12)与 [9.15](phase1/yuque-ingestion/retrieval-evaluation.md#915-规格文件补齐-cpu内存与硬盘p232026-10-13)。重新编码会使向量有细微差异（9.12），比较时注意区分。
+**当前基线** `.runtime/eval/corpus-v5/results-v19.json`：查询集 v8、语料 v5（2026-10-12 重导），k=20、不加权、文档端搜索模式、开启同义词；`all` 范围混合 Hit@1／Hit@5／MRR@10 为 0.78／0.95／0.857，见[评测 9.12](phase1/yuque-ingestion/retrieval-evaluation.md#912-评测子块记录栏目名后重导p112026-10-12)与 [9.16](phase1/yuque-ingestion/retrieval-evaluation.md#916-真实模型运行与工具定义修订p32p332026-10-14)。重新编码会使向量有细微差异（9.12），比较时注意区分。
 
 ### 8.2 按改动类型回归
 

@@ -8,12 +8,12 @@
   "weight_kg": 4.19,
   "screen_inch": 18.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra 9 275HX",
   "has_dgpu": true,
   "gpu": "RTX 5080",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -28,7 +28,12 @@
   },
   "ports_text": "机身左侧有一个SD读卡器（UHS-II速率）和3.5mm音频接口；机身右侧没有接口；机身后侧有一个RJ-45网口（5GbE）三个USB-A5Gbps、两个雷电5（支持PD100W充电和DP2.180Gbps独显输出）、一个HDMI2.1FRL（独显输出）。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 9 275HX 处理器",
+   "ram_gb": "32GB DDR5 6400MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -40,12 +45,12 @@
   "weight_kg": 1.2,
   "screen_inch": 16.0,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra X7 358H",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 2048,
   "battery_hours": 9.67,
   "is_gaming": false,
   "ports": {
@@ -60,7 +65,12 @@
   },
   "ports_text": "机身左侧有两个雷电4（均支持65WPD充电和DP2.180Gbps视频输出）和一个HDMI2.0接口；机身右侧有两个USB-A5Gbps和一个3.5mm音频接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra X7 358H 处理器",
+   "ram_gb": "32GB LPDDR5x 8533MT/s 内存",
+   "ram_upgradable": "内存为板载不可更换",
+   "storage_gb": "工程机的固态硬盘容量为2TB，由两根1TB组成"
+  },
   "note": ""
  },
  {
@@ -72,12 +82,12 @@
   "weight_kg": 1.57,
   "screen_inch": 14.0,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra 9 386H",
   "has_dgpu": true,
   "gpu": "RTX 5070Ti",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 64,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 11.38,
   "is_gaming": true,
   "ports": {
@@ -92,7 +102,12 @@
   },
   "ports_text": "机身左侧依次为电源接口、HDMI2.1（独显输出）、USB-A10Gbps、雷电4（支持100WPD充电和DP2.180Gbps核显视频输出）和3.5mm音频接口；机身右侧依次为USB-C10Gbps（支持100WPD充电和DP2.180Gbps独显视频输出）、USB-A10Gbps接口和SD卡槽（UHS-II）。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 9 386H 处理器",
+   "ram_gb": "64GB LPDDR5x 8533MT/s 内存",
+   "ram_upgradable": "内存为板载不可更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": "原文为预测售价"
  },
  {
@@ -104,12 +119,12 @@
   "weight_kg": 2.8,
   "screen_inch": 16.0,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra 9 386H",
   "has_dgpu": true,
   "gpu": "RTX 5090",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 64,
+  "ram_upgradable": "soldered",
+  "storage_gb": 2048,
   "battery_hours": 11.08,
   "is_gaming": false,
   "ports": {
@@ -124,24 +139,29 @@
   },
   "ports_text": "机身左侧有一个HDMI2.1FRL接口（独显输出）、USB-A10Gbps接口、雷电4（支持100WPD充电和DP2.140Gbps核显视频输出），此外键盘上有一个用于充电和有线连接的USB-C接口；机身右侧有一个雷电4（支持100WPD充电和DP2.140Gbps核显视频输出）、USB-A10Gbps接口以及SD卡槽（UHS-I）；",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 9 386H 处理器",
+   "ram_gb": "64GB LPDDR5x 8533MT/s 内存",
+   "ram_upgradable": "内存为板载设计，不可更换",
+   "storage_gb": "2TB 固态硬盘"
+  },
   "note": ""
  },
  {
   "key": "ROG 枪神10 Plus",
   "brand": "ROG",
-  "price_cny": null,
-  "price_kind": null,
-  "price_date": null,
+  "price_cny": 29999,
+  "price_kind": "launch",
+  "price_date": "2026-05-22",
   "weight_kg": 3.47,
   "screen_inch": 18.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra 9 290HX Plus",
   "has_dgpu": true,
   "gpu": "RTX 5080",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -156,7 +176,20 @@
   },
   "ports_text": "机身左侧有一个RJ45网口（2.5GbE）、HDMI2.1FRL（独显视频输出）、USB-A10Gbps、两个雷电5（支持100WPD充电和DP2.180Gbps独显视频输出）和3.5mm音频接口；机身右侧有两个USB-A10Gbps。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 9 290HX Plus 处理器",
+   "ram_gb": "32GB DDR5 6400MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘",
+   "price_cny": {
+    "source": "https://news.qq.com/rain/a/20260522A08XOD00",
+    "quote": "ROG枪神10 Plus则是18寸大屏幕，首发到手价21999元，晒单还返百元E卡。\n\n显卡更高还可选RTX 5070、RTX 5070 Ti、RTX 5080，首发到手价23999元、25999元、29999元，晒单返百元E卡。"
+   },
+   "price_date": {
+    "source": "https://news.qq.com/rain/a/20260522A08XOD00",
+    "quote": "2026-05-22 16:35发布于河南"
+   }
+  },
   "note": "原文售价尚未公布"
  },
  {
@@ -168,12 +201,12 @@
   "weight_kg": 2.64,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra 7 255HX",
   "has_dgpu": true,
   "gpu": "RTX 5060",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -188,7 +221,12 @@
   },
   "ports_text": "机身左侧有一个USB-C10Gbps（支持100WPD充电和DP2.180Gbps独显输出）、雷电4（支持DP2.180Gbps核显输出）、USB-A10Gbps、HDMI2.1FRL（独显输出）、3.5mm音频接口、RJ45网口以及电源接口；机身右侧有两个USB-A10Gbps接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 7 255HX 处理器",
+   "ram_gb": "16GB DDR5 5600MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -200,12 +238,12 @@
   "weight_kg": 1.89,
   "screen_inch": 16.0,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra 9 285H",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 64,
+  "ram_upgradable": "slots",
+  "storage_gb": 4096,
   "battery_hours": 8.67,
   "is_gaming": false,
   "ports": {
@@ -220,7 +258,12 @@
   },
   "ports_text": "机身左侧有两个雷电5（均支持140WPD充电和DP2.180Gbps核显视频输出）、HDMI2.1（核显输出）和3.5mm音频接口；机身右侧有一个USB-A10Gbps、雷电4接口（支持140WPD充电和DP2.180Gbps核显视频输出）和SD卡槽（UHS-I）；",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 9 285H 处理器",
+   "ram_gb": "测试机搭载了双通道64GB LPDDR5x 7467MT/s内存",
+   "ram_upgradable": "机器有一个LPCAMM2内存插槽",
+   "storage_gb": "我们手上的测试机固态硬盘容量4TB，为两根2TB 三星PM9E1"
+  },
   "note": ""
  },
  {
@@ -232,12 +275,12 @@
   "weight_kg": 1.52,
   "screen_inch": 15.3,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra X7 358H",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 15.62,
   "is_gaming": false,
   "ports": {
@@ -252,7 +295,12 @@
   },
   "ports_text": "机身左侧有两个雷电4（支持100WPD充电和DP2.180Gbps视频输出），一个HDMI2.0和3.5mm音频接口；机身右侧有一个雷电4（支持100WPD充电和DP2.180Gbps视频输出）、USB-A10Gbps接口和SD卡槽（UHS-I）。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra X7 358H 处理器",
+   "ram_gb": "32GB LPDDR5x 9600MT/s 内存",
+   "ram_upgradable": "内存为板载无法更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -264,12 +312,12 @@
   "weight_kg": 2.42,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core i5-14450HX",
   "has_dgpu": true,
   "gpu": "RTX 5060",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -284,7 +332,12 @@
   },
   "ports_text": "机身左侧有一个USB-C5Gbps（仅数据传输）、USB-A5Gbps接口和3.5mm音频接口；机身右侧有一个USB-A5Gbps接口；机身后侧有一个USB-C10Gbps（支持100WPD充电和DP1.4核显视频输出）、USB-A10Gbps、HDMI2.1FRL（独显输出）和电源接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "i5-14450HX 处理器",
+   "ram_gb": "16GB DDR5 5600MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -296,12 +349,12 @@
   "weight_kg": 0.798,
   "screen_inch": 14.2,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "麒麟 XE90",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 24,
+  "ram_upgradable": "soldered",
+  "storage_gb": 512,
   "battery_hours": null,
   "is_gaming": false,
   "ports": {
@@ -316,7 +369,12 @@
   },
   "ports_text": "机身左侧有一个USB-C5Gbps接口（支持65WPD和66WUFCS协议充电）；机身右侧有一个USB-C5Gbps接口（支持65WPD和66WUFCS协议充电以及DP1.2视频输出，最高4K60Hz）以及隐私开关按键（防窥版开启后激活防窥模式）。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "麒麟XE90 处理器",
+   "ram_gb": "24GB 内存（参数未知）",
+   "ram_upgradable": "内存为板载不可更换",
+   "storage_gb": "测试机的存储为512GB UFS闪存"
+  },
   "note": ""
  },
  {
@@ -328,12 +386,12 @@
   "weight_kg": 0.993,
   "screen_inch": 14.0,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Ryzen AI 9 H 465",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 9.98,
   "is_gaming": false,
   "ports": {
@@ -348,7 +406,12 @@
   },
   "ports_text": "机身左侧有一个USB4（支持65WPD充电和DP2.140Gbps视频输出）、USB-C5Gbps接口（支持65WPD充电和DP1.4视频输出）、HDMI2.0接口和3.5mm音频接口；机身右侧有两个USB-A5Gbps接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "AI 9 H 465 处理器",
+   "ram_gb": "32GB LPDDR5x 7500MT/s 内存",
+   "ram_upgradable": "内存为板载不可更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -360,12 +423,12 @@
   "weight_kg": 1.48,
   "screen_inch": 14.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Ryzen AI Max+ 392",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 64,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 6.17,
   "is_gaming": false,
   "ports": {
@@ -380,7 +443,12 @@
   },
   "ports_text": "机身左侧有一个电源接口、HDMI2.1、USB4（支持PD100W充电和DP2.140Gbps视频输出，兼容雷电4）、USB-A10Gbps和3.5mm音频接口；机身右侧有一个USB-A10Gbps、USB-C10Gbps（DP2.140Gbps视频输出）接口和MicroSD卡槽。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ryzen AI MAX+ 392 处理器",
+   "ram_gb": "64GB LPDDR5x 8000MT/s 内存",
+   "ram_upgradable": "内存为板载不可更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": "Radeon 8060S 集成显卡，参考售价 12999（首发补贴价 10499）"
  },
  {
@@ -392,12 +460,12 @@
   "weight_kg": 1.18,
   "screen_inch": 14.0,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra 7 258V",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 11.93,
   "is_gaming": false,
   "ports": {
@@ -412,7 +480,12 @@
   },
   "ports_text": "机身左侧有一个HDMI2.0接口，两个雷电4接口（均支持65WPD和DP视频输出）以及一个3.5mm音频接口；机身右侧有一个USB-A10Gbps。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 7 258V 处理器",
+   "ram_gb": "32GB LPDDR5x 8533MHz 内存",
+   "ram_upgradable": "内存与SoC封装在同一基板上，无法更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -424,12 +497,12 @@
   "weight_kg": 1.69,
   "screen_inch": 14.0,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra X9 388H",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 2048,
   "battery_hours": 13.5,
   "is_gaming": false,
   "ports": {
@@ -444,7 +517,12 @@
   },
   "ports_text": "机身左侧依次为HDMI2.1、雷电4接口（支持100WPD充电和DP2.180Gbps视频输出）和3.5mm音频接口；机身右侧依次为USB-A10Gbps和雷电4接口（支持100WPD充电和DP2.180Gbps视频输出）。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra X9 388H 处理器",
+   "ram_gb": "32GB LPDDR5x 9600MT/s 内存",
+   "ram_upgradable": "内存为板载无法更换",
+   "storage_gb": "2TB 固态硬盘"
+  },
   "note": "按含键盘重量"
  },
  {
@@ -456,12 +534,12 @@
   "weight_kg": 1.21,
   "screen_inch": 16.0,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "骁龙 X2 Elite Extreme X2E-94-100",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 48,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 12.55,
   "is_gaming": false,
   "ports": {
@@ -476,7 +554,12 @@
   },
   "ports_text": "机身左侧有两个USB4接口（均支持100WPD充电和DP视频输出）、一个HDMI2.0和3.5mm音频接口；USB4接口在关闭DSC时最高支持4K60Hz，开启后支持到4K120Hz。机身右侧有一个USB-A10Gbps接口和SD卡槽（UHS-II）。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "骁龙 X2 Elite Extreme X2E-94-100 处理器",
+   "ram_gb": "48GB LPDDR5x 9523MT/s 内存",
+   "ram_upgradable": "内存与SoC封装在同一基板上无法更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -488,12 +571,12 @@
   "weight_kg": 1.09,
   "screen_inch": 14.0,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra X7 358H",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 64,
+  "ram_upgradable": "soldered",
+  "storage_gb": 2048,
   "battery_hours": 11.67,
   "is_gaming": false,
   "ports": {
@@ -508,7 +591,12 @@
   },
   "ports_text": "机身左侧有一个雷电4（支持100WPD和DP2.180Gbps视频输出）、USB-A10Gbps、HDMI2.0和3.5mm音频接口；机身右侧有一个雷电4（支持100WPD和DP2.180Gbps视频输出）和USB-A10Gbps接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra X7 358H 处理器",
+   "ram_gb": "64GB LPDDR5x 8533MT/s 内存",
+   "ram_upgradable": "内存为板载不可更换",
+   "storage_gb": "2TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -520,12 +608,12 @@
   "weight_kg": 1.49,
   "screen_inch": 14.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra X7 358H",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 18.35,
   "is_gaming": false,
   "ports": {
@@ -540,7 +628,12 @@
   },
   "ports_text": "机身依次为雷电4、USB-C10Gbps（均支持100WPD充电和DP2.180Gbps视频输出）、HDMI2.0和3.5mm音频接口；机身右侧有两个USB-A5Gbps接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra X7 358H 处理器",
+   "ram_gb": "32GB LPDDR5x 9600MT/s 内存",
+   "ram_upgradable": "内存为板载不可更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -552,12 +645,12 @@
   "weight_kg": 1.89,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra X7 358H",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 14.33,
   "is_gaming": false,
   "ports": {
@@ -572,7 +665,12 @@
   },
   "ports_text": "这台电脑左侧有一个雷电4接口、USB-C10Gbps接口（均支持PD充电和DP2.180Gbps视频输出）、HDMI2.1TMDS和3.5mm音频接口；右侧有两个USB-A5Gbps。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra X7 358H 处理器",
+   "ram_gb": "32GB LPDDR5x 9600MT/s 内存",
+   "ram_upgradable": "内存为板载不可更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -584,12 +682,12 @@
   "weight_kg": 1.1,
   "screen_inch": 14.6,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra X7 358H",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 9.63,
   "is_gaming": false,
   "ports": {
@@ -604,7 +702,12 @@
   },
   "ports_text": "这台电脑左侧有一个HDMI2.0、一个USB-C10Gbps和雷电4接口（均支持100WPD充电和DP2.180Gbps视频输出）；右侧有一个USB-A5Gbps和一个3.5mm音频接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra X7 358H 处理器",
+   "ram_gb": "32GB LPDDR5x 9600MT/s 内存",
+   "ram_upgradable": "内存为板载不可更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -616,12 +719,12 @@
   "weight_kg": 2.6,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra 9 275HX",
   "has_dgpu": true,
   "gpu": "RTX 5080",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -636,7 +739,12 @@
   },
   "ports_text": "机身左侧有两个雷电5（均支持140WPD3.1充电和DP2.140Gbps独显输出）接口和一个SD卡槽（UHS-II）；机身右侧有两个USB-A10Gbps和一个3.5mm音频接口；机身后侧有一个RJ45网口(2.5GbE)、HDMI2.1(独显输出）和电源接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 9 275HX 处理器",
+   "ram_gb": "16GB DDR5 5600MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -648,12 +756,12 @@
   "weight_kg": 3.6,
   "screen_inch": 18.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra 9 285HX",
   "has_dgpu": true,
   "gpu": "RTX 5080",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 64,
+  "ram_upgradable": "slots",
+  "storage_gb": 4096,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -668,7 +776,12 @@
   },
   "ports_text": "机身左侧有两个USB-A10Gbps接口和一个SD卡槽（UHS-II）；机身右侧有两个雷电5（均支持DP2.1独显视频输出，以及140WPD3.1充电）和一个USB-A10Gbps和3.5mm耳麦接口；机身后侧有一个RJ45网口（2.5G）、HDMI2.1（独显输出）、电源接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 9 285HX 处理器",
+   "ram_gb": "64GB DDR5 6400MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "4TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -680,12 +793,12 @@
   "weight_kg": 3.57,
   "screen_inch": 18.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Ryzen 9 9955HX3D",
   "has_dgpu": true,
   "gpu": "RTX 5090",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 64,
+  "ram_upgradable": "slots",
+  "storage_gb": 2048,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -700,7 +813,12 @@
   },
   "ports_text": "机身左侧有两个USB-A10Gbps接口和一个SD卡槽（UHS-II）；机身右侧有两个USB4（兼容雷电4且均支持140WPD3.1充电和DP1.4独显视频输出）、USB-A10Gbps和3.5mm音频接口；机身后侧有一个RJ45网口（2.5G）、HDMI2.1（独显输出）和电源接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "R9 9955HX3D 处理器",
+   "ram_gb": "64GB DDR5 5600MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "2TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -712,12 +830,12 @@
   "weight_kg": 1.16,
   "screen_inch": 13.0,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra 7 266V",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "soldered",
+  "storage_gb": 512,
   "battery_hours": 9.67,
   "is_gaming": false,
   "ports": {
@@ -732,7 +850,12 @@
   },
   "ports_text": "机身左侧有两个雷电4接口（均支持65WPD充电和DP2.1视频输出）；机身右侧为SurfaceConnect磁吸充电口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 7 266V 处理器",
+   "ram_gb": "16GB LPDDR5x 8533MT/s 内存",
+   "ram_upgradable": "内存为板载无法更换",
+   "storage_gb": "512GB 固态硬盘"
+  },
   "note": "按键盘+笔套装计价与重量"
  },
  {
@@ -744,12 +867,12 @@
   "weight_kg": 2.99,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra 9 290HX Plus",
   "has_dgpu": true,
   "gpu": "RTX 5080",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -764,7 +887,12 @@
   },
   "ports_text": "机身左侧有两个雷电4接口（均支持DP2.180Gbps核显输出和100WPD充电）一个USB-A10Gbps接口以及3.5mm音频接口；机身右侧有一个USB-A10Gbps接口；机器后侧有一个HDMI2.1接口（独显输出）和2.5GRJ45网口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "英特尔 酷睿 Ultra 9 290HX Plus",
+   "ram_gb": "32GB DDR5 6400MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -776,12 +904,12 @@
   "weight_kg": 2.41,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra 7 251HX",
   "has_dgpu": true,
   "gpu": "RTX 5060",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -796,7 +924,12 @@
   },
   "ports_text": "机身左侧有一个USB-A5Gbps、USB-C10Gbps（支持100WPD和DP2.180Gbps核显输出）和3.5mm音频接口；机身右侧有一个USB-A5Gbps接口；机身后侧有一个USB-A10Gbps、HDMI2.1FRL（独显输出）和电源接口以及RJ45网口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 7 251HX 处理器",
+   "ram_gb": "16GB DDR5 5600MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -808,12 +941,12 @@
   "weight_kg": 1.45,
   "screen_inch": 14.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Ryzen 7 H 255",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": 6.55,
   "is_gaming": false,
   "ports": {
@@ -828,7 +961,12 @@
   },
   "ports_text": "机身左侧有一个HDMI2.1、两个USB-C10Gbps（均支持100WPD充电和DP1.4视频输出）、一个USB-A10Gbps和3.5mm音频接口；机身右侧有一个RJ45网口和USB-A5Gbps接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "AMD 锐龙 7 H 255 处理器",
+   "ram_gb": "32GB DDR5 5600MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -840,12 +978,12 @@
   "weight_kg": 1.08,
   "screen_inch": 14.0,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra 5 225H",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "soldered",
+  "storage_gb": 512,
   "battery_hours": 6.33,
   "is_gaming": false,
   "ports": {
@@ -860,7 +998,12 @@
   },
   "ports_text": "机身左侧有两个USB-C10Gbps（支持100WPD充电和DP2.180Gbps视频输出）、一个USB-A5Gbps和HDMI2.1TMDS接口；机身右侧有一个USB-A5Gbps以及3.5mm音频接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 5 225H 处理器",
+   "ram_gb": "16GB LPDDR5x 7467MT/s 内存",
+   "ram_upgradable": "内存为板载无法更换",
+   "storage_gb": "512GB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -872,12 +1015,12 @@
   "weight_kg": 2.53,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Ryzen 9 7945HX",
   "has_dgpu": true,
   "gpu": "RTX 5070Ti",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -892,7 +1035,12 @@
   },
   "ports_text": "机身左侧有一个USB-C10Gbps（支持PD100W充电和DP2.140Gbps核显输出）、USB-A5Gbps、3.5mm音频接口和RJ45网口（2.5GbE）；机身右侧有两个USB-A5Gbps接口；机身后侧有一个USB-C10Gbps（支持140W私有协议和PD100W充电以及DP2.140Gbps核显输出）、MiniDP（DP2.180Gbps独显输出）、HDMI2.1（独显输出）和电源接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "R9 7945HX 处理器",
+   "ram_gb": "16GB DDR5 5200MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -904,12 +1052,12 @@
   "weight_kg": 1.07,
   "screen_inch": 14.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra 5 226V",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 10.5,
   "is_gaming": false,
   "ports": {
@@ -924,7 +1072,12 @@
   },
   "ports_text": "机身左侧有两个雷电4（均支持65WPD充电和最大4K60Hz视频输出），一个USB-A10Gbps和HDMI2.0接口；机身右侧有一个USB-A5Gbps、USB-A2.0和3.5mm音频接口",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 5 226V 处理器",
+   "ram_gb": "16GB LPDDR5x 8533MT/s 内存",
+   "ram_upgradable": "内存与核心共同封装在一块基板上，无法更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -936,12 +1089,12 @@
   "weight_kg": 1.68,
   "screen_inch": 15.3,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Ryzen 7 8845HS",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 24,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": 8.48,
   "is_gaming": false,
   "ports": {
@@ -956,7 +1109,12 @@
   },
   "ports_text": "机身左侧依次为USB-A2.0、USB-C10Gbps（支持100WPD充电和dp1.4视频输出）、3.5mm音频接口；机身右侧为两个USB-A5Gbps；机身后侧依次为HDMI2.1、USB4（支持100WPD充电与DP1.4视频输出）和RJ45网口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "R7 8845HS 处理器",
+   "ram_gb": "24GB DDR5 5600MHz 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB固态硬盘"
+  },
   "note": ""
  },
  {
@@ -968,12 +1126,12 @@
   "weight_kg": 1.79,
   "screen_inch": 15.3,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Ryzen AI 9 H 365",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": 11.23,
   "is_gaming": false,
   "ports": {
@@ -988,7 +1146,12 @@
   },
   "ports_text": "机身左侧依次为USB-A5Gbps、USB-C10Gbps（支持100WPD充电和DP2.140Gbps视频输出）和3.5mm音频接口；机身右侧有两个USB-A5Gbps接口；机身后侧依次为HDMI2.1、USB4（支持140W私有协议和100WPD充电以及DP2.140Gbps视频输出）和RJ45网口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "AI 9 H 365 处理器",
+   "ram_gb": "32GB DDR5 5600MT/s 内存",
+   "ram_upgradable": "双通道32GB DDR5 5600MT/s内存能满足大部分用途的需求，如有需求可自行更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1000,12 +1163,12 @@
   "weight_kg": 1.05,
   "screen_inch": 14.0,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Ryzen AI 9 H 365",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 11.35,
   "is_gaming": false,
   "ports": {
@@ -1020,7 +1183,12 @@
   },
   "ports_text": "机身左侧有两个USB4（均支持65WPD充电和DP1.4视频输出）和一个HDMI2.1接口；机身右侧有两个USB-A5Gbps和一个3.5mm音频接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ryzen AI 9 H 365处理器",
+   "ram_gb": "32GB LPDDR5x 8000MT/s 内存",
+   "ram_upgradable": "内存为板载无法更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1032,12 +1200,12 @@
   "weight_kg": 1.03,
   "screen_inch": 14.0,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra X7 358H",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 13.83,
   "is_gaming": false,
   "ports": {
@@ -1052,7 +1220,12 @@
   },
   "ports_text": "机身左侧有两个雷电4（支持65WPD充电和DP2.180Gbps视频输出）以及一个HDMI2.0接口；机身右侧有两个USB-A接口5Gbps以及一个3.5mm音频接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra X7 358H 处理器",
+   "ram_gb": "32GB LPDDR5x 8533MT/s 内存",
+   "ram_upgradable": "内存为板载无法更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1064,12 +1237,12 @@
   "weight_kg": 1.45,
   "screen_inch": 15.3,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Ryzen AI 9 H 365",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 10.33,
   "is_gaming": false,
   "ports": {
@@ -1084,7 +1257,12 @@
   },
   "ports_text": "机身左侧有两个USB4（均支持65WPD充电和DP2.140Gbps视频输出）和一个HDMI2.0接口；机身右侧有两个USB-A5Gbps和一个3.5mm音频接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "锐龙 AI 9 H 365处理器",
+   "ram_gb": "32GB LPDDR5X 8000MT/s 内存",
+   "ram_upgradable": "内存为板载不可更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1096,12 +1274,12 @@
   "weight_kg": 2.32,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core i7-13700HX",
   "has_dgpu": true,
   "gpu": "RTX 5060",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -1116,7 +1294,12 @@
   },
   "ports_text": "机身左侧有一个USB-C10Gbps（支持100WPD充电和DP1.4核显视频输出）、USB-A5Gbps、3.5mm音频接口和RJ45网口（2.5GbE）；机身右侧有两个USB-A5Gbps接口；机身后侧有一个USB-C10Gbps（支持100WPD充电和140W私有协议充电和DP1.4核显视频输出）、MiniDP2.1（40Gbps独显输出）、HDMI2.1FRL（独显输出）和电源接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "i7-13700HX 处理器",
+   "ram_gb": "16GB DDR5 4800MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1128,12 +1311,12 @@
   "weight_kg": 1.56,
   "screen_inch": 15.3,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra 7 356H",
   "has_dgpu": true,
   "gpu": "RTX 5060",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 7.25,
   "is_gaming": true,
   "ports": {
@@ -1148,7 +1331,12 @@
   },
   "ports_text": "机身左侧有一个RJ-45网线接口、USB-C10Gbps接口（支持PD100W充电和DP2.180Gbps核显输出）、USB-A5Gbps接口以及3.5mm音频接口；机身右侧有两个USB-A5Gbps接口；机身后侧有一个雷电4接口（支持PD140W私有协议和DP2.180Gbps核显输出）、mini-DP（DP2.140Gbps独显视频输出）接口以及HDMI2.1FRL（独显输出）接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 7 356H 处理器",
+   "ram_gb": "32GB LPDDR5x 8533MT/s 内存",
+   "ram_upgradable": "内存为板载不可更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1160,12 +1348,12 @@
   "weight_kg": 2.7,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra 9 275HX",
   "has_dgpu": true,
   "gpu": "RTX 5070Ti",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -1180,7 +1368,12 @@
   },
   "ports_text": "机身左侧有一个USB-C10Gbps（支持100WPD充电和DP1.4核显输出）、USB-A5Gbps、RJ45网口（2.5G）和3.5mm音频接口；机身右侧有两个USB-A5Gbps接口；机身后侧有一个雷电四（支持最大140W私有协议充电和DP2.1核显输出）、MiniDP2.1、HDMI2.1和电源接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 9 275HX 处理器",
+   "ram_gb": "32GB DDR5 5600MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1192,12 +1385,12 @@
   "weight_kg": 2.86,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra 9 275HX",
   "has_dgpu": true,
   "gpu": "RTX 5090",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 64,
+  "ram_upgradable": "slots",
+  "storage_gb": 2048,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -1212,7 +1405,12 @@
   },
   "ports_text": "机身左侧有一个USB-C10Gbps（支持100WPD充电和DP1.4核显输出）、USB-A5Gbps、RJ45网口（2.5GbE）和3.5mm音频接口；机身右侧有两个USB-A5Gbps接口；机身后侧有一个雷电4（支持最大140W私有协议充电和DP2.1核显输出）、MiniDP2.1、HDMI2.1和电源接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 9 275HX 处理器",
+   "ram_gb": "64GB DDR5 6400MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "2TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1224,12 +1422,12 @@
   "weight_kg": 2.81,
   "screen_inch": 18.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra 7 270HX Plus",
   "has_dgpu": true,
   "gpu": "RTX 5070",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -1244,7 +1442,12 @@
   },
   "ports_text": "机身左侧有一个RJ-45网线接口、USB-A5Gbps接口、USB-C10Gbps接口（支持100WPD充电和DP2.180Gbps核显视频输出）以及3.5mm音频接口；机身右侧有两个USB-A5Gbps接口；机身后侧有一个雷电4接口（支持140W私有协议充电和DP2.180Gbps核显视频输出）、DC电源口、MiniDP2.1接口（独显输出）以及HDMI2.1接口（独显输出）。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 7 270HX Plus 处理器",
+   "ram_gb": "16GB DDR5 5600MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1256,12 +1459,12 @@
   "weight_kg": 2.84,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Ryzen 9 9955HX3D",
   "has_dgpu": true,
   "gpu": "RTX 5090",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 64,
+  "ram_upgradable": "slots",
+  "storage_gb": 2048,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -1276,7 +1479,12 @@
   },
   "ports_text": "机身左侧有RJ-45网口、USB-C10Gbps（支持100WPD充电和DP2.140Gbps核显输出）、USB-A5Gbps、3.5mm音频接口；机身右侧有两个USB-A5Gbps接口；机身后侧有电源接口、MiniDP2.1（80Gbps独显输出）、HDMI2.1接口（独显输出）。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "锐龙9 9955HX3D 处理器",
+   "ram_gb": "64GB DDR5 5600MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "2TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1288,12 +1496,12 @@
   "weight_kg": 2.55,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Ryzen 9 9955HX",
   "has_dgpu": true,
   "gpu": "RTX 5070Ti",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -1308,7 +1516,12 @@
   },
   "ports_text": "机身左侧依次为RJ45网口（2.5GbE）、USB-C10Gbps（支持100WPD充电和DP2.140Gbps集显输出）、USB-A5Gbps、3.5mm音频接口；机身右侧有两个USB-A5Gbps接口；机身后侧有USB-C10Gbps（支持最大140W私有协议、100WPD充电和DP2.140Gbps集显输出）接口、电源接口、MiniDP2.1（80Gbps独显输出）接口和HDMI2.1（独显输出）接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "R9 9955HX 处理器",
+   "ram_gb": "32GB DDR5 5600MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1320,12 +1533,12 @@
   "weight_kg": 2.27,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Ryzen 9 7845HX",
   "has_dgpu": true,
   "gpu": "RTX 5060",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "slots",
+  "storage_gb": 512,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -1340,7 +1553,12 @@
   },
   "ports_text": "机身左侧有一个USB-C10Gbps（支持PD100W充电和DP2.140Gbps集显输出）、USB-A5Gbps、3.5mm音频接口和RJ45网口（2.5GbE）；机身右侧有两个USB-A5Gbps接口；机身后侧有一个USB-C10Gbps（支持140W私有协议和PD100W充电以及DP2.140Gbps集显输出）、MiniDP（DP2.140Gbps独显输出）、HDMI2.1（独显输出）和电源接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "R9 7845HX 处理器",
+   "ram_gb": "16GB DDR5 5200MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "512GB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1352,12 +1570,12 @@
   "weight_kg": 2.28,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Ryzen 9 8940HX",
   "has_dgpu": true,
   "gpu": "RTX 5070",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -1372,7 +1590,12 @@
   },
   "ports_text": "机身左侧有有一个USB-C10Gbps（支持PD100W充电和DP2.140Gbps集显输出）、USB-A5Gbps、3.5mm音频接口和RJ45网口（2.5GbE）；机身右侧有两个USB-A5Gbps接口；机身后侧有有一个USB-C10Gbps（支持140W私有协议和PD100W充电，以及DP2.140Gbps集显输出）、MiniDP2.1（40Gbps独显输出）、HDMI2.1（独显输出）和电源接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "R9 8940HX 处理器",
+   "ram_gb": "32GB DDR5 5200MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1384,12 +1607,12 @@
   "weight_kg": 2.72,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core i7-14700HX",
   "has_dgpu": true,
   "gpu": "RTX 5070Ti",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -1404,7 +1627,12 @@
   },
   "ports_text": "机身左侧有一个USB-A5Gbps和3.5mm音频接口；机身右侧有两个USB-A5Gbps接口；机身后侧有一个USB-C10Gbps（支持140WPD3.1充电和DP1.4核显输出）、HDMI2.1（48Gbps独显输出）接口和RJ45网口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "i7-14700HX 处理器",
+   "ram_gb": "32GB DDR5 5600MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1416,12 +1644,12 @@
   "weight_kg": 1.45,
   "screen_inch": 14.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra 7 255H",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 10.48,
   "is_gaming": false,
   "ports": {
@@ -1436,7 +1664,12 @@
   },
   "ports_text": "机身左侧依次为USB-C10Gbps和雷电4（均支持140W私有协议充电和100WPD充电与DP1.4视频输出）、HDMI2.0和3.5mm音频接口；机身右侧为两个USB-A5Gbps。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 7 255H 处理器",
+   "ram_gb": "32GB LPDDR5X 8400MT/s 内存",
+   "ram_upgradable": "内存为板载无法更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1448,12 +1681,12 @@
   "weight_kg": 1.58,
   "screen_inch": 14.5,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra X7 358H",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": 15.23,
   "is_gaming": false,
   "ports": {
@@ -1468,7 +1701,12 @@
   },
   "ports_text": "机身左侧有两个USB4（均支持最大140W私有协议充电和DP2.180Gbps视频输出）、一个USB-A5Gbps、HDMI2.1和3.5mm音频接口；机身右侧有一个USB-A5Gbps、SD卡槽（UHS-I）和隐藏式USB2.0接口；机身后侧有一个RJ45网口和TGX（OCuLink）接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra X7 358H 处理器",
+   "ram_gb": "32GB LPDDR5x 8533MT/s LPCAMM2 内存",
+   "ram_upgradable": "双通道32GB LPDDR5x 8533MT/s内存能满足大部分用途的需求，如有需求可自行更换内存",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1480,12 +1718,12 @@
   "weight_kg": 1.51,
   "screen_inch": 14.5,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Ryzen 7 H 255",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 12.67,
   "is_gaming": false,
   "ports": {
@@ -1500,7 +1738,12 @@
   },
   "ports_text": "机身左侧有两个USB4（均支持最大140W私有协议充电和DP1.4视频输出）、一个USB-A5Gbps、HDMI2.1和3.5mm音频接口；机身右侧有一个USB-A5Gbps、SD卡槽（UHS-I）和隐藏式USB2.0接口；机身后侧有一个RJ45网口和TGX显卡扩展坞接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "锐龙 7 H 255 处理器",
+   "ram_gb": "32GB LPDDR5x 7500MT/s 内存",
+   "ram_upgradable": "内存为板载不可更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1512,12 +1755,12 @@
   "weight_kg": 1.97,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra 7 356H",
   "has_dgpu": true,
   "gpu": "RTX 5060",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": 13.3,
   "is_gaming": false,
   "ports": {
@@ -1532,7 +1775,12 @@
   },
   "ports_text": "机身左侧有两个雷电4（均支持最大140W私有协议供电和DP2.180Gbps核显输出），一个USB-A5Gbps、HDMI2.1FRL（独显输出）和3.5mm音频接口；机身右侧有一个USB-A5Gbps、SD卡槽（UHS-I）和隐藏式USB-A2.0接口；机身后侧有一个TGX显卡扩展坞接口和RJ45网口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 7 356H 处理器",
+   "ram_gb": "32GB LPDDR5x 8533MT/s LPCAMM2 内存",
+   "ram_upgradable": "双通道32GB LPDDR5x 8533MT/s LPCAMM2 内存能满足大部分用途的需求，如有特殊需求可自行更换内存",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1544,12 +1792,12 @@
   "weight_kg": 2.11,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra 9 275HX",
   "has_dgpu": true,
   "gpu": "RTX 5070",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": 6.08,
   "is_gaming": false,
   "ports": {
@@ -1564,7 +1812,12 @@
   },
   "ports_text": "机身左侧有两个雷电4（均支持100WPD充电和DP2.180Gbps视频输出）、一个USB-A10Gbps和3.5音频接口；机身右侧有两个USB-A5Gbps和一个SD卡槽（UHS-I）；机身后侧有一个HDMI2.1（独显输出）和电源接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 9 275HX 处理器",
+   "ram_gb": "32GB DDR5 5600MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1576,12 +1829,12 @@
   "weight_kg": 2.17,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Ryzen 9 8945HX",
   "has_dgpu": true,
   "gpu": "RTX 5060",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": null,
   "is_gaming": false,
   "ports": {
@@ -1596,7 +1849,12 @@
   },
   "ports_text": "机身左侧有两个USB-C10Gbps（均支持100WPD充电和DP2.154Gbps独显视频输出）、一个USB-A10Gbps和3.5音频接口；机身右侧有两个USB-A5Gbps和一个SD卡槽（UHS-I）；机身后侧有一个HDMI2.1（独显输出）和电源接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "R9 8945HX 处理器",
+   "ram_gb": "16GB DDR5 5200MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1608,12 +1866,12 @@
   "weight_kg": 1.4,
   "screen_inch": 14.0,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra X7 358H",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 512,
   "battery_hours": 10.1,
   "is_gaming": false,
   "ports": {
@@ -1628,7 +1886,12 @@
   },
   "ports_text": "机身左侧有一个USB-A10Gbps以及两个雷电4（PD100W充电、DP2.180Gbps）；机身右侧有一个HDMI2.1FRL以及USB-A10Gbps。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra X7 358H 处理器",
+   "ram_gb": "32GB LPDDR5x 9600MT/s 内存",
+   "ram_upgradable": "内存为板载无法更换",
+   "storage_gb": "测试机的固态硬盘容量为512GB"
+  },
   "note": ""
  },
  {
@@ -1640,12 +1903,12 @@
   "weight_kg": 1.19,
   "screen_inch": 14.0,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra 5 338H",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 11.08,
   "is_gaming": false,
   "ports": {
@@ -1660,7 +1923,12 @@
   },
   "ports_text": "机身左侧有两个雷电4（均支持100WPD充电和DP2.180Gbps视频输出）、一个HDMI2.1TMDS和3.5mm音频接口；机身右侧有两个USB-A5Gbps接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 5 338H 处理器",
+   "ram_gb": "32GB LPDDR5x 8533MT/s 内存",
+   "ram_upgradable": "内存为板载无法更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1672,12 +1940,12 @@
   "weight_kg": 0.961,
   "screen_inch": 14.0,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra X7 358H",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 15.17,
   "is_gaming": false,
   "ports": {
@@ -1692,7 +1960,12 @@
   },
   "ports_text": "机身左侧有两个雷电4接口（均支持65WPD充电和DP2.180Gbps视频输出）；机身右侧有一个雷电4接口（支持65WPD充电和DP2.180Gbps视频输出）。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra X7 358H 处理器",
+   "ram_gb": "32GB LPDDR5x 9600MT/s 内存",
+   "ram_upgradable": "内存为板载无法更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1704,12 +1977,12 @@
   "weight_kg": 1.06,
   "screen_inch": 14.0,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra 5 226V",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "soldered",
+  "storage_gb": 512,
   "battery_hours": 11.07,
   "is_gaming": false,
   "ports": {
@@ -1724,7 +1997,12 @@
   },
   "ports_text": "机身左侧有两个USB-C10Gbps（均支持65WPD充电和DP2.180Gbps视频输出）接口；机身右侧有一个USB-C10Gbps（支持65WPD充电和DP2.180Gbps视频输出）接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 5 226V 处理器",
+   "ram_gb": "16GB LPDDR5x 8533MT/s 内存",
+   "ram_upgradable": "内存与CPU封装在同一块基板上，无法更换",
+   "storage_gb": "512GB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1736,12 +2014,12 @@
   "weight_kg": 1.73,
   "screen_inch": 16.0,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra X9 388H",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 14.88,
   "is_gaming": false,
   "ports": {
@@ -1756,7 +2034,12 @@
   },
   "ports_text": "机身左侧有两个雷电4（支持最大140W私有协议、100WPD充电和DP2.180Gbps视频输出）、SD卡槽（UHS-I）和HDMI2.1接口；机身右侧有两个USB-A5Gbps和3.5mm音频接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra X9 388H 处理器",
+   "ram_gb": "32GB LPDDR5x 9600MT/s 内存",
+   "ram_upgradable": "内存为板载不可更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1768,12 +2051,12 @@
   "weight_kg": 1.97,
   "screen_inch": 15.3,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra 7 251HX",
   "has_dgpu": true,
   "gpu": "RTX 5060",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": 5.85,
   "is_gaming": true,
   "ports": {
@@ -1788,7 +2071,12 @@
   },
   "ports_text": "机身左侧有一个USB-C10Gbps（支持140W私有协议和100WPD充电以及DP2.154Gbps独显视频输出）、雷电4接口（支持140W私有协议和100WPD充电以及DP2.180Gbps核显视频输出）和RJ45网口；机身右侧有一个USB-A5Gbps接口和3.5mm音频接口；机身后侧有一个USB-A5Gbps（靠近HDMI）、HDMI2.1FRL（独显输出）、USB-A10Gbps接口和电源接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 7 251HX 处理器 RTX 5060 8GB 独立显卡",
+   "ram_gb": "16GB DDR5 6400MT/s 内存",
+   "ram_upgradable": "单通道16GB DDR5 6400MT/s内存能满足大部分用途的需求，如有需求可自行加装内存",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1800,12 +2088,12 @@
   "weight_kg": 2.59,
   "screen_inch": 16.0,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra 9 290HX Plus",
   "has_dgpu": true,
   "gpu": "RTX 5090",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 64,
+  "ram_upgradable": "slots",
+  "storage_gb": 2048,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -1820,7 +2108,12 @@
   },
   "ports_text": "机身左侧有一个雷电4（支持DP2.180Gbps核显视频输出）、USB-C10Gbps（支持最大140W私有协议供电和DP2.180Gbps独显视频输出）、USB-A10Gbps和HDMI2.1FRL（独显输出）接口；机身右侧有两个USB-A5Gbps和一个3.5mm音频接口以及RJ45（2.5GbE）网口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 9 290HX Plus 处理器",
+   "ram_gb": "64GB DDR5 6400MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "2TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1832,12 +2125,12 @@
   "weight_kg": 2.44,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra 7 251HX",
   "has_dgpu": true,
   "gpu": "RTX 5060",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -1852,7 +2145,12 @@
   },
   "ports_text": "机身左侧有USB-C10Gbps（支持100WPD充电和DP2.154Gbps独显视频输出）、USB-A5Gbps、HDMI2.1FRL（独显输出）和电源接口；机身右侧有两个USB-A5Gbps、一个3.5mm音频接口和RJ45网口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 7 251HX 处理器",
+   "ram_gb": "16GB DDR5 5600MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1864,12 +2162,12 @@
   "weight_kg": 2.45,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Ryzen 9 8940HX",
   "has_dgpu": true,
   "gpu": "RTX 5060",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "slots",
+  "storage_gb": 512,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -1884,7 +2182,12 @@
   },
   "ports_text": "机身左侧有一个USB-C10Gbps（支持100WPD充电和DP2.154Gbps独显视频输出）、USB-A5Gbps、HDMI2.1FRL（独显输出）以及电源接口；机身右侧有两个USB-A5Gbps、3.5mm音频接口以及RJ45网口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "R9 8940HX 处理器",
+   "ram_gb": "16GB DDR5 4800MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "512GB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1896,12 +2199,12 @@
   "weight_kg": 1.98,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra 7 251HX",
   "has_dgpu": true,
   "gpu": "RTX 5060",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -1916,7 +2219,12 @@
   },
   "ports_text": "机身左侧有两个USB-A5Gbps以及USB-C10Gbps（支持PD100W供电和DP2.180Gbps核显视频输出）；机身右侧有一个3.5mm音频接口以及USB-A5Gbps；机身后侧有一个RJ45（1GbE）、HDMI2.1FRL（独显输出）、USB-C10Gbps（支持PD100W供电和DP2.180Gbps核显视频输出）以及电源接口接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 7 251HX 处理器",
+   "ram_gb": "16GB DDR5 5600MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1928,12 +2236,12 @@
   "weight_kg": 0.984,
   "screen_inch": 14.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core 5 315",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 12,
+  "ram_upgradable": "soldered",
+  "storage_gb": 512,
   "battery_hours": 10.48,
   "is_gaming": false,
   "ports": {
@@ -1948,7 +2256,12 @@
   },
   "ports_text": "机身左侧有两个USB-C5Gbps（均支持65WPD充电和DP1.4视频输出）；机身右侧有一个USB-C5Gbps和3.5mm音频接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Core 5 315 处理器",
+   "ram_gb": "12GB LPDDR5 5600MT/s 内存",
+   "ram_upgradable": "内存为板载无法更换",
+   "storage_gb": "512GB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1960,12 +2273,12 @@
   "weight_kg": 1.25,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core 5 320",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 12,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 9.93,
   "is_gaming": false,
   "ports": {
@@ -1980,7 +2293,12 @@
   },
   "ports_text": "机身左侧有两个USB-C5Gbps（均支持100WPD充电和最高4K60Hz视频输出）；机身右侧有一个USB-C5Gbps（仅支持数据传输）。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Core 5 320 处理器",
+   "ram_gb": "12GB LPDDR5 5600MT/s 内存",
+   "ram_upgradable": "内存为板载无法更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -1992,12 +2310,12 @@
   "weight_kg": 2.23,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core 5 205H",
   "has_dgpu": true,
   "gpu": "RTX 3050",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "slots",
+  "storage_gb": 512,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -2012,7 +2330,12 @@
   },
   "ports_text": "机身左侧有两个USB-A5Gbps以及一个3.5mm音频接口；机身右侧有两个USB-A5Gbps接口；机身后侧有一个USB-C10Gbps（支持100WPD充电和DP1.4独显视频输出）、HDMI2.1FRL（独显输出）、电源接口以及RJ45网口（1GbE）。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Core 5 205H 处理器",
+   "ram_gb": "16GB DDR4 3200MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "512GB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -2024,12 +2347,12 @@
   "weight_kg": 1.23,
   "screen_inch": 13.6,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Apple M4",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "soldered",
+  "storage_gb": 512,
   "battery_hours": null,
   "is_gaming": false,
   "ports": {
@@ -2044,7 +2367,12 @@
   },
   "ports_text": "机身左侧有两个雷雳4（支持最大约70WPD充电和DP1.4视频输出）和一个MagSafe3充电口；机身右侧有一个3.5mm耳机接口。这一代升级了视频输出，如今可在开屏状态同时输出两个外接显示器",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "M4 处理器（10核CPU+10核GPU）",
+   "ram_gb": "16GB 统一内存",
+   "ram_upgradable": "内存为板载无法更换",
+   "storage_gb": "512GB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -2056,12 +2384,12 @@
   "weight_kg": 1.51,
   "screen_inch": 15.3,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Apple M5",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 2048,
   "battery_hours": 12.65,
   "is_gaming": false,
   "ports": {
@@ -2076,7 +2404,12 @@
   },
   "ports_text": "机身左侧有两个雷雳4（支持最大70W充电和DP1.4视频输出）和一个Magsafe充电接口；机身右侧有一个3.5mm音频接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Apple M5 处理器（4P+6E+10GPU）",
+   "ram_gb": "32GB 统一内存（153GB/s带宽）",
+   "ram_upgradable": "内存与SoC封装在一起，不可加装或更换",
+   "storage_gb": "2TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -2088,12 +2421,12 @@
   "weight_kg": 1.23,
   "screen_inch": 13.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Apple A18 Pro",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 8,
+  "ram_upgradable": "soldered",
+  "storage_gb": 256,
   "battery_hours": 10.13,
   "is_gaming": false,
   "ports": {
@@ -2108,7 +2441,12 @@
   },
   "ports_text": "机身左侧有一个USB-C2.0（支持最大35WPD充电）、USB-C10Gbps（支持最大35WPD充电和DP1.4最大4K60Hz视频输出）和3.5mm音频接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Apple A18 Pro 处理器（2P+4E+5GPU）",
+   "ram_gb": "8GB LPDDR5 7500MT/s 内存",
+   "ram_upgradable": "内存与SoC封装在一起，不可加装或更换",
+   "storage_gb": "256GB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -2120,12 +2458,12 @@
   "weight_kg": 1.54,
   "screen_inch": 14.2,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Apple M5",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "soldered",
+  "storage_gb": 512,
   "battery_hours": 13.73,
   "is_gaming": false,
   "ports": {
@@ -2140,7 +2478,12 @@
   },
   "ports_text": "机身左侧有两个雷雳4接口（均支持最大96WPD充电和DP1.4视频输出）、一个3.5mm音频接口和Magsafe磁吸充电口；机身右侧有一个雷雳4接口（支持最大96WPD充电和DP1.4视频输出）、SD卡槽（UHS-II）和HDMI2.1接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Apple M5 处理器（10核CPU+10核GPU）",
+   "ram_gb": "16GB 统一内存",
+   "ram_upgradable": "内存与SoC一同封装在基板上，无法加装或更换",
+   "storage_gb": "512GB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -2152,12 +2495,12 @@
   "weight_kg": 2.15,
   "screen_inch": 16.2,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Apple M5 Max",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 128,
+  "ram_upgradable": "soldered",
+  "storage_gb": 8192,
   "battery_hours": 14.47,
   "is_gaming": false,
   "ports": {
@@ -2172,7 +2515,12 @@
   },
   "ports_text": "机身左侧有两个雷雳5接口（均支持140WPD3.1充电和DP2.180GBps视频输出）、一个3.5mm音频接口以及MagSafe磁吸充电口；机身右侧有一个雷雳5接口（均支持140WPD3.1充电和DP2.180GBps视频输出）、SDXC卡槽以及HDMI2.1接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Apple M5 Max 处理器（18核CPU+40核GPU）",
+   "ram_gb": "128GB 统一内存",
+   "ram_upgradable": "SoC与内存封装在同一基板上，无法加装或更换",
+   "storage_gb": "8TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -2184,12 +2532,12 @@
   "weight_kg": 1.39,
   "screen_inch": 14.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra 5 336H",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 16.92,
   "is_gaming": false,
   "ports": {
@@ -2204,7 +2552,12 @@
   },
   "ports_text": "机身左侧有两个USB-C10Gbps（均支持100WPD充电和最大4K120Hz视频输出）、HDMI2.1TMDS以及3.5mm音频接口；机身右侧有两个USB-A5Gbps接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 5 336H 处理器",
+   "ram_gb": "16GB LPDDR5x 8533MT/s 内存",
+   "ram_upgradable": "内存为板载无法更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -2216,12 +2569,12 @@
   "weight_kg": 1.42,
   "screen_inch": 14.6,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra 5 338H",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 18.43,
   "is_gaming": false,
   "ports": {
@@ -2236,7 +2589,12 @@
   },
   "ports_text": "机身左侧有一个雷电4和USB-C10Gbps（均支持100WPD充电和DP2.180Gbps视频输出）、HDMI2.0接口以及3.5mm音频接口；机身右侧有两个USB-A5Gbps。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 5 338H 处理器",
+   "ram_gb": "32GB LPDDR5x 8533MT/s 内存",
+   "ram_upgradable": "内存为板载，不可更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -2248,12 +2606,12 @@
   "weight_kg": 1.38,
   "screen_inch": 14.6,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra 5 225H",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 12.18,
   "is_gaming": false,
   "ports": {
@@ -2268,7 +2626,12 @@
   },
   "ports_text": "机身左侧有两个USB-C10Gbps（均支持PD100W充电和DP视频输出）、HDMI2.0接口、以及3.5mm音频接口；机身右侧有两个USB-A5Gbps接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 5 225H 处理器",
+   "ram_gb": "32GB LPDDR5x 8400MT/s 内存",
+   "ram_upgradable": "内存为板载无法更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -2280,12 +2643,12 @@
   "weight_kg": 1.4,
   "screen_inch": 14.6,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra 9 285H",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 12.18,
   "is_gaming": false,
   "ports": {
@@ -2300,7 +2663,12 @@
   },
   "ports_text": "机身左侧有两个USB-C10Gbps（均支持PD100W充电和DP视频输出）、HDMI2.0接口、以及3.5mm音频接口；机身右侧有两个USB-A5Gbps接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 9 285H 处理器",
+   "ram_gb": "32GB LPDDR5x 8400MT/s 内存",
+   "ram_upgradable": "内存为板载无法更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -2312,12 +2680,12 @@
   "weight_kg": 1.67,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra X9 388H",
   "has_dgpu": false,
   "gpu": null,
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "soldered",
+  "storage_gb": 1024,
   "battery_hours": 13.33,
   "is_gaming": false,
   "ports": {
@@ -2332,7 +2700,12 @@
   },
   "ports_text": "这台机器左侧有一个HDMI2.1TMDS、USB-C10Gbps（支持100WPD充电和DP2.140Gbps视频输出）、雷电4（支持100WPD充电和DP2.180Gbps视频输出）以及3.5mm音频接口；右侧有两个USB-A5Gbps接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra X9 388H 处理器",
+   "ram_gb": "32GB LPDDR5x 9600MT/s 内存",
+   "ram_upgradable": "内存为板载不可更换",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -2344,12 +2717,12 @@
   "weight_kg": 2.28,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core i7-14650HX",
   "has_dgpu": true,
   "gpu": "RTX 5060",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -2364,7 +2737,12 @@
   },
   "ports_text": "机身左侧有USB-A5Gbps、USB-C5Gbps和3.5mm音频接口；机身右侧有两个USB-A5Gbps接口和RJ45网口；机身后侧有一个USB-C10Gbps（支持100WPD充电和DP2.180Gbps独显视频输出）、HDMI2.1FRL（独显输出）和电源接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "i7-14650HX 处理器",
+   "ram_gb": "16GB DDR5 5600MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -2376,12 +2754,12 @@
   "weight_kg": 2.41,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra 9 290HX Plus",
   "has_dgpu": true,
   "gpu": "RTX 5070Ti",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -2396,7 +2774,12 @@
   },
   "ports_text": "机身左侧有一个USB-A10Gbps接口、一个雷电4接口（支持100WPD充电和DP2.180Gbps核显视频输出）一个USB-C10Gbps接口（支持100WPD充电和DP2.140Gbps独显视频输出）以及3.5mm音频接口；机身右侧有有两个USB-A5Gbps接口和HDMI2.1（独显输出）接口以及RJ-45千兆网口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 9 290HX Plus 处理器",
+   "ram_gb": "32GB DDR5 6400MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -2408,12 +2791,12 @@
   "weight_kg": 1.52,
   "screen_inch": 15.3,
   "panel": "oled",
-  "cpu": null,
+  "cpu": "Core Ultra 7 356H",
   "has_dgpu": true,
   "gpu": "RTX 5060",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": 5.67,
   "is_gaming": true,
   "ports": {
@@ -2428,7 +2811,12 @@
   },
   "ports_text": "机身左侧有一个USB-A5Gbps和3.5mm音频接口；机身右侧有一个USB-A5Gbps接口；机身后侧有两个USB-C10Gbps（均支持DP2.180Gbps核显输出，其中一个支持100WPD充电）、一个HDMI2.1（核显输出）接口和RJ45网口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 7 356H 处理器",
+   "ram_gb": "32GB DDR5 5600MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -2440,12 +2828,12 @@
   "weight_kg": 2.55,
   "screen_inch": 16.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core i9-13900HX",
   "has_dgpu": true,
   "gpu": "RTX 5070Ti",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 16,
+  "ram_upgradable": "slots",
+  "storage_gb": 1024,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -2460,7 +2848,12 @@
   },
   "ports_text": "机身左侧有一个RJ-45网口、USB-C（支持PD100W充电和DP1.4核显视频输出）、USB-A5Gbps以及3.5mm音频接口；机身右侧有两个USB-A5Gbps接口；机身后侧有一个USB-C10Gbps（支持PD100W充电和DP1.4核显视频输出）、DC电源接口、MiniDP（DP2.180Gbps独显输出）以及HDMI2.1（独显输出）接口。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "i9-13900HX 处理器",
+   "ram_gb": "16GB DDR5 5600MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "1TB 固态硬盘"
+  },
   "note": ""
  },
  {
@@ -2472,12 +2865,12 @@
   "weight_kg": 3.17,
   "screen_inch": 18.0,
   "panel": "lcd",
-  "cpu": null,
+  "cpu": "Core Ultra 9 290HX Plus",
   "has_dgpu": true,
   "gpu": "RTX 5090",
-  "ram_gb": null,
-  "ram_upgradable": null,
-  "storage_gb": null,
+  "ram_gb": 32,
+  "ram_upgradable": "slots",
+  "storage_gb": 2048,
   "battery_hours": null,
   "is_gaming": true,
   "ports": {
@@ -2492,7 +2885,12 @@
   },
   "ports_text": "机身左侧依次为电源接口、RJ45网口（2.5GbE）、两个USB-A10Gbps和雷电4接口（支持100WPD充电和DP2.180Gbps核显输出）；机身右侧依次为HDMI2.1FRL（独显输出）、USB-A10Gbps、雷电5接口（支持100WPD充电和DP2.180Gbps独显输出）和SD卡槽（UHS-II）。",
   "extra": {},
-  "evidence": {},
+  "evidence": {
+   "cpu": "Ultra 9 290HX Plus 处理器",
+   "ram_gb": "32GB DDR5 6400MT/s 内存",
+   "ram_upgradable": "机器有两个内存插槽",
+   "storage_gb": "2TB 固态硬盘"
+  },
   "note": ""
  }
 ]

@@ -100,7 +100,7 @@
             "description": "独显型号，满足其中之一即可；没有独显的机型不满足。"
           },
           "has_dgpu": {"type": "boolean", "description": "是否有独立显卡。"},
-          "is_gaming": {"type": "boolean", "description": "是否游戏本：有 RTX 独显且定位为游戏本，创作本、双屏本除外。"},
+          "is_gaming": {"type": "boolean", "description": "是否游戏本：有 RTX 独显且定位为游戏本，创作本、全能本、商务本、双屏本除外。"},
           "panel": {"type": "string", "enum": ["oled", "lcd", "miniled"], "description": "屏幕面板类型。"},
           "ports": {
             "type": "array",

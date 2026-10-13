@@ -181,7 +181,7 @@ print(ContextUnit.objects.get(source__document_schema='product_review', title='�
 
 填写规则：
 
-- 一台机器一条记录。`key` 与清单中的 `entity_title` 完全一致，`brand` 取它的第一个词；子品牌 ROG、ThinkPad、红米单列（如“联想 ThinkPad X14”记为 ThinkPad，“小米 REDMI Book”记为红米），以便按品牌筛选时不漏机。
+- 一台机器一条记录。`key` 与清单中的 `entity_title` 完全一致，`brand` 取它的第一个词；子品牌 ROG、ThinkPad、红米单列（如“联想 ThinkPad X14”记为 ThinkPad，“小米 REDMI Book”记为红米），以便按品牌筛选时不漏机。只有这三个子品牌，ThinkBook、拯救者等系列仍记为联想。
 - 先从评测原文取值；原文有多个配置时只取评测机。
 - 原文缺失的字段，可以联网搜索补充，优先官网参数页，其次电商官方旗舰店详情页、其他评测媒体，配置必须与评测机一致。价格只补官方首发价或建议零售价，`price_date` 写该价格的日期；续航不从别处补，见下表。查不到的填 `null`，不推算。
 - 规格字段在 `evidence` 中附引用，键为字段名，一句话能证明几个相关字段时写在其中一个下即可。引用逐字复制，不改写、不拼接：
@@ -190,16 +190,16 @@ print(ContextUnit.objects.get(source__document_schema='product_review', title='�
 
 | 字段 | 口径 |
 | --- | --- |
-| `price_cny`、`price_kind`、`price_date` | 单位元。优先取参考价或首发价，只有补贴价时取补贴价，其他价格写进 `note`。`price_kind` 为 `launch`（首发）、`reference`（参考、建议零售）、`subsidy`（补贴、国补）、`predicted`（预测）；日期原文没写时用评测日期 |
-| `weight_kg` | 机身重量，不含适配器；二合一按含键盘称重时在 `note` 注明 |
+| `price_cny`、`price_kind`、`price_date` | 单位元。取配置表的“参考售价”，`price_kind` 为 `reference`：这是笔吧给出的参考到手价，可能已含国补、平台补贴或券，照取不改。配置表没有参考售价时按正文取，`price_kind` 为 `launch`（首发）、`reference`（售价、建议零售）或 `subsidy`（只有补贴价）；尚未开售时，原文给出预测价或区间才填（区间取下限，`predicted`），只说“至少××元”填 `null`。首发价等其他价格写进 `note`。日期原文没写时用评测日期 |
+| `weight_kg` | 机身重量，不含适配器。二合一的重量和价格都按评测机的实际形态（含键盘的套装）取，裸机数据写进 `note` |
 | `screen_inch`、`panel` | 英寸；`panel` 为 `oled`、`lcd`（IPS 等液晶屏）或 `miniled` |
-| `cpu` | 完整型号，如 `Core Ultra 9 275HX` |
+| `cpu` | 完整型号，不写品牌，如 `Core Ultra 9 275HX`、`Ryzen 7 H 255`、`Apple M4`；原文只写“Ultra 9 386H”时补上 `Core` |
 | `has_dgpu`、`gpu` | 只有核显时为 `false`、`null`；独显写成 `RTX 5060`、`RTX 5070Ti`，Ti 紧跟数字 |
-| `ram_gb`、`ram_upgradable` | 单位 GB；有内存插槽为 `slots`，板载为 `soldered` |
+| `ram_gb`、`ram_upgradable` | 单位 GB；有内存插槽或可更换模块（如 LPCAMM2）为 `slots`，板载为 `soldered` |
 | `storage_gb` | 单位 GB，1TB 记为 1024 |
-| `battery_hours` | 只取笔吧“日常应用仿真”的成绩，单位小时，保留两位小数（8 小时 29 分钟记为 8.48）。官网续航和其他测试的口径不同，不能用来补 |
-| `is_gaming` | 定位为游戏本且有 RTX 独显为 `true`；创作本、双屏本或没有独显为 `false` |
-| `ports` | 8 个布尔值，接口介绍里没提到的为 `false`：`usb_a`；`usb_c`（含雷电、USB4）；`video_out`（有 HDMI、DP 或支持视频输出的 USB-C）；`hdmi`；`rj45`；`card_reader`（SD 或 microSD）；`thunderbolt`（雷电或 USB4）；`oculink` |
+| `battery_hours` | 只取笔吧“日常应用仿真”的成绩，单位小时，分钟除以 60 后四舍五入保留两位小数（8 小时 29 分钟记为 8.48）。只认这个测试项名称，“中高负载仿真”等其他项填 `null`。官网续航和其他测试的口径不同，不能用来补 |
+| `is_gaming` | 有 RTX 独显时默认为 `true`；原文或厂商定位为创作本（设计师本）、全能本、商务本或双屏本时为 `false`；没有独显为 `false` |
+| `ports` | 8 个布尔值，接口介绍里没提到的为 `false`：`usb_a`；`usb_c`（含雷电、USB4）；`video_out`（有 HDMI、DP 或支持视频输出的 USB-C）；`hdmi`；`rj45`；`card_reader`（SD 或 microSD）；`thunderbolt`（雷电或 USB4）；`oculink`（联想 TGX 接口即 OCuLink） |
 | `ports_text` | 原文介绍接口的段落，逐字复制；评测没有介绍接口时，复制补充来源中的接口说明 |
 | `extra` | 可选，只用 `refresh_hz`、`resolution`、`battery_wh` 三个键 |
 | `note` | 计价、称重口径等说明，没有就写空字符串 |
@@ -245,6 +245,8 @@ print(ContextUnit.objects.get(source__document_schema='product_review', title='�
    有任何一条字段或引用校验不通过，整个文件都不写库。报告中“失去关联”表示找不到 `key` 对应的评测，通常是 `entity_title` 拼写不一致。
 3. **评测**：D 类答案由规格文件生成，补规格后按第 7、8 节跑回归。
 4. **工具定义**：新增显卡型号或品牌时，按[工具定义 3.1 节](../products/tool-definitions.md#31-可选值)更新可选值与显卡档次；单元测试会检查工具定义与规格文件是否一致。
+
+规则试填记录（2026-10-13）：选 10 台覆盖预测价、无价格、国补价、双屏、有独显的全能本、二合一、无续航成绩、OCuLink 与网口的机型，由只看本节和评测原文的 LLM 盲填（不联网），与规格文件比对。品牌、尺寸、面板、独显、显卡、续航、接口 10/10 一致；价格 6/10、价格口径 7/10、重量 9/10、游戏本 9/10。差异来自规则未写明的口径：配置表“参考售价”常为国补或券后价（星耀14、战66、MacBook Air 13），“至少××元”的预估价（枪神10 Plus），二合一裸机与套装（Surface Pro 11），“专业性能轻薄本”是否算游戏本（幻14 Air）。上表已按规格文件的既有口径补写这些规则，并补充 CPU 写法、LPCAMM2、TGX 与续航换算；现有数据无需修改。试填由与维护者同类的模型完成，换用其他模型时宜再抽查几台。
 
 ### 2.5 单篇资料（API）
 

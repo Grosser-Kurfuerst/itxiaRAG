@@ -57,7 +57,8 @@ class ChatModel:
         body = {"model": self.model, "temperature": 0, "tools": self.tools,
                 "messages": [{"role": "system", "content": self.prompt}, *messages]}
         request = Request(self.url, method="POST", data=json.dumps(body).encode("utf-8"),
-                          headers={"Content-Type": "application/json"})
+                          # Cloudflare 会拦截 urllib 默认 UA（error 1010）
+                          headers={"Content-Type": "application/json", "User-Agent": "itxia-llm-eval"})
         if self.api_key:
             request.add_header("Authorization", f"Bearer {self.api_key}")
         with urlopen(request, timeout=120) as response:

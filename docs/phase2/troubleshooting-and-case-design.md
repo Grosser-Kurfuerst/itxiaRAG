@@ -1,6 +1,6 @@
 # 后续批次技术方案：排障指南与单案例记录
 
-本文给出语雀排障指南（`troubleshooting`，10 篇）与单案例记录（`case`，9 篇）的接入方案，对应[二期需求](requirements.md) F2-12、F2-13，评测对应 F2-14。逐篇名单见[需求分析附录](../phase1/yuque-ingestion/requirements-analysis.md#附录后续批次与不导入清单)。解析、章节树、父段规划和子块生成沿用[第一批技术方案](../phase1/yuque-ingestion/technical-design.md)第 4、5 节，本文只写差异。**状态：已实现，19 篇已导入开发环境并完成抽查和维修类评测（2026-10-11），结果见第 8 节。**
+本文给出语雀排障指南（`troubleshooting`，10 篇）与单案例记录（`case`，9 篇）的接入方案，对应[二期需求](requirements.md) F2-12、F2-13，评测对应 F2-14。逐篇名单见[需求分析附录](../phase1/yuque-ingestion/requirements-analysis.md#附录后续批次与不导入清单)。解析、章节树、父段规划和子块生成沿用[第一批技术方案](../phase1/yuque-ingestion/technical-design.md)第 4、5 节，本文只写差异。**状态：已实现，19 篇已导入正式库并完成抽查和维修类评测（2026-10-11），结果见第 8 节。**
 
 ## 1. 结论
 
@@ -177,7 +177,7 @@ YUQUE_CATEGORY_PIPELINES = {
 ### 8.2 试运行与正式导入（2026-10-11）
 
 1. 重新保存快照：`import_yuque --save-snapshot --dry-run` 得到 preprocessed=93、skipped=26、unregistered=0、failed=0，共保存 93 篇正文。19 篇正文与 2026-10-08 分析快照逐字节一致。
-2. 用该快照在开发环境正式导入：imported=19、reused=74、failed=0。第一批 74 篇全部 `reused`，说明 ToolCardStrategy 重构与新映射不影响已有文档。立即重跑，结果为 reused=93。
+2. 用该快照导入正式库 `itxia`：imported=19、reused=74、failed=0。第一批 74 篇全部 `reused`，说明 ToolCardStrategy 重构与新映射不影响已有文档。立即重跑，结果为 reused=93。
 3. 库中新增规模与第 2 节的试切结果一致：
 
    | schema | 来源 | 父段 | 子块 |

@@ -167,17 +167,28 @@ dc ps    # 应有 app（API，127.0.0.1:8000）、db（PostgreSQL，15432）、e
 
 #### 规格填写
 
-项目不自动提取规格：由维护者人工填写，或把本节连同评测正文交给外部 LLM 生成草稿，再核对。只把公开的笔吧评测发给外部 LLM，不要发送语雀内部文档或 `.runtime/` 中的其他内容。
+本节可以整节交给有仓库和 Docker 执行权限的 LLM 代理（如 Claude Code、Codex）：由它导出、填写、合并、校验，经维护者确认后导入并提交。没有执行权限的聊天模型只能做第 2 步，其余步骤由维护者执行。代理先读第 0 节的操作约定。
 
-评测正文从库中导出，导入规格时按这份正文自动校验引用：
+维护者给出以下一种任务：
+
+- **新增机型**：为库中有评测、规格文件中还没有 `key` 的机型各补一条完整记录，通常在导入新评测之后。
+- **补字段**：为已有记录补指定的空字段，如 `cpu`、`ram_gb`、`ram_upgradable`、`storage_gb`。只写值为 `null` 的指定字段及其 `evidence`，不改已有的非空值；发现已有值与原文不符时列入核对清单，由维护者决定是否修改。
+
+边界：只读本节、规格文件、[工具定义](../products/tool-definitions.md)和第 1 步导出的评测正文，不读语雀内部文档、`.runtime/` 中的其他内容和 env 文件；不改代码和 [attributes.json](../eval/attributes.json)。
+
+**1. 导出评测正文。** 评测正文是公众号文章预处理后存入库中的评测父段，父段标题就是 `entity_title`。导入规格时按这份正文校验引用，所以只根据它填写，不用网页原文。导出后每行一篇，`key` 为机型，`date` 为评测日期：
 
 ```sh
 mkdir -p .runtime/specs
-dc exec -T app python manage.py shell -c "
+dc exec -T app python manage.py shell --no-imports -c "
+import json
 from catalog.models import ContextUnit
-print(ContextUnit.objects.get(source__document_schema='product_review', title='联想 来酷GT 16 酷睿版').body)
-" > .runtime/specs/laiku-gt16.txt
+for c in ContextUnit.objects.filter(source__document_schema='product_review').select_related('source'):
+    print(json.dumps({'key': c.title, 'date': str(c.source.source_date), 'body': c.body}, ensure_ascii=False))
+" > .runtime/specs/reviews.jsonl
 ```
+
+**2. 填写。** 一次处理一台：读完该机型的整篇正文，按下面的规则填写，不凭记忆补值。
 
 填写规则：
 
@@ -233,18 +244,23 @@ print(ContextUnit.objects.get(source__document_schema='product_review', title='�
 }
 ```
 
-填好后：
+**3. 合并。** 把记录写入 [products/specs/bibar.json](../products/specs/bibar.json)：新增的记录插入列表，补字段只改对应记录的指定字段和 `evidence`，不动其他记录。文件按 `key` 排序，字段顺序同示例，格式与 `json.dumps(records, ensure_ascii=False, indent=1)` 加末尾换行一致。出现规格文件中没有的显卡型号或品牌时，按[工具定义 3.1 节](../products/tool-definitions.md#31-可选值)更新可选值与显卡档次。
 
-1. **核对**：不论谁填写，都对照 `evidence` 检查，重点是价格口径、续航是否来自日常应用仿真、`ports` 与 `ports_text` 是否一致；联网补充的字段要点开链接，确认引用存在、配置与评测机一致。
-2. **合入并导入**：记录加入 `products/specs/bibar.json`，合入即视为已审核。命令读取镜像中的文件，先重建 app（`dc up -d --build app`），试运行后去掉 `--dry-run` 正式导入：
+**4. 校验。** 以下都通过才进入下一步：
 
-   ```sh
-   dc exec app python manage.py import_specs --file products/specs/bibar.json --dry-run
-   ```
+```sh
+.venv/bin/python -m pytest tests/unit/test_products.py -q   # 字段格式、key 唯一、工具定义与规格文件一致
+dc up -d --build app                                        # import_specs 读取镜像中的规格文件
+dc exec app python manage.py import_specs --file products/specs/bibar.json --dry-run
+```
 
-   有任何一条字段或引用校验不通过，整个文件都不写库。报告中“失去关联”表示找不到 `key` 对应的评测，通常是 `entity_title` 拼写不一致。
-3. **评测**：D 类答案由规格文件生成，补规格后按第 7、8 节跑回归。
-4. **工具定义**：新增显卡型号或品牌时，按[工具定义 3.1 节](../products/tool-definitions.md#31-可选值)更新可选值与显卡档次；单元测试会检查工具定义与规格文件是否一致。
+试运行报告应为 `failed=0`、`unlinked=0`，`created`／`updated` 恰好是本次处理的机型，其余为 `unchanged`。有任何一条字段或引用校验不通过，整个文件都不写库：引用不在正文中时回到正文重新逐字复制；“失去关联”表示找不到 `key` 对应的评测，通常是 `key` 与 `entity_title` 拼写不一致。
+
+再逐台自查：价格是否取自配置表的参考售价，续航是否来自日常应用仿真，`ports` 与 `ports_text` 是否一致，`is_gaming` 是否符合原文定位。
+
+**5. 交维护者确认。** 合入规格文件即视为已审核，代理在此停下，向维护者提交核对清单：每台机型填了哪些字段；拿不准的取值及理由；联网补充的字段及链接；已有值与原文不符之处。维护者确认或指出修改后再继续。
+
+**6. 导入与提交。** 去掉 `--dry-run` 正式导入。改了价格、重量、尺寸、显卡、续航、面板、接口、品牌等推荐条件用到的字段时，按 8.2 节“规格文件、推荐逻辑”一行跑回归；只补 CPU、内存、硬盘时不影响评测，可以跳过。最后按文件名暂存规格文件（以及改过的工具定义）并提交，如 `chore(products): 补充 5 台机型规格`。
 
 规则试填记录（2026-10-13）：选 10 台覆盖预测价、无价格、国补价、双屏、有独显的全能本、二合一、无续航成绩、OCuLink 与网口的机型，由只看本节和评测原文的 LLM 盲填（不联网），与规格文件比对。品牌、尺寸、面板、独显、显卡、续航、接口 10/10 一致；价格 6/10、价格口径 7/10、重量 9/10、游戏本 9/10。差异来自规则未写明的口径：配置表“参考售价”常为国补或券后价（星耀14、战66、MacBook Air 13），“至少××元”的预估价（枪神10 Plus），二合一裸机与套装（Surface Pro 11），“专业性能轻薄本”是否算游戏本（幻14 Air）。上表已按规格文件的既有口径补写这些规则，并补充 CPU 写法、LPCAMM2、TGX 与续航换算；现有数据无需修改。试填由与维护者同类的模型完成，换用其他模型时宜再抽查几台。
 

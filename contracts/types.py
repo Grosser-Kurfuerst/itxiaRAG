@@ -113,6 +113,8 @@ class DocumentStore(Protocol):
     def save(self, source: SourceSpec, document: ProcessedDocument,
              vectors: list[list[float]], embedding_space: str) -> ImportResult: ...
 
+    def existing_sources(self, source_type: str) -> dict[str, str]: ...
+
 
 class EmbeddingProvider(Protocol):
     @property

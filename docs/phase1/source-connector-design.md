@@ -125,6 +125,8 @@ request = {
 - `fetch()` 抛 `SourceAccessError`（凭据失效、无权限，如 `YuqueAuthenticationError`）时终止整批，命令转为 CommandError。
 - `fetch()` 抛 `DomainError`（单篇读取或格式错误）时，该篇报告 `failed` 后继续。
 
+**过期来源对账**：`run(..., existing=...)` 接收库中同一 `source_type` 的来源 `{canonical_locator: title}`，主循环结束后由 `find_stale` 对照：本次列表中没有对应 `SourceRef`，或对应行为 `skipped`、`unregistered` 的来源写入 `ImportReport.stale`，报告输出 `stale:` 行与 `stale=<条数>`，不删除、不影响退出码。命令只在不带 `--only` 的正式导入时通过 `DocumentStore.existing_sources` 取库中来源；试运行不访问数据库。删除由 `delete_source` 命令完成，见[来源对账与下线方案](../phase4/source-reconciliation-design.md)。
+
 ## 7. 平台差异
 
 | 维度 | 语雀 | 笔吧公众号 |
@@ -154,7 +156,7 @@ request = {
 
   [搜狗客户端](../../sources/wechat/sogou.py)依赖非公开页面格式：搜索结果取标题、账号与发布时间，跳转页拼出临时链接，文章页取 `biz/mid/idx/ct/nickname` 并去掉 script、style。只有账号、标题与日期都一致才下载；搜狗不支持匿名按时间筛选，每期同名文章往往搜不到最新一期，需人工采集。验证码属于整批失败（`SourceAccessError`），未找到、多篇一致和页面改版属于单篇失败。
 - **元数据**：类别（评测、选购指南、转载评测、不收录）和机型名无法从页面可靠推断，需要逐篇登记。
-- **身份稳定**：入库后不要再更换链接形式或采集文件名，否则会生成新的来源，旧来源目前没有删除入口。重复采集在列出阶段拦截，因此清单的 `skip`／`canonical` 不用于公众号去重；分批或用 `--only` 跨账号导入时，跨账号重复无法拦截，后导入的会覆盖同身份来源。
+- **身份稳定**：入库后不要再更换链接形式或采集文件名，否则会生成新的来源；旧身份会在不带 `--only` 的正式导入中报为过期来源（不在本次列表中），用 `delete_source` 下线。重复采集在列出阶段拦截，因此清单的 `skip`／`canonical` 不用于公众号去重；分批或用 `--only` 跨账号导入时，跨账号重复无法拦截，后导入的会覆盖同身份来源。
 - **内容质量属于 ingestion**：真实文章预处理测试发现，整句加粗被识别为标题导致散热条件与结果分离，接口子块混入噪音与价格，泛化图片说明（alt 为“图片”）没有警告。这些需在解析器和评测策略中改进，connector 不负责。
 
 ## 8. 迁移步骤

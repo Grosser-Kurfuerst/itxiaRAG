@@ -51,10 +51,32 @@ class ImportRow:
     detail: str = ""
 
 
+@dataclass(frozen=True)
+class StaleSource:
+    locator: str
+    title: str
+    reason: str
+
+
+def find_stale(refs: Iterable[SourceRef], rows: Iterable[ImportRow], existing: Mapping[str, str]) -> list[StaleSource]:
+    """库中来源对照本次列表：不在列表中、清单已 skip 或未登记的视为过期。"""
+    keys = {ref.canonical_locator: ref.key for ref in refs}
+    rows = {row.doc: row for row in rows}
+    stale = []
+    for locator, title in sorted(existing.items()):
+        row = rows.get(keys.get(locator))
+        if row is None:
+            stale.append(StaleSource(locator, title, "不在本次列表中"))
+        elif row.status in ("skipped", "unregistered"):
+            stale.append(StaleSource(locator, title, f"{row.status}: {row.detail}"))
+    return stale
+
+
 @dataclass
 class ImportReport:
     rows: list[ImportRow] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
+    stale: list[StaleSource] | None = None  # None 表示本次未对账
 
     @property
     def summary(self) -> dict[str, int]:
@@ -78,7 +100,11 @@ class ImportReport:
         lines = ["  ".join(cell.ljust(width) for cell, width in zip(row[:5], widths)) + "  " + row[5]
                  for row in table]
         lines.extend(f"warning: {warning}" for warning in self.warnings)
-        lines.append("summary: " + " ".join(f"{key}={value}" for key, value in self.summary.items()))
+        summary = "summary: " + " ".join(f"{key}={value}" for key, value in self.summary.items())
+        if self.stale is not None:
+            lines.extend(f"stale: {source.locator}  {source.title}  {source.reason}" for source in self.stale)
+            summary += f" stale={len(self.stale)}"
+        lines.append(summary)
         return "\n".join(line.rstrip() for line in lines)
 
 
@@ -89,7 +115,9 @@ class SourceImportService:
         self.category_pipelines, self.submit = category_pipelines, submit
 
     def run(self, refs: Iterable[SourceRef], *, only: Iterable[str] | None = None,
-            read_errors: Mapping[str, DomainError] | None = None) -> ImportReport:
+            read_errors: Mapping[str, DomainError] | None = None,
+            existing: Mapping[str, str] | None = None) -> ImportReport:
+        """existing 为库中同类型来源 {定位符: 标题}，传入时在导入后对账；是否对账由调用方决定。"""
         refs = list(refs)
         selected = set(only) if only else None
         available = {ref.key for ref in refs}
@@ -146,4 +174,6 @@ class SourceImportService:
             except ValidationError as exc:
                 report.rows.append(ImportRow(key, classification, "failed",
                                             detail=f"INVALID_REQUEST: {exc.get_codes()}"))
+        if existing is not None:
+            report.stale = find_stale(refs, report.rows, existing)
         return report

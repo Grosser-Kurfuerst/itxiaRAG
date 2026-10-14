@@ -92,7 +92,7 @@ api → products.service.recommend → products.conditions：按原子条件过�
 
 一个子块对应一个 embedding，编码文本固定为 `父段标题 + 换行 + 子块正文`，子块带 `retrieval_prefix` 时为 `父段标题 + 换行 + 前缀 + 换行 + 子块正文`，同一文本也保存为关键词路的 `retrieval_text`。父段不单独编码。文档级 metadata 用于保留来源信息，不投影为召回条件，也不默认完整发送给调用方；父段 metadata 随结果返回，子块 metadata 和 warnings 保存供维护或后续扩展，不默认返回。回答所需的风险警告应写入文档或父段 warnings，不能只放在子块中。子块 locator 应保持简短，只记录章节、段落号或字符偏移等定位信息，不放正文或大型附加数据。
 
-保存采用 `DocumentStore` 协议（`find_unchanged` 与 `save`），默认 `DjangoDocumentStore`。现阶段向量保存在 PostgreSQL JSONB 数组；`VectorRetriever` 在数据库完成范围过滤后逐批读取向量，用余弦计算精确 top-N，不预截断候选。复杂度约 `O(N × D)`，适合小规模验证；无 ANN 索引，不承诺大规模性能。需要规模化时替换为 pgvector 字段和 Retriever，DTO、API、RRF 不变。
+保存采用 `DocumentStore` 协议（`find_unchanged`、`save`，以及供批量导入对账的只读方法 `existing_sources`），默认 `DjangoDocumentStore`。现阶段向量保存在 PostgreSQL JSONB 数组；`VectorRetriever` 在数据库完成范围过滤后逐批读取向量，用余弦计算精确 top-N，不预截断候选。复杂度约 `O(N × D)`，适合小规模验证；无 ANN 索引，不承诺大规模性能。需要规模化时替换为 pgvector 字段和 Retriever，DTO、API、RRF 不变。
 
 ### 4.1 重复与更新
 

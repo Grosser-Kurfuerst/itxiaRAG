@@ -7,6 +7,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
@@ -265,4 +266,44 @@ def test_snapshot_command_imports_all_registered_categories_and_reimport_reuses_
     assert "skipped=1" in first.getvalue() and "unregistered=1" in first.getvalue()
     assert "case(path_rule)" in first.getvalue() and "未接入" not in first.getvalue()
     assert list(EvidenceUnit.objects.order_by("id").values_list("id", flat=True)) == ids
+    assert "stale=0" in repeated.getvalue()
+
+
+def delete_args(*locators):
+    return ["--source-type", "yuque", *(arg for locator in locators for arg in ("--locator", locator))]
+
+
+def test_reimport_reports_stale_sources_and_delete_source_removes_them(tmp_path, embedder):
+    manifest, snapshot = command_snapshot(tmp_path)
+    with patch("config.components.embedding_provider", return_value=embedder):
+        call_command("import_yuque", manifest=str(manifest), snapshot=str(snapshot), stdout=StringIO())
+        manifest.write_text(manifest.read_text(encoding="utf-8").replace(
+            '[docs."help/case"]\ncategory = "case"', '[docs."help/case"]\nskip = "已废弃"'), encoding="utf-8")
+        docs_path = snapshot / "help/docs.json"
+        docs = json.loads(docs_path.read_text(encoding="utf-8"))
+        docs["data"] = [doc for doc in docs["data"] if doc["slug"] != "trouble"]
+        docs_path.write_text(json.dumps(docs), encoding="utf-8")
+        output = StringIO()
+        call_command("import_yuque", manifest=str(manifest), snapshot=str(snapshot), stdout=output)
+    assert "stale: doc:4  合成安装  skipped: 已废弃" in output.getvalue()
+    assert "stale: doc:6  合成安装  不在本次列表中" in output.getvalue()
+    assert "stale=2" in output.getvalue()
+
+    counts = (KnowledgeSource.objects.count(), ContextUnit.objects.count(), EvidenceUnit.objects.count())
+    with pytest.raises(CommandError, match="doc:404"):
+        call_command("delete_source", *delete_args("doc:4", "doc:404"))
+    preview = StringIO()
+    call_command("delete_source", *delete_args("doc:4", "doc:6"), "--dry-run", stdout=preview)
+    assert "doc:4  合成安装  parents=1 children=1" in preview.getvalue()
+    assert "doc:6  合成安装  parents=2" in preview.getvalue() and "deleted=" not in preview.getvalue()
+    assert (KnowledgeSource.objects.count(), ContextUnit.objects.count(), EvidenceUnit.objects.count()) == counts
+
+    kept = ["doc:1", "doc:100", "doc:2"]
+    kept_counts = (ContextUnit.objects.filter(source__canonical_locator__in=kept).count(),
+                   EvidenceUnit.objects.filter(context__source__canonical_locator__in=kept).count())
+    deleted = StringIO()
+    call_command("delete_source", *delete_args("doc:4", "doc:6"), stdout=deleted)
+    assert "deleted=2" in deleted.getvalue()
+    assert sorted(KnowledgeSource.objects.values_list("canonical_locator", flat=True)) == kept
+    assert (ContextUnit.objects.count(), EvidenceUnit.objects.count()) == kept_counts
 

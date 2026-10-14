@@ -25,6 +25,11 @@ class DjangoDocumentStore:
         context_ids = list(source.contexts.values_list("id", flat=True)) if source else []
         return ImportResult(source.pk, context_ids, True) if context_ids else None
 
+    def existing_sources(self, source_type):
+        """返回该类型已入库来源的 {canonical_locator: title}，供批量导入对账。"""
+        return dict(KnowledgeSource.objects.filter(source_type=source_type)
+                    .values_list("canonical_locator", "title"))
+
     @transaction.atomic
     def save(self, source_spec, document, vectors, embedding_space):
         validate_vectors(vectors, sum(len(c.children) for c in document.contexts))

@@ -218,6 +218,28 @@ def test_service_records_all_statuses_counts_warnings_and_continues_after_domain
     assert "先备份数据再安装" not in formatted
 
 
+def test_reconciliation_reports_sources_skipped_unregistered_or_missing_from_listing(snapshot):
+    directory, path = snapshot
+    registry = components.preprocessors()
+
+    def submit(source, raw, schema, version):
+        if source.canonical_locator == "doc:1":
+            raise DomainError("SYNTHETIC_FAILURE", "合成失败")
+        reused = source.canonical_locator == "doc:3"
+        return SubmissionResult(registry.process(raw, schema, version), ImportResult(uuid4(), [uuid4()], reused))
+
+    existing = {"doc:1": "读取失败", "doc:2": "已导入", "doc:3": "已复用", "doc:5": "未登记",
+                "doc:7": "已废弃", "doc:999": "已删除"}
+    report = service(directory, path, submit).run(help_refs(directory), existing=existing)
+    assert [(source.locator, source.reason) for source in report.stale] == [
+        ("doc:5", "unregistered: 请在清单中登记类别或 skip"), ("doc:7", "skipped: deprecated"),
+        ("doc:999", "不在本次列表中"),
+    ]
+    formatted = report.format()
+    assert "stale: doc:999  已删除  不在本次列表中" in formatted
+    assert formatted.splitlines()[-1].endswith("failed=1 stale=3")
+
+
 @pytest.mark.parametrize("entry,titles", [
     ('category = "knowledge"', ["合成工具"]),
     ('category = "tool_card"\nmetadata = { tool_collection = true }', ["分类 > 合成工具"]),
@@ -323,7 +345,7 @@ def test_command_dry_run_needs_no_embedding_or_store(snapshot):
     store.assert_not_called()
     assert "preprocessed=6" in output.getvalue() and "failed=0" in output.getvalue()
     assert "troubleshooting(manifest)" in output.getvalue() and "case(path_rule)" in output.getvalue()
-    assert "未接入" not in output.getvalue()
+    assert "未接入" not in output.getvalue() and "stale" not in output.getvalue()  # 试运行不对账
     assert "合成社内教程" not in output.getvalue()
 
 
@@ -340,7 +362,8 @@ def test_command_only_reads_selected_books_and_only_reports_selected_docs(snapsh
 def test_command_formal_import_uses_raw_main_chain_once_per_doc_and_reports_counts(snapshot, embedder):
     directory, path = snapshot
     registry = components.preprocessors()
-    store = Mock(**{"find_unchanged.return_value": None})
+    store = Mock(**{"find_unchanged.return_value": None,
+                    "existing_sources.return_value": {"doc:20": "社内安装", "doc:999": "已删除"}})
     store.save.side_effect = lambda *args: ImportResult(uuid4(), [uuid4()], False)
     output = StringIO()
     with patch("config.components.embedding_provider", return_value=embedder), \
@@ -351,6 +374,8 @@ def test_command_formal_import_uses_raw_main_chain_once_per_doc_and_reports_coun
         call_command("import_yuque", manifest=str(path), snapshot=str(directory), stdout=output)
     assert process.call_count == embed.call_count == store.save.call_count == 6
     assert "imported=6" in output.getvalue() and "preprocessed=0" in output.getvalue()
+    store.existing_sources.assert_called_once_with("yuque")
+    assert "stale: doc:999  已删除  不在本次列表中" in output.getvalue() and "stale=1" in output.getvalue()
     source, document, vectors, space = store.save.call_args.args
     assert source.canonical_locator == "doc:20" and source.visibility == "internal"
     assert document.document_schema == "tutorial" and document.title == "社内安装"
@@ -372,6 +397,7 @@ def test_command_formal_import_failure_happens_before_embedding_or_save(snapshot
                          only=["textbook/install"], stdout=output)
     embedder.return_value.embed_documents.assert_not_called()
     store.return_value.save.assert_not_called()
+    store.return_value.existing_sources.assert_not_called()  # --only 不对账
     registry.process.assert_called_once()
     assert f"SYNTHETIC_FAILURE: {message}" in output.getvalue()
 

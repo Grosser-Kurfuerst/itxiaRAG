@@ -1,6 +1,6 @@
 # 第一批技术方案：教程、工具条目与知识的预处理和导入
 
-本文给出满足[需求分析](requirements-analysis.md)的技术方案，覆盖操作教程（`tutorial`）、工具条目（`tool_card`）、知识科普／对比／速查（`knowledge`）三类语雀文档。现有原文预处理契约见[文档预处理](../preprocessing.md)，公共 DTO 与存储见[首期技术设计](../phase1-technical-design.md)。**阶段 1～3 已实现；阶段 4 的读取方式已于 2026-10-10 由官方 OpenAPI 改为匿名读取公开网页，无需 Token；阶段 5、6 已实现，第一批 74 篇已导入开发环境并完成检索抽查。**
+本文给出满足[需求分析](requirements-analysis.md)的技术方案，覆盖操作教程（`tutorial`）、工具条目（`tool_card`）、知识科普／对比／速查（`knowledge`）三类语雀文档。现有原文预处理契约见[文档预处理](../preprocessing.md)，公共 DTO 与存储见[首期技术设计](../phase1-technical-design.md)。**阶段 1～3 已实现；阶段 4 的读取方式已于 2026-10-10 由官方 OpenAPI 改为匿名读取公开网页，无需 Token；阶段 5、6 已实现，第一批 74 篇已导入正式库并完成检索抽查。**
 
 ## 1. 设计目标与原则
 
@@ -613,7 +613,7 @@ summary: imported=… reused=… skipped=… unregistered=… failed=…
 3. **人工抽查 9 篇**：
    - 篇目：教程 `install_win10`、`hello_my_pc`、`change_win_account_name`；工具 `sdi-driver`、`giq7z502ohos1d3u`、`recommended_tools`；知识 `win10_activation`、`windows_short_commands`、`slang`。
    - 检查项：正文无样式标签和图片地址、占位符保留、章节路径正确、步骤未断开、warnings 完整。
-4. **检索抽查**：在开发环境用真实模型导入后，检查期望文档是否出现在前 5 个父段，结果作为参数校准依据，不作为自动化通过标准：
+4. **检索抽查**：用真实模型导入正式库后，检查期望文档是否出现在前 5 个父段，结果作为参数校准依据，不作为自动化通过标准：
 
    | 查询 | 期望命中 |
    | --- | --- |

@@ -26,6 +26,7 @@ def test_capture_command_imports_reviews_and_guides_then_reimport_reuses(capture
         call_command("import_wechat", manifest=str(manifest), capture=str(root), stdout=repeated)
     assert "imported=2" in first.getvalue() and "reused=2" in repeated.getvalue()
     assert "skipped=1" in first.getvalue() and "unregistered=1" in first.getvalue()
+    assert "stale=0" in repeated.getvalue()
     assert list(EvidenceUnit.objects.order_by("id").values_list("id", flat=True)) == ids
     review, guide = KnowledgeSource.objects.order_by("canonical_locator")
     assert review.source_type == guide.source_type == "wechat"

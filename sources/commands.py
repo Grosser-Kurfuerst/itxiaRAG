@@ -59,10 +59,12 @@ class SourceImportCommand(KBCommand):
 
         collections = [collection for collection in manifest.collections
                        if not only or any(key.startswith(f"{collection}/") for key in only)]
+        # 只在全量正式导入时对账：--only 只处理部分文档，试运行不访问数据库。
+        existing = None if dry_run or only else store.existing_sources(self.source_type)
         try:
             connector, refs, read_errors = self.collect(state, manifest, options, collections)
             report = SourceImportService(connector, manifest, self.category_pipelines, submit).run(
-                refs, only=only, read_errors=read_errors,
+                refs, only=only, read_errors=read_errors, existing=existing,
             )
         except SourceAccessError as exc:
             raise CommandError(str(exc)) from None

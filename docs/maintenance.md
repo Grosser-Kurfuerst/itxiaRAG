@@ -60,7 +60,7 @@ dc ps    # 应有 app（API，127.0.0.1:8000）、db（PostgreSQL，15432）、e
 同一来源由 `source_type` 与 `canonical_locator` 确定：语雀是 `doc:<文档 ID>`（改 slug、移动目录不影响）；公众号是永久链接，没有链接时用采集文件名；API 来源由提交的值决定。
 
 - 内容不变返回 `reused`：仍会读取原文、预处理，但不调用 Embedding、不写库；内容有变返回 `imported`，整篇替换，key 不变的父段和子块保留 ID。
-- **没有删除同步**：清单删掉某篇或改成 `skip`，已入库内容不会删除，下线按 2.6。
+- **只对账、不自动删除**：清单改成 `skip`、文章已删除或不再登记时，已入库内容不会删除。不带 `--only` 的正式导入会在报告末尾列出这些过期来源，下线按 2.6。
 - **没有变更通知**：定期全量重跑 `import_yuque`，有改动的自动更新。
 
 | 报告状态 | 含义与处理 |
@@ -70,6 +70,17 @@ dc ps    # 应有 app（API，127.0.0.1:8000）、db（PostgreSQL，15432）、e
 | `skipped` | 清单写了 `skip`，或类别没有接入流水线；确认是预期结果 |
 | `unregistered` | 清单里没有这篇，按第 3 节登记类别或 `skip` |
 | `failed` | 读取、预处理或保存失败；按原因修正后重跑，批次以非零状态退出 |
+
+过期来源单独成行，汇总行末尾为 `stale=<条数>`，不影响退出码：
+
+```text
+stale: doc:12345  旧版激活教程  skipped: 已废弃
+stale: doc:67890  校园网旧客户端  不在本次列表中
+```
+
+- 判定：库中同一 `source_type` 的来源，对应行为 `skipped`、`unregistered`，或本次列表中找不到（文章已删除、库移出清单、采集目录中没有该文件）。`failed` 不算过期。
+- 带 `--only` 或试运行时不对账，报告中没有 `stale`。
+- 用 `--snapshot` 导入时以快照中的列表为准，快照之后新导入的文档会报“不在本次列表中”；需要准确对账时在线导入或重新保存快照。
 
 ### 2.3 语雀文档
 
@@ -312,14 +323,23 @@ curl -sS --fail-with-body \
 
 ### 2.6 下线或删除来源
 
-没有删除命令。先备份，再查出来源，确认后删除；父段和子块级联删除：
+用 `delete_source` 按来源类型和定位符删除，父段和子块级联删除。定位符从 2.2 的过期来源报告复制，`--locator` 可重复：
+
+1. 先备份（9.2）。
+2. 试运行，核对列出的标题和父段、子块数：
+
+   ```sh
+   dc exec app python manage.py delete_source --source-type yuque --locator doc:12345 --locator doc:67890 --dry-run
+   ```
+
+3. 去掉 `--dry-run` 正式删除，输出 `deleted=<来源数>`。任一定位符在库中不存在时报错，一篇都不删。
+
+不在对账报告中的来源（如 API 导入的 `manual`），可按标题查出定位符：
 
 ```sh
-dc exec app python manage.py shell -c "
+dc exec -T app python manage.py shell -c "
 from catalog.models import KnowledgeSource as S
-qs = S.objects.filter(source_type='yuque', title='要下线的标题')
-print(list(qs.values_list('id', 'canonical_locator', 'title')))
-# 确认无误后：print(qs.delete())
+print(list(S.objects.filter(title__icontains='标题关键词').values_list('source_type', 'canonical_locator', 'title')))
 "
 ```
 
@@ -719,7 +739,7 @@ dc exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' > .runtime/back
 
 ### 9.3 每次维护后的检查
 
-1. 导入报告 `failed` 为 0，`unregistered` 都已登记类别或标 `skip`。
+1. 导入报告 `failed` 为 0，`unregistered` 都已登记类别或标 `skip`，`stale` 中的来源已确认保留或按 2.6 下线。
 2. 改了清单的，清单单测通过、app 已重建。
 3. 改了资料、词表或参数的，评测没有回归，结果和版本号已记录。
 4. 改了代码的，全量测试通过。

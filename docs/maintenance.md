@@ -600,14 +600,14 @@ dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/retrieval:/app/retrie
 - 报告第一行是检索配置和语料规模，核对规模与预期一致才能确认导入完整。
 - 挂载只覆盖检索代码；改了预处理、切分代码要先重建 app 并重新导入。D 类标注读镜像中的规格文件，改了规格文件也要先重建。
 - 对比输出汇总表（全部、A～F、D、T、X、K、U、R 的混合指标，召回／排序失败条数，奇偶分半 MRR 变化）和逐条变化（名次变化的查询、“新进前5未标注”的父段）。两份结果的查询或标注不同时拒绝对比。
-- 改了规格文件、条件判定或推荐服务时，另跑推荐评测（镜像中的 `products/` 要先重建），输出 D 类链路集合核对与 P@5、软条件排序 nDCG@5 和结论附带率，方法见[评测 9.13](phase1/yuque-ingestion/retrieval-evaluation.md#913-d-类改读规格文件与推荐接口评测p152026-10-12)：
+- 改了规格文件、条件判定或推荐服务时，另跑推荐评测（镜像中的 `products/` 要先重建），输出 D 类链路集合核对与 P@5、软条件排序 nDCG@5 和结论附带率，方法见[机型规格库实施记录第 1 节](phase3/product-spec-log.md#1-推荐评测p152026-10-12)：
 
   ```sh
   dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/.runtime/eval:/data" -e PYTHONPATH=/app app \
     python eval/recommend_eval.py eval/queries.json eval/recommend-queries.json /data/corpus-v5/recommend-v4.json
   ```
 
-- 改了[工具定义](../products/tool-definitions.md)时，用对话模型跑上层 LLM 模拟评测（镜像中的 `products/` 要先重建），输出工具选择、条件换算差异和端到端 P@5，方法见[评测 9.14](phase1/yuque-ingestion/retrieval-evaluation.md#914-上层-llm-模拟评测p322026-10-13)。模型通过 `EVAL_LLM_BASE_URL`、`EVAL_LLM_MODEL`、`EVAL_LLM_API_KEY` 配置，只在当前 shell 设置，不写入 env 文件：
+- 改了[工具定义](../products/tool-definitions.md)时，用对话模型跑上层 LLM 模拟评测（镜像中的 `products/` 要先重建），输出工具选择、条件换算差异和端到端 P@5，方法见[机型规格库实施记录第 2 节](phase3/product-spec-log.md#2-上层-llm-模拟评测脚本p322026-10-13)。模型通过 `EVAL_LLM_BASE_URL`、`EVAL_LLM_MODEL`、`EVAL_LLM_API_KEY` 配置，只在当前 shell 设置，不写入 env 文件：
 
   ```sh
   dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/.runtime/eval:/data" -e PYTHONPATH=/app \
@@ -615,7 +615,7 @@ dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/retrieval:/app/retrie
     python eval/llm_eval.py eval/queries.json eval/llm-queries.json /data/corpus-v5/llm-v3.json
   ```
 
-**当前基线** `.runtime/eval/corpus-v5/results-v19.json`：查询集 v8、语料 v5（2026-10-12 重导），k=20、不加权、文档端搜索模式、开启同义词；`all` 范围混合 Hit@1／Hit@5／MRR@10 为 0.78／0.95／0.857，见[评测 9.12](phase1/yuque-ingestion/retrieval-evaluation.md#912-评测子块记录栏目名后重导p112026-10-12)与 [9.16](phase1/yuque-ingestion/retrieval-evaluation.md#916-真实模型运行与工具定义修订p32p332026-10-14)。重新编码会使向量有细微差异（9.12），比较时注意区分。
+**当前基线** `.runtime/eval/corpus-v5/results-v19.json`：查询集 v8、语料 v5（2026-10-12 重导），k=20、不加权、文档端搜索模式、开启同义词；`all` 范围混合 Hit@1／Hit@5／MRR@10 为 0.78／0.95／0.857，见[评测 9.12](phase1/yuque-ingestion/retrieval-evaluation.md#912-评测子块记录栏目名后重导p112026-10-12)与 [9.15](phase1/yuque-ingestion/retrieval-evaluation.md#915-d01-标注修订后的召回回归p332026-10-14)。重新编码会使向量有细微差异（9.12），比较时注意区分。
 
 ### 8.2 按改动类型回归
 
@@ -626,7 +626,7 @@ dc run --rm --no-deps -v "$PWD/eval:/app/eval:ro" -v "$PWD/retrieval:/app/retrie
 | 新增类别 | 先按上一行，再加新查询建立新基线 | 同上；新类别每篇至少一条查询，结果写入评测文档 |
 | 更换模型 | 全量重导后全量评测 | 与旧模型对比，结论写入评测文档 |
 | 只改评测集 | 重跑当前配置作为新基线 | 评测器能加载，变化都来自标注 |
-| 规格文件、推荐逻辑 | 召回评测对比基线（D 类标注变化时按“只改评测集”重跑作为新基线），再跑推荐评测 | D 类链路集合全部相同；软条件排序与结论附带率不下降，变化写入评测文档 |
+| 规格文件、推荐逻辑 | 召回评测对比基线（D 类标注变化时按“只改评测集”重跑作为新基线），再跑推荐评测 | D 类链路集合全部相同；软条件排序与结论附带率不下降，变化写入[机型规格库实施记录](phase3/product-spec-log.md) |
 
 **通用底线**（[改进记录第 1 节](phase2/retrieval-improvement-log.md#1-记录规则)）：全部 MRR@10 提升至少 0.01；A～F 类 Hit@5、MRR@10 下降不超过 0.02；D 类 Hit@5 不下降、MRR@10 下降不超过 0.02；按编号奇偶分两半，MRR@10 都提升。每次只改一个变量。
 

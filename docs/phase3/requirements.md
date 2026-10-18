@@ -1,6 +1,6 @@
 # 第三阶段需求（草案）
 
-状态：实施中（2026-10-18 按当前实现核对）。2026-10-12 建立。F2-07、F2-08 已完成：规格库、`import_specs` 与推荐接口（[机型规格库方案](product-spec-design.md) P1），78 台规格补齐（P2），工具定义与上层 LLM 模拟评测（P3.2、P3.3）；工具定义待上层开发者确认（P3.1）。2026-10-18 起，上层通过 MCP 接入，方案见[MCP 服务方案](mcp-server-design.md)（待确认，未实现）。
+状态：实施中（2026-10-18 按当前实现核对）。2026-10-12 建立。F2-07、F2-08 已完成：规格库、`import_specs` 与推荐接口（[机型规格库方案](product-spec-design.md) P1），78 台规格补齐（P2），工具定义与上层 LLM 模拟评测（P3.2、P3.3）；工具定义待上层开发者确认（P3.1）。2026-10-18 起，上层通过 MCP 接入，服务与认证已实现，见[MCP 服务方案](mcp-server-design.md)；已用 `gpt-5.6-terra` 完成新模型评测基线，`deepseek-flash` 同模型重跑待执行（[实施记录第 5 节](product-spec-log.md#5-mcp-工具定义与-gpt-56-terra-基线2026-10-18)）。
 
 第三阶段计划接入大模型（LLM），把第二阶段中依赖“理解问题”的功能改为由 LLM 完成。
 
@@ -17,7 +17,7 @@
 
 | 功能 | 内容 | 进度 |
 | --- | --- | --- |
-| MCP 服务 | 上层问答机器人只通过 MCP 使用工具；新增 MCP 服务，以 `search_knowledge`、`recommend_laptops` 提供检索与推荐，参数契约改用 pydantic 模型统一定义 | 方案待确认，未实现（[MCP 服务方案](mcp-server-design.md)） |
+| MCP 服务 | 上层问答机器人只通过 MCP 使用工具；新增 MCP 服务，以 `search_knowledge`、`recommend_laptops` 提供检索与推荐，参数契约改用 pydantic 模型统一定义 | 已实现（2026-10-18）：MCP 服务、Token 认证、Compose 与冒烟检查；工具定义改由 MCP 生成，`gpt-5.6-terra` 新模型基线已完成（[MCP 服务方案](mcp-server-design.md)） |
 
 ## 2. 需要在第三阶段确定的事项
 

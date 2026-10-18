@@ -1,11 +1,11 @@
 # 工具定义：知识检索与机型推荐
 
-本文给上层系统的开发者使用，对应[机型规格库方案 3.3 节](../docs/phase3/product-spec-design.md#33-工具定义)。上层 LLM 通过两个工具使用检索系统：
+本文给上层系统的开发者使用，对应[机型规格库方案 3.3 节](../docs/phase3/product-spec-design.md#33-工具定义)。上层 LLM 通过 MCP 服务提供的两个工具使用检索系统：
 
 - `search_knowledge` 对应 `POST /api/v1/search/`；
 - `recommend_laptops` 对应 `POST /api/v1/products/recommend/`。
 
-接口契约以[首期技术设计第 6 节](../docs/phase1/phase1-technical-design.md#6-api-与错误)为准。第 1 节的提示词放进上层系统的系统提示词，第 2、3 节的 JSON 可以直接作为 function calling 的工具定义。JSON 按 OpenAI 的 `{name, description, parameters}` 格式书写，用 Chat Completions 时包成 `{"type": "function", "function": {...}}`；用 Anthropic 接口时，把 `parameters` 改名为 `input_schema`。Schema 含可选字段和 `default`，只适用于非 strict 模式。评测脚本从本文读取提示词和工具定义，所以只有这三个代码块使用 `text`、`json` 标记，示例使用 `jsonc` 标记。
+接口契约以[首期技术设计第 6 节](../docs/phase1/phase1-technical-design.md#6-api-与错误)为准。工具定义由 MCP 服务根据 [mcp_server/server.py](../mcp_server/server.py) 的函数签名和 [contracts/](../contracts/) 中的 pydantic 模型生成，不再在本文手写 JSON。第 1 节提示词放进 persona 的系统提示词，工具名相应改为 `mcp__search_knowledge`、`mcp__recommend_laptops`；MCP 接入方式见[MCP 服务方案](../docs/phase3/mcp-server-design.md)。评测脚本从本文读取提示词，并从 MCP 服务读取工具 schema。本文只有提示词使用 `text` 代码块，调用示例使用 `jsonc` 标记。
 
 ## 1. 提示词
 
@@ -37,99 +37,18 @@
 - review.highlights 只说明评测中有相关段落，不代表一定满足偏好。回答时引用 conclusions 和 highlights 的原文，附上评测链接 review.source.url，不要编造规格。
 ```
 
-## 2. 知识检索 `search_knowledge`
+## 2. 工具定义
 
-```json
-{
-  "name": "search_knowledge",
-  "description": "检索 IT 侠知识库（评测、购机指南、教程、知识、工具、排障经验，含校园网、软件与维修），返回完整段落及来源。用于具体机型的事实、配置以及使用、软件、网络、维修问题，不用于按条件挑机型。",
-  "parameters": {
-    "type": "object",
-    "properties": {
-      "query": {
-        "type": "string",
-        "minLength": 1,
-        "maxLength": 2000,
-        "description": "检索问题，保留机型名和关键术语，例如“来酷 GT16 内存插槽”。"
-      },
-      "filters": {
-        "type": "object",
-        "properties": {
-          "source_ids": {
-            "type": "array",
-            "items": {"type": "string", "format": "uuid"},
-            "minItems": 1,
-            "maxItems": 50,
-            "description": "只在这些来源中检索；可以填写 recommend_laptops 结果中的 review.source.id。省略表示不限来源。"
-          }
-        },
-        "additionalProperties": false
-      },
-      "top_k": {"type": "integer", "minimum": 1, "maximum": 20, "default": 5, "description": "返回的段落数。"}
-    },
-    "required": ["query"],
-    "additionalProperties": false
-  }
-}
+工具 schema 由 MCP 服务生成，persona 通过 Streamable HTTP 直接读取，不需要再从本文复制。需要检查或保存当前定义时执行：
+
+```sh
+python manage.py shell -c "import asyncio, json; from mcp_server.server import mcp; \
+print(json.dumps([t.model_dump(by_alias=True, include={'name', 'description', 'input_schema'}) for t in asyncio.run(mcp.list_tools())], ensure_ascii=False, indent=2))"
 ```
 
-## 3. 机型推荐 `recommend_laptops`
+`search_knowledge` 的顶层参数是 `query`、`filters`、`top_k`，只有 `query` 必填；`recommend_laptops` 的顶层参数是 `conditions`、`preference`、`top_k`，都可省略。字段约束和说明维护在 `contracts/query.py`、`contracts/products.py`，REST 与 MCP 共用。
 
-```json
-{
-  "name": "recommend_laptops",
-  "description": "按原子条件从已评测的笔记本中筛选机型，并按 preference 在评测正文中排序。返回规格卡、评测结论和与偏好相关的评测段落。口语条件需先按提示词中的参考口径换算。字段没有数据的机型视为不满足该条件。结果为空时返回 diagnostics，系统不会自动放宽条件。",
-  "parameters": {
-    "type": "object",
-    "properties": {
-      "conditions": {
-        "type": "object",
-        "description": "硬条件，全部满足才入选；省略表示不过滤。",
-        "properties": {
-          "price_min": {"type": "number", "minimum": 0, "description": "价格下限（元）。价格是评测时的价格，不是实时价格。"},
-          "price_max": {"type": "number", "minimum": 0, "description": "价格上限（元）。"},
-          "weight_max": {"type": "number", "minimum": 0, "description": "重量上限（kg）。"},
-          "screen_min": {"type": "number", "minimum": 0, "description": "屏幕尺寸下限（英寸）。"},
-          "screen_max": {"type": "number", "minimum": 0, "description": "屏幕尺寸上限（英寸）。"},
-          "battery_min": {"type": "number", "minimum": 0, "description": "续航下限（小时），只指评测中“日常应用仿真”的成绩。许多机型没有该数据，没有数据视为不满足。"},
-          "gpu_in": {
-            "type": "array",
-            "items": {"type": "string", "enum": ["RTX 3050", "RTX 5060", "RTX 5070", "RTX 5070Ti", "RTX 5080", "RTX 5090"]},
-            "minItems": 1,
-            "maxItems": 20,
-            "description": "独显型号，满足其中之一即可；没有独显的机型不满足。"
-          },
-          "has_dgpu": {"type": "boolean", "description": "是否有独立显卡。"},
-          "is_gaming": {"type": "boolean", "description": "是否游戏本：有 RTX 独显且定位为游戏本，创作本、全能本、商务本、双屏本除外。"},
-          "panel": {"type": "string", "enum": ["oled", "lcd", "miniled"], "description": "屏幕面板类型。"},
-          "ports": {
-            "type": "array",
-            "items": {"type": "string", "enum": ["usb_a", "usb_c", "video_out", "hdmi", "rj45", "card_reader", "thunderbolt", "oculink"]},
-            "minItems": 1,
-            "maxItems": 8,
-            "description": "必须全部具备的接口：usb_a、usb_c；video_out 为任一视频输出（HDMI、DP 或支持 DP 的 USB-C）；hdmi；rj45 网口；card_reader 读卡器；thunderbolt 雷电或 USB4；oculink，TGX 接口也是 OCuLink。"
-          },
-          "brands": {
-            "type": "array",
-            "items": {"type": "string", "enum": ["ALIENWARE", "LG", "ROG", "ThinkPad", "七彩虹", "华为", "华硕", "小米", "微星", "微软", "惠普", "机械师", "机械革命", "神舟", "红米", "联想", "苹果", "荣耀", "雷神", "雷蛇"]},
-            "minItems": 1,
-            "maxItems": 20,
-            "description": "品牌，满足其中之一即可。子品牌 ROG、ThinkPad、红米单列，不归入华硕、联想、小米；问母品牌的全部机型时连同子品牌一起列出。"
-          }
-        },
-        "additionalProperties": false
-      },
-      "preference": {
-        "type": "string",
-        "maxLength": 500,
-        "description": "无法换算成条件的偏好，例如“性能释放强、散热好”。为空时按评测日期由新到旧排序。"
-      },
-      "top_k": {"type": "integer", "minimum": 1, "maximum": 20, "default": 5, "description": "返回的机型数。"}
-    },
-    "additionalProperties": false
-  }
-}
-```
+## 3. 参数说明
 
 ### 3.1 可选值
 

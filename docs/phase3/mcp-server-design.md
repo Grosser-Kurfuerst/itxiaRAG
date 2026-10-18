@@ -1,6 +1,6 @@
 # MCP 服务方案
 
-状态：方案，待确认（2026-10-18）。对应[机型规格库方案](product-spec-design.md) P3 的上层接入。
+状态：已实现（2026-10-18）。已用当前端点支持的 `gpt-5.6-terra` 完成新模型评测基线；persona 接入验证与 `deepseek-flash` 同模型重跑待执行。对应[机型规格库方案](product-spec-design.md) P3 的上层接入。
 
 ## 1. 目标与边界
 
@@ -446,7 +446,7 @@ app = TokenAuthMiddleware(http_app())
 | [recommend_eval.py](../../eval/recommend_eval.py) `Recommender` | `keys` 改用 `parse_model(RecommendInput, …)` 和 `model_dump(exclude_none=True)`，删除 `self.options` 和对 `condition_options` 的导入。报错仍是 DRF `ValidationError`，`llm_eval.recommend_with` 的异常处理不变 |
 | [llm_eval.py](../../eval/llm_eval.py) `load_tools` | 提示词仍取自 tool-definitions.md 的 `text` 代码块；工具定义改为 `asyncio.run(mcp.list_tools())`，转成 `{"type": "function", "function": {"name", "description", "parameters": tool.input_schema}}`。2.x 的 `Tool` 字段名是 `input_schema`，序列化成 JSON 时才是 `inputSchema`。`tools_sha256` 照常记录 |
 | [tool-definitions.md](../../products/tool-definitions.md) | 见下文 |
-| 重跑评测 | 用与上次相同的模型（deepseek-flash）重跑 `llm_eval`，结果写入[实施记录](product-spec-log.md)新的一节。对照基线是第 4 节的 llm-v2（查询集 v19），验收线见第 10 节阶段 3 |
+| 重跑评测 | 用与上次相同的模型（deepseek-flash）重跑 `llm_eval`，结果写入[实施记录](product-spec-log.md)新的一节。对照基线是第 4 节的 llm-v2（查询集 v19），验收线见第 10 节阶段 3。端点不支持 `deepseek-flash` 时按新模型基线记录，同模型重跑另行补做 |
 
 tool-definitions.md 的改动：
 
@@ -619,6 +619,8 @@ persona 会给工具名加上 `mcp__` 前缀，所以提示词中的工具名要
    - 补充样例的工具选择不低于 10/11。
 
    达不到时按第 6 节修订字段说明后重跑，修订内容和前后结果都写入记录。允许小幅波动，是因为温度为 0 时模型输出仍会略有变化。
+
+   若端点不支持 `deepseek-flash`，按新模型基线记录并验收上述绝对阈值，同模型重跑另行补做。
 4. 平铺参数（5.6）的次数不超过 2 次；超过时在记录中写明，再决定是否处理。
 
 **提交**：`docs(products): 工具定义改由 MCP 服务生成并重跑上层 LLM 评测`

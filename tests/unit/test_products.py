@@ -5,9 +5,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from contracts.products import (BRANDS, GPUS, PANELS, PORTS, Conditions, ProductSpecSerializer, RecommendInput,
-                                normalize_gpu)
-from contracts.query import QueryInput
+from contracts.products import BRANDS, GPUS, PORTS, ProductSpecSerializer, RecommendInput, normalize_gpu
 
 ROOT = Path(__file__).resolve().parents[2]
 SPEC_FILE = ROOT / "products/specs/bibar.json"
@@ -105,22 +103,11 @@ def test_recommend_request_rejects_invalid_values(data):
         validate_request(data)
 
 
-def test_tool_definitions_match_contracts_and_spec_file():
+def test_tool_prompt_and_enums_match_spec_file():
     text = TOOL_FILE.read_text(encoding="utf-8")
-    prompt, = re.findall(r"```text\n(.*?)\n```", text, re.S)  # 评测脚本按这个约定读取提示词和工具定义
-    blocks = re.findall(r"```json\n(.*?)\n```", text, re.S)
-    tools = {tool["name"]: tool["parameters"]["properties"] for tool in map(json.loads, blocks)}
-    assert len(blocks) == 2
-    assert set(tools["search_knowledge"]) == set(QueryInput.model_fields)
-    assert set(tools["search_knowledge"]["filters"]["properties"]) == set(QueryInput.model_fields["filters"].annotation.model_fields)
-    assert set(tools["recommend_laptops"]) == set(RecommendInput.model_fields)
-
-    conditions = tools["recommend_laptops"]["conditions"]["properties"]
-    assert set(conditions) == set(Conditions.model_fields)
-    assert conditions["ports"]["items"]["enum"] == list(PORTS) and conditions["panel"]["enum"] == list(PANELS)
+    prompt, = re.findall(r"```text\n(.*?)\n```", text, re.S)  # 评测脚本按这个约定读取提示词
+    assert "```json\n" not in text
     records = json.loads(SPEC_FILE.read_text(encoding="utf-8"))
     assert set(GPUS) == {normalize_gpu(record["gpu"]) for record in records if record.get("gpu")}
     assert set(BRANDS) == {record["brand"] for record in records}
-    assert conditions["gpu_in"]["items"]["enum"] == list(GPUS)
-    assert conditions["brands"]["items"]["enum"] == list(BRANDS)
     assert " < ".join(GPUS) in prompt  # 提示词中的显卡档次与 enum 顺序一致

@@ -6,7 +6,7 @@
 4. 补充样例：口语化选购与多轮追问，答案为满足标准条件的全部机型。
 
 只看 LLM 第一轮回复的工具调用，不执行多步对话；参数不合法时记为错误，不重试。
-提示词和工具定义取自 products/tool-definitions.md。LLM 通过 OpenAI 兼容的 /chat/completions 调用，
+提示词取自 products/tool-definitions.md，工具定义由 mcp_server 中的 MCP 服务生成。LLM 通过 OpenAI 兼容的 /chat/completions 调用，
 在环境变量 EVAL_LLM_BASE_URL、EVAL_LLM_MODEL、EVAL_LLM_API_KEY（可选）中配置。运行方式同 recommend_eval.py：
 
     docker compose --env-file .env.docker -p itxia run --rm --no-deps \
@@ -15,6 +15,7 @@
       app python eval/llm_eval.py eval/queries.json eval/llm-queries.json /data/corpus-v5/llm-v1.json
 """
 import argparse
+import asyncio
 import hashlib
 import json
 import os
@@ -31,6 +32,7 @@ from rest_framework.exceptions import ValidationError  # noqa: E402
 
 from catalog.selectors import scoped_contexts  # noqa: E402
 from contracts.types import SearchScope  # noqa: E402
+from mcp_server.server import mcp  # noqa: E402
 from products.conditions import match  # noqa: E402
 from products.models import ProductSpec  # noqa: E402
 
@@ -39,10 +41,12 @@ SEARCH, RECOMMEND = "search_knowledge", "recommend_laptops"
 
 
 def load_tools(path=TOOL_FILE):
-    """工具定义文档中只有提示词使用 text 代码块，只有两个工具定义使用 json 代码块。"""
+    """提示词取自文档；工具参数由 MCP 服务根据同一份 pydantic 模型生成。"""
     text = path.read_text(encoding="utf-8")
     prompt, = re.findall(r"```text\n(.*?)\n```", text, re.S)
-    tools = [{"type": "function", "function": json.loads(block)} for block in re.findall(r"```json\n(.*?)\n```", text, re.S)]
+    tools = [{"type": "function", "function": {"name": tool.name, "description": tool.description,
+                                               "parameters": tool.input_schema}}
+             for tool in asyncio.run(mcp.list_tools())]
     return prompt, tools
 
 
@@ -170,7 +174,7 @@ def _print_conditions(rows):
 
 
 def print_report(meta, spec, extra, chain):
-    print(f"模型 {meta['model']}；工具定义 sha256 {meta['tools_sha256'][:12]}；补充样例 {meta['extra_version']}\n")
+    print(f"模型 {meta['model']}；提示词 sha256 {meta['tools_sha256'][:12]}；补充样例 {meta['extra_version']}\n")
     print("== 工具选择")
     by_cat = defaultdict(list)
     for r in spec:

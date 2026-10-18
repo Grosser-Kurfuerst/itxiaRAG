@@ -130,3 +130,35 @@ D01 是例外。它的标准条件是 `weight_max` 2.3 加显卡档次，而参�
 两次运行都只跑了一次，模型也是轻量模型。上层系统换用其他模型时结果会不同，正式效果以上层系统自己的评测为准。
 
 结果为 `.runtime/eval/corpus-v5/llm-v1.json`、`llm-v2.json`、`recommend-v3.json`，不提交。
+
+## 5. MCP 工具定义与 gpt-5.6-terra 基线（2026-10-18）
+
+[MCP 服务方案](mcp-server-design.md)阶段 3 把工具定义改为由 MCP 服务生成：`eval/llm_eval.py` 的 `load_tools` 调用 `mcp.list_tools()`，把 `Tool.input_schema` 转成 OpenAI function calling 的 `parameters`；[工具定义](../../products/tool-definitions.md)删除手写 JSON，只保留提示词、参数说明、结果说明和示例。提示词内容未改，参数约束由 `contracts/` 中的 pydantic 模型生成。
+
+**模型差异**：方案要求沿用上次的 `deepseek-flash`。本次配置的端点只接受 `gpt-5.6-terra`，对 `deepseek-flash` 返回 `unknown provider for model deepseek-flash`，因此以下结果是更换模型后的新基线，不能作为 llm-v2 的同模型回归；严格同模型验收仍需换用支持 `deepseek-flash` 的端点重跑。模型不同，指标不能直接归因于 MCP schema 或提示词变化。
+
+运行命令：
+
+```sh
+docker compose --env-file .env.docker -p itxia run --rm --no-deps \
+  -v "$PWD/eval:/app/eval:ro" -v "$PWD/.runtime/eval:/data" -e PYTHONPATH=/app \
+  -e EVAL_LLM_BASE_URL -e EVAL_LLM_MODEL -e EVAL_LLM_API_KEY app \
+  python eval/llm_eval.py eval/queries.json eval/llm-queries.json /data/corpus-v5/llm-mcp-gpt56-terra.json
+```
+
+`tools_sha256` 为 `c65ea69fbabd12c040b9b255cbf950645bd8dfcd69773883b92a4a858461dcf8`，对应本次 `products/tool-definitions.md` 的内容；工具 schema 另由 MCP 服务从 pydantic 模型生成。平铺参数（顶层直接传 `price_max` 等）为 0 次。
+
+| 指标 | llm-v2（deepseek-flash） | 本次（gpt-5.6-terra） |
+| --- | --- | --- |
+| 工具选择 | 166/170 | 169/170 |
+| 条件换算一致 | 16/18 | 16/18 |
+| D 类 19 条 P@5／nDCG@5 | 1.000／0.922 | 1.000／0.924 |
+| 有标准条件的 18 条 P@5／nDCG@5（链路） | 1.000／0.918（0.915） | 1.000／0.920（0.915） |
+| 补充样例：工具选择、条件一致、P@5 | 11/11、8/9、1.000 | 11/11、7/9、0.972 |
+
+- 工具选择只有 G10“台式机装机配置推荐”直接回答，没有调用工具；其余 169 条选对。补充样例 11/11。
+- 条件差异：D11“8000 左右的 RTX 5060 游戏本”的 `price_min` 为 6000，标准为 7200；D12“预算一万左右，显卡要 5070 以上”的 `price_min` 为 7500，标准为 9000。两条都把“X 左右”按“预算 X”的 0.75X～1.1X 处理，推荐集合仍与标准答案一致。
+- 补充样例差异：L02“五千左右、背着不累的大学生笔记本”的 `price_min` 为 3750，标准为 4500；M01 第二轮“要 OLED 屏的”沿用了 5250 的下限，标准为 6300。两者属于同一类“预算 X”与“X 左右”的口径差异；M01 的 P@5 仍为 1.000，L02 为 0.75。
+- D 类 19 条全部 P@5=1.000；18 条有标准条件的 nDCG@5 为 0.920，略高于链路的 0.915。
+
+按方案阶段 3 的数值验收线，本次均达到（工具选择不低于 164/170、条件换算不低于 15/18、D 类 P@5 不低于 0.95 且 nDCG@5 不低于 0.87、补充样例工具选择不低于 10/11、平铺参数不超过 2）；但模型与 llm-v2 不同，不能据此宣布同模型回归通过。结果文件为 `.runtime/eval/corpus-v5/llm-mcp-gpt56-terra.json`，不提交。

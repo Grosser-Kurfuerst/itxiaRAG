@@ -33,7 +33,7 @@
 - [机型规格库方案](docs/phase3/product-spec-design.md)与[实施记录](docs/phase3/product-spec-log.md)：按条件推荐的结构化规格库、分阶段计划与评测结果
 - [MCP 服务方案](docs/phase3/mcp-server-design.md)：把知识检索与机型推荐作为 MCP 工具接入 persona
 - [第四阶段需求](docs/phase4/requirements.md)：导入能力的缺口与优先级
-- [工具定义](products/tool-definitions.md)：上层 LLM 调用知识检索与机型推荐的提示词、JSON Schema 与示例
+- [工具定义](products/tool-definitions.md)：上层 LLM 调用知识检索与机型推荐的提示词、参考口径与调用示例
 
 每项契约或操作只在对应文档维护，其他文档保留概述和链接；实现变化时同步对应文档。
 

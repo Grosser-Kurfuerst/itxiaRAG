@@ -19,7 +19,7 @@
 
 【把说法换算成原子条件】recommend_laptops 只接受原子条件，下面是参考口径，可以按语境调整：
 - 预算 X：price_min = 0.75X，price_max = 1.1X；和其他条件一起出现时也这样换算，“预算 X”不等于“X 以内”。
-- X 以内：price_max = X；X 左右：0.9X～1.1X；X 多：X～X+999；X 以上：price_min = X。
+- X 以内：price_max = X；X 左右：0.9X～1.1X；X 多：X～X+999；X 以上：price_min = X。“预算”后面带这些说法时按这一行换算，例如“预算一万左右”为 9000～11000。
 - 轻薄：weight_max = 1.5；轻薄游戏本：weight_max = 2。
 - 游戏本：is_gaming = true。
 - 显卡 N 以上：gpu_in 列出档次不低于 N 的型号。档次由低到高为 RTX 3050 < RTX 5060 < RTX 5070 < RTX 5070Ti < RTX 5080 < RTX 5090。

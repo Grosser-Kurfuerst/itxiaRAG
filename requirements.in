@@ -5,4 +5,3 @@ psycopg[binary]>=3.2,<4
 jieba==0.42.1
 mcp>=2.3,<3
 pydantic>=2.12,<3
-rpds-py==2026.6.3

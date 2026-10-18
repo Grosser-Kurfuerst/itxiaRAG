@@ -77,7 +77,6 @@ referencing==0.37.0
     #   jsonschema-specifications
 rpds-py==2026.6.3
     # via
-    #   -r requirements.in
     #   jsonschema
     #   referencing
 sqlparse==0.6.0

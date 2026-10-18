@@ -1,3 +1,22 @@
+x-app-env: &app-env
+  DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?请设置 DJANGO_SECRET_KEY}
+  DEBUG: ${DEBUG:-false}
+  ALLOWED_HOSTS: ${ALLOWED_HOSTS:-127.0.0.1,localhost}
+  POSTGRES_DB: ${POSTGRES_DB:-itxia}
+  POSTGRES_USER: ${POSTGRES_USER:-itxia}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?请设置 POSTGRES_PASSWORD}
+  POSTGRES_HOST: db
+  POSTGRES_PORT: 5432
+  EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-}
+  EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
+  EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-0}
+  EMBEDDING_REVISION: ${EMBEDDING_REVISION:-}
+  EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
+  EMBEDDING_QUERY_PREFIX: ${EMBEDDING_QUERY_PREFIX:-}
+  PREPROCESS_MAX_INPUT_BYTES: ${PREPROCESS_MAX_INPUT_BYTES:-2400}
+  RETRIEVAL_MIN_COSINE: ${RETRIEVAL_MIN_COSINE:-}
+  RETRIEVAL_MIN_BM25: ${RETRIEVAL_MIN_BM25:-0}
+
 services:
   db:
     image: postgres:17-bookworm
@@ -22,23 +41,7 @@ services:
       context: .
       target: runtime
     environment:
-      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?请设置 DJANGO_SECRET_KEY}
-      DEBUG: ${DEBUG:-false}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-127.0.0.1,localhost}
-      POSTGRES_DB: ${POSTGRES_DB:-itxia}
-      POSTGRES_USER: ${POSTGRES_USER:-itxia}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?请设置 POSTGRES_PASSWORD}
-      POSTGRES_HOST: db
-      POSTGRES_PORT: 5432
-      EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-}
-      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
-      EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-0}
-      EMBEDDING_REVISION: ${EMBEDDING_REVISION:-}
-      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
-      EMBEDDING_QUERY_PREFIX: ${EMBEDDING_QUERY_PREFIX:-}
-      PREPROCESS_MAX_INPUT_BYTES: ${PREPROCESS_MAX_INPUT_BYTES:-2400}
-      RETRIEVAL_MIN_COSINE: ${RETRIEVAL_MIN_COSINE:-}
-      RETRIEVAL_MIN_BM25: ${RETRIEVAL_MIN_BM25:-0}
+      <<: *app-env
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -51,6 +54,22 @@ services:
       exec gunicorn --bind 0.0.0.0:8000 --workers ${WEB_WORKERS:-2}
       --timeout ${WEB_TIMEOUT:-120}
       --access-logfile - --error-logfile - config.wsgi:application'
+
+  mcp:
+    restart: unless-stopped
+    build:
+      context: .
+      target: runtime
+    environment:
+      <<: *app-env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${MCP_BIND_ADDRESS:-127.0.0.1}:${MCP_PORT:-8001}:8001"
+    command: ["uvicorn", "mcp_server.asgi:app", "--host", "0.0.0.0", "--port", "8001"]
 
   embedding:
     profiles: ["model"]

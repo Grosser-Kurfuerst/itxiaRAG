@@ -391,10 +391,12 @@ async def call_tool(operation, args, ctx):
 | 异常 | 返回给 persona（`isError: true`） |
 | --- | --- |
 | 参数校验失败 | SDK 返回 pydantic 报错，见 3.4 |
-| `DomainError`（Embedding 未配置或不可用等） | `{"error": {"code", "message"}}`，与 REST 一致 |
+| `DomainError`（Embedding 未配置或不可用等） | `Error executing tool <名称>: ` 后接 `{"error": {"code", "message"}}`，JSON 与 REST 一致 |
 | 其他异常 | `Error executing tool <名称>`，不带内部信息 |
 
 成功时用 DRF 的 `JSONEncoder` 序列化后作为文本返回。这样日期、UUID 的格式和 REST 一致，结果字段也和 REST 完全相同。
+
+SDK 2.3 会给 `ToolError` 的文本加上 `Error executing tool <名称>: ` 前缀；上层按文本判断时从首个 `{` 开始解析 JSON。
 
 `current_user` 单独成函数，是因为 SDK 的进程内测试客户端不经过 HTTP，`ctx.request_context.request` 为 `None`（2.3.0 实测）。单测替换这个函数即可。
 

@@ -13,6 +13,7 @@ dependencies = [
     "inflection==0.5.1",
     "jsonschema==4.26.0",
     "jsonschema-specifications==2025.9.1",
+    "mcp>=2.3,<3",
     "packaging==26.3",
     "psycopg[binary]>=3.2,<4",
     "psycopg-binary==3.3.6",

@@ -239,6 +239,7 @@ Scope 查询、召回、RRF、分组或结果读取失败按现有错误契约�
 | `POST /api/v1/sources/raw/` | Token + maintain_source；请求 `{source, preprocess: {schema, version?}, raw: {content, media_type, metadata?}}`；预处理后复用标准导入，响应相同 |
 | `POST /api/v1/search/` | Token；请求 `{query, filters?, top_k?}`；返回 `{mode: "hybrid", result_status, contexts}` |
 | `POST /api/v1/products/recommend/` | Token；请求 `{conditions?, preference?, top_k?}`；返回 `{result_status, products, unknown, diagnostics}` |
+| `POST http://<host>:8001/mcp` | Token；MCP Streamable HTTP（无状态 JSON），工具 `search_knowledge`、`recommend_laptops` 分别复用查询与推荐，参数模型同上；支持 `2025-11-25` 握手与 `2026-07-28` 无握手请求 |
 
 查询示例：`{"query":"电池能用多久","filters":{"source_ids":["00000000-0000-0000-0000-000000000001"]},"top_k":5}`。`query` 最多 2000 字符；`filters.source_ids` 接受 1～50 个 UUID，省略表示不按来源过滤；top_k 默认 5，范围 1～20，计父段数。校验依据见 [contracts/query.py](../../contracts/query.py) 中的 pydantic 模型，REST 与 MCP 工具共用。查询不接受 scenario、confirmed_context、preprocess 或知识类型过滤参数；preprocess 仅属于原文导入请求。显式传 `null` 等同于不传。
 

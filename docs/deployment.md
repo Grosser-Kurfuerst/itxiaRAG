@@ -1,6 +1,6 @@
 # Docker 部署与运行验收
 
-从仓库根目录执行本文命令。Compose 提供 Django + Gunicorn、PostgreSQL，以及可选的 Ollama Embedding 服务。当前支持标准化 JSON 导入、HTML／Markdown／文本经预处理后导入，以及按清单批量导入语雀公开文档和公众号采集文章；OCR 和回答生成尚未实现。预处理策略与请求契约见[文档预处理](phase1/preprocessing.md)，测试规则见[项目测试规则](unit-testing-guidelines.md)，部署后的资料、词表与评测维护见[维护手册](maintenance.md)。
+从仓库根目录执行本文命令。Compose 提供 Django + Gunicorn、MCP 服务、PostgreSQL，以及可选的 Ollama Embedding 服务。当前支持标准化 JSON 导入、HTML／Markdown／文本经预处理后导入，以及按清单批量导入语雀公开文档和公众号采集文章；OCR 和回答生成尚未实现。预处理策略与请求契约见[文档预处理](phase1/preprocessing.md)，测试规则见[项目测试规则](unit-testing-guidelines.md)，部署后的资料、词表与评测维护见[维护手册](maintenance.md)。
 
 ## 1. 准备配置
 
@@ -59,31 +59,31 @@ dc config -q
 
 ## 2. 启动模型和知识库
 
-先启动模型容器并下载模型，再启动 Web：
+先启动模型容器并下载模型，再启动 Web 和 MCP：
 
 ```sh
 dc --profile model up -d embedding
 dc exec embedding ollama pull qwen3-embedding:0.6b
 dc exec embedding ollama list
-dc up -d --build app
+dc up -d --build app mcp
 dc --profile model ps
 ```
 
-首次下载和构建需要网络；模型文件与数据库分别存放在 `ollama_data`、`postgres_data` 卷。`db` 应为 `healthy`，`app`、`embedding` 应为 `running`。Ollama 容器默认使用 CPU；GPU 加速不包含在这份最小配置中。
+首次下载和构建需要网络；模型文件与数据库分别存放在 `ollama_data`、`postgres_data` 卷。`db` 应为 `healthy`，`app`、`mcp`、`embedding` 应为 `running`。`app` 启动时执行数据库迁移；MCP 不执行迁移，首次部署应同时启动两者。Ollama 容器默认使用 CPU；GPU 加速不包含在这份最小配置中。
 
-如果已有兼容 OpenAI `/embeddings` 的服务，跳过 Ollama 两个启动／下载命令，配置实际地址、模型和维度，然后直接启动 `app`。容器里的 `127.0.0.1` 指向自身；宿主机服务可用 `http://host.docker.internal:8001/v1`，并确保它监听容器可达的接口。
+如果已有兼容 OpenAI `/embeddings` 的服务，跳过 Ollama 两个启动／下载命令，配置实际地址、模型和维度，然后直接启动 `app mcp`。容器里的 `127.0.0.1` 指向自身；宿主机服务可用 `http://host.docker.internal:8001/v1`，并确保它监听容器可达的接口；`app` 与 `mcp` 都已配置该主机名映射。
 
 Web 启动时先执行数据库迁移。检查应用、迁移和日志：
 
 ```sh
 dc exec app python manage.py check
 dc exec app python manage.py migrate --check
-dc logs --tail=100 app db
+dc logs --tail=100 app mcp db
 ```
 
 `check` 应无错误，`migrate --check` 应退出成功。数据库首次使用新卷；旧版数据库仍有业务数据时，收敛迁移会中止，应保留旧库并在新库重新导入。
 
-默认 API 只绑定宿主机 `127.0.0.1:8000`；PostgreSQL 只绑定 `127.0.0.1:15432`，供本机 Navicat、psql 等客户端查看导入的父段和子块，连接参数取 `.env.docker` 中的库名、用户和密码，端口冲突时设置 `DB_PORT`；Ollama 不暴露宿主机端口。端口冲突时在配置中增加 `APP_PORT=18000`，并同步下文请求地址；监听地址、Gunicorn 进程数和超时可分别用 `APP_BIND_ADDRESS`（默认 `127.0.0.1`）、`WEB_WORKERS`（默认 2）、`WEB_TIMEOUT`（默认 120 秒）调整。远程访问可通过 SSH 转发；对外部署时由 HTTPS 反向代理接入，并把域名加入 `ALLOWED_HOSTS`。
+默认 API 只绑定宿主机 `127.0.0.1:8000`，MCP 只绑定 `127.0.0.1:8001`；PostgreSQL 只绑定 `127.0.0.1:15432`，供本机 Navicat、psql 等客户端查看导入的父段和子块，连接参数取 `.env.docker` 中的库名、用户和密码，端口冲突时设置 `DB_PORT`；Ollama 不暴露宿主机端口。端口冲突时在配置中增加 `APP_PORT=18000`、`MCP_PORT=18001`，并同步下文请求地址；监听地址、Gunicorn 进程数和超时可分别用 `APP_BIND_ADDRESS`（默认 `127.0.0.1`）、`MCP_BIND_ADDRESS`（默认 `127.0.0.1`）、`WEB_WORKERS`（默认 2）、`WEB_TIMEOUT`（默认 120 秒）调整。远程访问可通过 SSH 转发；对外部署时由 HTTPS 反向代理接入，并把域名加入 `ALLOWED_HOSTS`。MCP 的主机校验沿用 `ALLOWED_HOSTS`，需填写具体主机名，不能使用 `*` 或前导点通配。
 
 ## 3. 验收导入与混合检索
 
@@ -228,6 +228,39 @@ dc run --rm --no-deps -v "$PWD/.runtime/eval/corpus-v1:/import:ro" app \
 
 `--no-deps` 复用已运行的 `db` 与 `embedding`，一次性容器与 app 使用同一网络和配置。语雀快照同样可以这样挂载导入，例如 `-v "$PWD/.runtime/yuque-snapshot:/snapshot:ro"` 后传 `--snapshot /snapshot`；不必先复制进 app 容器。2026-10-11 按本节试运行：公众号 78 篇、语雀快照 74 篇全部 preprocessed，0 失败。
 
+### 3.9 MCP 服务冒烟检查
+
+MCP 端点使用 Streamable HTTP 的无状态 JSON 响应，认证与 REST 共用 Token。下面的请求直接使用 3.1 创建的只读账号；未带 Token 时应返回 `401`：
+
+```sh
+MCP_URL=http://127.0.0.1:8001/mcp
+curl -sS -w '\nHTTP %{http_code}\n' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"curl","version":"1"}}}' \
+  "$MCP_URL"
+```
+
+带 Token 重新执行，预期 HTTP `200`，`result.protocolVersion` 为 `2025-11-25`。随后列出工具并调用检索：
+
+```sh
+curl -sS --fail-with-body \
+  -H "Authorization: Token $(cat "$READER_TOKEN_FILE")" \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' \
+  "$MCP_URL"
+
+curl -sS --fail-with-body \
+  -H "Authorization: Token $(cat "$READER_TOKEN_FILE")" \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"search_knowledge","arguments":{"query":"续航","top_k":5}}}' \
+  "$MCP_URL"
+```
+
+`tools/list` 应返回 `search_knowledge` 和 `recommend_laptops`；`tools/call` 的 `result.content[0].text` 是 JSON 文本，内容和同参数 REST 查询一致。uvicorn 访问日志只记录请求方法和路径，不应出现 Token；`dc logs mcp` 可用于确认服务启动和请求状态。
+
 ## 4. 在 Docker 中运行自动测试
 
 使用独立 Compose 项目 `itxia-tests`，避免触碰运行服务的数据库和卷。测试内部再创建 PostgreSQL 测试库；模型使用明确的测试替身，不需要启动 Ollama。项目隔离不包括宿主机端口，测试库改用 `DB_PORT=25432`，避免与运行服务占用的 15432 冲突；shell 环境变量优先于 `--env-file`。
@@ -270,6 +303,8 @@ dct down -v
 | 原文导入 `400` | 检查 schema、media_type、元数据与机型边界；ENTITY_TITLE_REQUIRED 表示单机评测缺少机型名，SEMANTIC_UNIT_TOO_LARGE 表示购机指南或经验文档的不可拆小节超预算，见预处理文档 |
 | 查询 `no_result` | 确认已导入、资料可见、模型配置未变及路线门槛；模型配置改变后重新导入 |
 | `401`／`403` | 分别检查 Token 和账号权限 |
+| MCP 返回 `401`／`421` | `401` 检查 `Authorization`；`421` 检查 `ALLOWED_HOSTS` 是否包含实际访问的主机名 |
+| MCP 启动失败或工具调用报数据库错误 | 确认 `app` 已执行迁移、`db` 为 `healthy`，查看 `dc logs mcp db` |
 
 更新代码后重建并查看日志：
 

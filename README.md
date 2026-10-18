@@ -31,6 +31,7 @@
 - [召回改进方案](docs/phase2/retrieval-improvement-plan.md)与[改进记录](docs/phase2/retrieval-improvement-log.md)：改进项、实验结果与取舍
 - [第三阶段需求](docs/phase3/requirements.md)：计划接入大模型后实现的功能（草案）
 - [机型规格库方案](docs/phase3/product-spec-design.md)与[实施记录](docs/phase3/product-spec-log.md)：按条件推荐的结构化规格库、分阶段计划与评测结果
+- [MCP 服务方案](docs/phase3/mcp-server-design.md)：把知识检索与机型推荐作为 MCP 工具接入 persona
 - [第四阶段需求](docs/phase4/requirements.md)：导入能力的缺口与优先级
 - [工具定义](products/tool-definitions.md)：上层 LLM 调用知识检索与机型推荐的提示词、JSON Schema 与示例
 
@@ -38,7 +39,7 @@
 
 ## Docker 运行
 
-推荐按 [Docker 部署与验收](docs/deployment.md) 启动。Compose 提供 Web、PostgreSQL、可选的 Ollama 模型服务和独立测试镜像；文档包含配置、模型下载、账号创建、导入／检索验收及停止备份步骤。
+推荐按 [Docker 部署与验收](docs/deployment.md) 启动。Compose 提供 Web、MCP 服务、PostgreSQL、可选的 Ollama 模型服务和独立测试镜像；文档包含配置、模型下载、账号创建、导入／检索／MCP 冒烟检查及停止备份步骤。
 
 ## 本地运行
 
@@ -103,6 +104,17 @@ curl -H "Authorization: Token $(cat .runtime/maintainer.token)" \
   -d '{"conditions":{"price_max":8000,"weight_max":1.5},"preference":"续航长","top_k":5}' \
   http://127.0.0.1:8000/api/v1/products/recommend/
 ```
+
+## MCP 服务
+
+`mcp_server/` 把同一套检索与推荐暴露为 MCP 工具 `search_knowledge`、`recommend_laptops`，端点为 `http://127.0.0.1:8001/mcp`，使用与 REST 相同的 `Authorization: Token <key>`。本地启动前加载配置：
+
+```sh
+set -a; . ./.env.local; set +a
+make run-mcp
+```
+
+未带 Token 返回 401。握手、`tools/list` 与 `tools/call` 的冒烟命令见[部署文档](docs/deployment.md#39-mcp-服务冒烟检查)，参数契约与协议版本见 [MCP 服务方案](docs/phase3/mcp-server-design.md)。
 
 ## 语雀导入
 

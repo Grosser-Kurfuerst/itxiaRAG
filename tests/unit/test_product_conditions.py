@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from contracts.products import PORTS, ConditionsSerializer
+from contracts.products import PORTS, Conditions
 from products.conditions import CONDITIONS, diagnostics, evaluate, match, unknown_counts
 
 
@@ -57,4 +57,4 @@ def test_empty_conditions_match_all():
 
 
 def test_every_request_condition_has_a_rule():
-    assert set(ConditionsSerializer().fields) == set(CONDITIONS)
+    assert set(Conditions.model_fields) == set(CONDITIONS)

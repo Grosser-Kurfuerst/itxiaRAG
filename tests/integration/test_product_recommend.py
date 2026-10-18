@@ -105,11 +105,24 @@ def test_unknown_options_and_fields_are_rejected(catalog, embedder):
     client = client_for()
     response = recommend(client, embedder, {"conditions": {"gpu_in": ["RTX 4090"]}})
     assert response.status_code == 400 and "RTX 5070" in str(response.data)
-    response = recommend(client, embedder, {"conditions": {"brands": ["雷蛇"]}})  # 内部机型的品牌对普通用户不可选
-    assert response.status_code == 400 and "可选：华为、联想" in str(response.data)
-    assert recommend(client_for(["read_internal"]), embedder, {"conditions": {"brands": ["雷蛇"]}}).status_code == 200
+    response = recommend(client, embedder, {"conditions": {"brands": ["雷蛇"]}})  # 枚举中有，但普通用户没有可见机型
+    assert response.status_code == 200 and response.data["result_status"] == "no_result"
+    internal = recommend(client_for(["read_internal"]), embedder, {"conditions": {"brands": ["雷蛇"]}})
+    assert internal.status_code == 200 and keys(internal) == ["雷蛇 内部样机"]
     assert recommend(client, embedder, {"conditions": {"thin_light": True}}).status_code == 400
     assert recommend(client, embedder, {"top_k": 21}).status_code == 400
+
+
+def test_validation_error_paths_and_explicit_null(catalog, embedder):
+    client = client_for()
+    response = recommend(client, embedder, {"conditions": {"price_min": 9000, "price_max": 8000}})
+    assert response.status_code == 400
+    assert response.data == {"conditions": ["price_min 不能大于 price_max"]}
+
+    explicit = recommend(client, embedder, {"conditions": None, "top_k": None})
+    omitted = recommend(client, embedder, {})
+    assert explicit.status_code == omitted.status_code == 200
+    assert explicit.data == omitted.data
 
 
 def test_preference_search_is_limited_to_candidate_reviews(catalog, embedder):

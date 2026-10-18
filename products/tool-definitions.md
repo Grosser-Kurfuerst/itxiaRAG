@@ -133,14 +133,9 @@
 
 ### 3.1 可选值
 
-`gpu_in` 和 `brands` 的可选值来自规格文件 [bibar.json](specs/bibar.json)。规格文件新增型号或品牌后，用下面的命令重新生成，更新第 3 节的 `enum`；`gpu_in` 的 enum 与第 1 节的档次都要手工按档次由低到高排列（`unique` 按字符排序）。单元测试会检查本文与规格文件、接口字段是否一致。
+`gpu_in` 和 `brands` 的可选值来自 [contracts/products.py](../contracts/products.py) 中的 `GPUS`、`BRANDS`，接口只按这两个常量校验。规格文件 [bibar.json](specs/bibar.json) 新增型号或品牌后，需要同步更新常量；单元测试会检查常量与规格文件一致。显卡型号会先规范写法，例如 `rtx5070 ti` 会变成 `RTX 5070Ti`。
 
-```sh
-jq -c '[.[].gpu | select(.)] | unique' products/specs/bibar.json
-jq -c '[.[].brand] | unique' products/specs/bibar.json
-```
-
-接口按调用者可见的机型校验可选值。传入不可见或不存在的值会返回 400，错误信息会列出当前可选值，上层可以据此修正后重试。显卡型号会先规范写法，例如 `rtx5070 ti` 会变成 `RTX 5070Ti`。
+不在常量中的值返回 400，错误信息会列出全部可选值。常量中有的值如果调用者没有可见机型，或库中已经没有对应机型，推荐返回 `no_result`，由上层查看 `diagnostics` 后放宽条件。
 
 ## 4. 结果说明
 

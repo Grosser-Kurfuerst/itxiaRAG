@@ -1,15 +1,24 @@
 """机型规格契约：规格文件的记录格式与推荐请求，见机型规格库方案 5.1、5.3、6.1 节。"""
 import math
 import re
+from typing import Annotated, Literal
 
+from pydantic import AfterValidator, BeforeValidator, Field, model_validator
+from pydantic_core import PydanticCustomError
 from rest_framework import serializers
 
+from contracts.requests import RequestModel, empty_if_null, strip_text
 from contracts.serializers import StrictSerializer, TextField
 
 PRICE_KINDS = ["launch", "reference", "subsidy", "predicted"]
-PANELS = ["oled", "lcd", "miniled"]
+PANELS = ("oled", "lcd", "miniled")
 RAM_KINDS = ["slots", "soldered"]
-PORTS = ["usb_a", "usb_c", "video_out", "hdmi", "rj45", "card_reader", "thunderbolt", "oculink"]
+PORTS = ("usb_a", "usb_c", "video_out", "hdmi", "rj45", "card_reader", "thunderbolt", "oculink")
+GPUS = ("RTX 3050", "RTX 5060", "RTX 5070", "RTX 5070Ti", "RTX 5080", "RTX 5090")
+BRANDS = (
+    "ALIENWARE", "LG", "ROG", "ThinkPad", "七彩虹", "华为", "华硕", "小米", "微星", "微软",
+    "惠普", "机械师", "机械革命", "神舟", "红米", "联想", "苹果", "荣耀", "雷神", "雷蛇",
+)
 
 
 def normalize_gpu(name):
@@ -98,45 +107,71 @@ class ProductSpecSerializer(StrictSerializer):
         return data
 
 
-def _known_options(values, options, label):
-    """可选值由调用方按规格库生成并放入 context；未知取值报错并列出可选值，供上层 LLM 修正。"""
-    unknown = [value for value in values if value not in options]
-    if unknown:
-        raise serializers.ValidationError(f"未知{label}：{'、'.join(unknown)}；可选：{'、'.join(options)}")
-    return values
+def normalize_gpu_input(value):
+    return normalize_gpu(value) if isinstance(value, str) else value
 
 
-class ConditionsSerializer(StrictSerializer):
+Gpu = Annotated[Literal[GPUS], BeforeValidator(normalize_gpu_input)]
+Amount = Annotated[float, Field(ge=0, allow_inf_nan=False)]
+Preference = Annotated[
+    str,
+    Field(max_length=500, description="无法换算成条件的偏好，例如“性能释放强、散热好”。为空时按评测日期由新到旧排序。"),
+    AfterValidator(strip_text),
+]
+RecommendTopK = Annotated[int, Field(ge=1, le=20, description="返回的机型数。")]
+
+
+class Conditions(RequestModel):
     """只接受原子条件（方案 6.1 节）；“轻薄”“预算左右”等派生概念由上层换算。"""
-    price_min = FiniteFloatField(min_value=0, required=False)
-    price_max = FiniteFloatField(min_value=0, required=False)
-    weight_max = FiniteFloatField(min_value=0, required=False)
-    screen_min = FiniteFloatField(min_value=0, required=False)
-    screen_max = FiniteFloatField(min_value=0, required=False)
-    battery_min = FiniteFloatField(min_value=0, required=False)
-    gpu_in = serializers.ListField(child=GpuField(max_length=50), allow_empty=False, max_length=20, required=False)
-    has_dgpu = serializers.BooleanField(required=False)
-    is_gaming = serializers.BooleanField(required=False)
-    panel = serializers.ChoiceField(PANELS, required=False)
-    ports = serializers.ListField(child=serializers.ChoiceField(PORTS), allow_empty=False, max_length=len(PORTS),
-                                  required=False)
-    brands = serializers.ListField(child=TextField(max_length=50), allow_empty=False, max_length=20, required=False)
+    price_min: Annotated[Amount, Field(description="价格下限（元）。价格是评测时的价格，不是实时价格。")] = None
+    price_max: Annotated[Amount, Field(description="价格上限（元）。")] = None
+    weight_max: Annotated[Amount, Field(description="重量上限（kg）。")] = None
+    screen_min: Annotated[Amount, Field(description="屏幕尺寸下限（英寸）。")] = None
+    screen_max: Annotated[Amount, Field(description="屏幕尺寸上限（英寸）。")] = None
+    battery_min: Annotated[
+        Amount,
+        Field(description="续航下限（小时），只指评测中“日常应用仿真”的成绩。许多机型没有该数据，没有数据视为不满足。"),
+    ] = None
+    gpu_in: Annotated[
+        list[Gpu],
+        Field(min_length=1, max_length=20, description="独显型号，满足其中之一即可；没有独显的机型不满足。"),
+    ] = None
+    has_dgpu: Annotated[bool, Field(description="是否有独立显卡。")] = None
+    is_gaming: Annotated[
+        bool,
+        Field(description="是否游戏本：有 RTX 独显且定位为游戏本，创作本、全能本、商务本、双屏本除外。"),
+    ] = None
+    panel: Annotated[Literal[PANELS], Field(description="屏幕面板类型。")] = None
+    ports: Annotated[
+        list[Literal[PORTS]],
+        Field(min_length=1, max_length=len(PORTS),
+              description="必须全部具备的接口：usb_a、usb_c；video_out 为任一视频输出（HDMI、DP 或支持 DP 的 USB-C）；"
+                          "hdmi；rj45 网口；card_reader 读卡器；thunderbolt 雷电或 USB4；oculink，TGX 接口也是 OCuLink。"),
+    ] = None
+    brands: Annotated[
+        list[Literal[BRANDS]],
+        Field(min_length=1, max_length=20,
+              description="品牌，满足其中之一即可。子品牌 ROG、ThinkPad、红米单列，不归入华硕、联想、小米；"
+                          "问母品牌的全部机型时连同子品牌一起列出。"),
+    ] = None
 
-    def validate_gpu_in(self, value):
-        return _known_options(value, self.context["gpus"], "显卡型号")
-
-    def validate_brands(self, value):
-        return _known_options(value, self.context["brands"], "品牌")
-
-    def validate(self, data):
+    @model_validator(mode="after")
+    def check_ranges(self):
         for low, high in [("price_min", "price_max"), ("screen_min", "screen_max")]:
-            if low in data and high in data and data[low] > data[high]:
-                raise serializers.ValidationError({low: f"不能大于 {high}"})
-        return data
+            if getattr(self, low) is not None and getattr(self, high) is not None \
+                    and getattr(self, low) > getattr(self, high):
+                raise PydanticCustomError("range", "{low} 不能大于 {high}", {"low": low, "high": high})
+        return self
 
 
-class RecommendSerializer(StrictSerializer):
-    """推荐请求；context 需提供 {"gpus": [...], "brands": [...]}。"""
-    conditions = ConditionsSerializer(default=dict)
-    preference = serializers.CharField(max_length=500, allow_blank=True, default="")
-    top_k = serializers.IntegerField(min_value=1, max_value=20, default=5)
+ConditionsArg = Annotated[
+    Conditions,
+    BeforeValidator(empty_if_null),
+    Field(default_factory=Conditions, description="硬条件，全部满足才入选；省略表示不过滤。"),
+]
+
+
+class RecommendInput(RequestModel):
+    conditions: ConditionsArg
+    preference: Preference = ""
+    top_k: RecommendTopK = 5

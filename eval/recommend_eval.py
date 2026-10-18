@@ -22,9 +22,9 @@ from django.conf import settings  # noqa: E402
 
 from catalog.models import EvidenceUnit  # noqa: E402
 from config import components  # noqa: E402
-from contracts.products import RecommendSerializer  # noqa: E402
+from contracts.products import RecommendInput  # noqa: E402
+from contracts.requests import parse_model  # noqa: E402
 from products.models import ProductSpec  # noqa: E402
-from products.selectors import condition_options  # noqa: E402
 from products.service import CONCLUSION_SECTIONS, recommend  # noqa: E402
 
 VISIBILITIES = ("public", "internal")
@@ -69,14 +69,12 @@ class Recommender:
         self.embedder = components.embedding_provider()
         self.collector = components.recall_collector(self.embedder)
         self.pipeline = components.post_recall_pipeline()
-        self.options = condition_options(VISIBILITIES)
 
     def keys(self, conditions, preference=""):
         """按接口的校验规则校验请求，返回推荐机型 key 列表。"""
-        serializer = RecommendSerializer(data={"conditions": conditions, "preference": preference, "top_k": TOP_K},
-                                         context=self.options)
-        serializer.is_valid(raise_exception=True)
-        result = recommend(serializer.validated_data, VISIBILITIES, collector=self.collector, pipeline=self.pipeline,
+        args = parse_model(RecommendInput, {"conditions": conditions, "preference": preference, "top_k": TOP_K})
+        result = recommend(args.model_dump(exclude_none=True), VISIBILITIES, collector=self.collector,
+                           pipeline=self.pipeline,
                            embedding_space=self.embedder.space_id,
                            candidate_limit=settings.RETRIEVAL_CANDIDATE_LIMIT)
         return [product["key"] for product in result["products"]]

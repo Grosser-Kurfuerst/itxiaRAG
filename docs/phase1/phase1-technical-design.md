@@ -38,7 +38,7 @@ api → products.service.recommend → products.conditions：按原子条件过�
 
 | 模块 | 责任 | 不负责 |
 | --- | --- | --- |
-| [contracts/](../../contracts/) | DTO、Protocol、导入、查询和推荐 Serializer | ORM、模型调用和解析实现 |
+| [contracts/](../../contracts/) | DTO、Protocol、导入 Serializer、查询与推荐的 pydantic 模型 | ORM、模型调用和解析实现 |
 | [ingestion/](../../ingestion/) | 可编排解析/分段/预算控制；公共校验 → 编码 → 保存 | 获取推文、OCR |
 | [embeddings/](../../embeddings/) | HTTP 编码适配器、批次顺序与向量校验 | 数据库和召回排序 |
 | [catalog/](../../catalog/) | 三张业务表、事务保存、可见范围、父段读取 | 模型供应商协议、审核发布 |
@@ -240,7 +240,7 @@ Scope 查询、召回、RRF、分组或结果读取失败按现有错误契约�
 | `POST /api/v1/search/` | Token；请求 `{query, filters?, top_k?}`；返回 `{mode: "hybrid", result_status, contexts}` |
 | `POST /api/v1/products/recommend/` | Token；请求 `{conditions?, preference?, top_k?}`；返回 `{result_status, products, unknown, diagnostics}` |
 
-查询示例：`{"query":"电池能用多久","filters":{"source_ids":["00000000-0000-0000-0000-000000000001"]},"top_k":5}`。`query` 最多 2000 字符；`filters.source_ids` 接受 1～50 个 UUID，省略表示不按来源过滤；top_k 默认 5，范围 1～20，计父段数。校验依据见 [contracts/query.py](../../contracts/query.py)。查询不接受 scenario、confirmed_context、preprocess 或知识类型过滤参数；preprocess 仅属于原文导入请求。
+查询示例：`{"query":"电池能用多久","filters":{"source_ids":["00000000-0000-0000-0000-000000000001"]},"top_k":5}`。`query` 最多 2000 字符；`filters.source_ids` 接受 1～50 个 UUID，省略表示不按来源过滤；top_k 默认 5，范围 1～20，计父段数。校验依据见 [contracts/query.py](../../contracts/query.py) 中的 pydantic 模型，REST 与 MCP 工具共用。查询不接受 scenario、confirmed_context、preprocess 或知识类型过滤参数；preprocess 仅属于原文导入请求。显式传 `null` 等同于不传。
 
 导入成功响应示例：
 
@@ -252,11 +252,11 @@ Scope 查询、召回、RRF、分组或结果读取失败按现有错误契约�
 
 `contexts[]` 包含 `score_kind`，`matches[]` 包含 `score_kind/route_scores/ranks/key/locator`。默认 `score` 仍为 RRF 分数；以后启用重排时表示最终排序分数，由 `score_kind` 说明含义。`ranks` 始终保留召回路线原始名次；`matches` 中出现的子块就是实际参与最终结果的命中证据。
 
-推荐示例：`{"conditions":{"price_max":10000,"is_gaming":true,"gpu_in":["RTX 5060"]},"preference":"散热好","top_k":5}`。`conditions` 只接受原子条件 `price_min/price_max/weight_max/screen_min/screen_max/battery_min/gpu_in/has_dgpu/is_gaming/panel/ports/brands`，省略表示不过滤；`gpu_in`、`brands` 只能取当前可见机型中出现过的值，否则 400 并列出可选值，显卡型号先规范写法（如 `rtx5070 ti` → `RTX 5070Ti`）；`preference` 最多 500 字符，可为空；`top_k` 默认 5，范围 1～20，计机型数。校验依据见 [contracts/products.py](../../contracts/products.py)。只推荐有可见评测的机型；规格字段为空视为不满足该条件，`unknown` 按规格字段名统计“只因该字段为空而落选”的机型数。`preference` 为空时按评测日期由新到旧排序，不调用 Embedding 服务（仍需 Embedding 配置，候选限当前向量空间的评测）；否则在候选机型的评测父段内检索排序，没有命中的按日期排在后面。
+推荐示例：`{"conditions":{"price_max":10000,"is_gaming":true,"gpu_in":["RTX 5060"]},"preference":"散热好","top_k":5}`。`conditions` 只接受原子条件 `price_min/price_max/weight_max/screen_min/screen_max/battery_min/gpu_in/has_dgpu/is_gaming/panel/ports/brands`，省略表示不过滤；`gpu_in`、`brands` 只按 `contracts/products.py` 中的静态枚举校验，不在枚举中的值返回 400，枚举中有但调用者没有可见机型的值返回 `no_result`，显卡型号先规范写法（如 `rtx5070 ti` → `RTX 5070Ti`）；`preference` 最多 500 字符，可为空；`top_k` 默认 5，范围 1～20，计机型数。校验依据见 [contracts/products.py](../../contracts/products.py) 中的 pydantic 模型，REST 与 MCP 工具共用。只推荐有可见评测的机型；规格字段为空视为不满足该条件，`unknown` 按规格字段名统计“只因该字段为空而落选”的机型数。`preference` 为空时按评测日期由新到旧排序，不调用 Embedding 服务（仍需 Embedding 配置，候选限当前向量空间的评测）；否则在候选机型的评测父段内检索排序，没有命中的按日期排在后面。
 
 `products[]` 每项为 `{key, spec, review}`。`spec` 是规格卡：`brand/price_cny/price_kind/price_date/weight_kg/screen_inch/panel/cpu/has_dgpu/gpu/ram_gb/ram_upgradable/storage_gb/battery_hours/is_gaming/ports/ports_text/extra/note`，不含维护用的引用 `evidence`。`review` 包含 `context_id/title/source{id,title,url,source_date}/conclusions/highlights`：`conclusions` 是评测结论栏目的子块（每个栏目取第一个，最多 3 个；没有结论栏目时取最后一个子块），`highlights` 是 `preference` 在该评测中的命中子块（最多 2 个，带 RRF `score`；向量路默认无余弦门槛，命中不代表一定满足偏好）。两者每项含 `evidence_id/key/sections/text`。需要评测全文时，以 `review.source.id` 作为 `filters.source_ids` 调用查询接口。`result_status=no_result` 时 `diagnostics={total, satisfied:{条件名: 台数}}`，供上层判断放宽哪个条件，检索系统不自动放宽；有结果时为 `null`。依据见[机型规格库方案第 6 节](../phase3/product-spec-design.md#6-推荐接口)与 [products/service.py](../../products/service.py)。
 
-输入未知字段或结构错误使用 DRF 400；认证失败 401，动作权限不足 403。领域或模型错误使用 `{error: {code, message}}`；配置缺失 503，模型失败／非法向量 502，意外服务异常 500。不返回 SQL、凭据或外部错误正文，不增加统一错误 Schema／OpenAPI 管理。
+输入未知字段或结构错误返回 400：请求模型由 pydantic 校验，报错键是用点号连接的字段路径（列表元素带下标），整个请求体无法解析时用 `non_field_errors`；类型、范围和枚举错误为 pydantic 的英文消息，文本与范围上下限错误为中文。认证失败 401，动作权限不足 403。领域或模型错误使用 `{error: {code, message}}`；配置缺失 503，模型失败／非法向量 502，意外服务异常 500。不返回 SQL、凭据或外部错误正文，不增加统一错误 Schema／OpenAPI 管理。
 
 ## 7. 验收与迁移
 

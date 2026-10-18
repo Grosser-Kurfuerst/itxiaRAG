@@ -8,7 +8,8 @@ from contracts.serializers import SourceImportSerializer, import_dtos, validate_
 from contracts.types import RawDocument
 from ingestion.registry import PreprocessorRegistry
 from contracts.errors import DomainError
-from contracts.query import QuerySerializer
+from contracts.query import QueryInput
+from contracts.requests import parse_model
 
 
 def document(data):
@@ -43,9 +44,8 @@ def test_removed_type_fields_are_rejected(document_payload):
     document_payload['document']['contexts'][0]['children'][0]['knowledge_type'] = 'concept'
     with pytest.raises(ValidationError, match='未知字段'):
         document(document_payload)
-    query = QuerySerializer(data={'query': '续航', 'filters': {'knowledge_types': ['concept']}})
-    with pytest.raises(ValidationError, match='未知字段'):
-        query.is_valid(raise_exception=True)
+    with pytest.raises(ValidationError, match='Extra inputs are not permitted'):
+        parse_model(QueryInput, {'query': '续航', 'filters': {'knowledge_types': ['concept']}})
 
 
 @pytest.mark.parametrize('fault', ['unknown', 'duplicate_parent', 'duplicate_child', 'unrelated_child', 'empty'])

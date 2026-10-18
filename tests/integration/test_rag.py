@@ -13,7 +13,8 @@ from catalog.selectors import DjangoContextReader
 from catalog.storage import DjangoDocumentStore
 from config import components
 from contracts.errors import DomainError
-from contracts.query import QuerySerializer
+from contracts.query import QueryInput
+from contracts.requests import parse_model
 from contracts.serializers import SourceImportSerializer, import_dtos
 from contracts.types import SearchScope
 from ingestion.pipeline import import_processed
@@ -41,11 +42,10 @@ def ingest(payload, embedder, store=None):
 
 
 def query(text, user, embedder, **fields):
-    s = QuerySerializer(data={'query': text, **fields})
-    s.is_valid(raise_exception=True)
-    return search(s.validated_data, visible_scopes(user), collector=components.recall_collector(embedder),
-        pipeline=components.post_recall_pipeline(), reader=DjangoContextReader(),
-        embedding_space=embedder.space_id)
+    args = parse_model(QueryInput, {'query': text, **fields})
+    return search(args.model_dump(exclude_none=True), visible_scopes(user),
+                  collector=components.recall_collector(embedder), pipeline=components.post_recall_pipeline(),
+                  reader=DjangoContextReader(), embedding_space=embedder.space_id)
 
 
 def test_import_dedupe_and_update_keep_ids_without_job_or_publication(actor, embedder, document_payload):

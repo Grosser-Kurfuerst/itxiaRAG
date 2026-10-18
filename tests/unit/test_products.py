@@ -3,10 +3,11 @@ import re
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
-from contracts.products import (PANELS, PORTS, ConditionsSerializer, ProductSpecSerializer, RecommendSerializer,
+from contracts.products import (BRANDS, GPUS, PANELS, PORTS, Conditions, ProductSpecSerializer, RecommendInput,
                                 normalize_gpu)
-from contracts.query import QuerySerializer
+from contracts.query import QueryInput
 
 ROOT = Path(__file__).resolve().parents[2]
 SPEC_FILE = ROOT / "products/specs/bibar.json"
@@ -64,12 +65,8 @@ def test_committed_spec_file_is_valid():
     assert len({record["key"] for record in records}) == len(records)
 
 
-OPTIONS = {"gpus": ["RTX 5060", "RTX 5070Ti"], "brands": ["联想", "华为"]}
-
-
 def validate_request(data):
-    serializer = RecommendSerializer(data=data, context=OPTIONS)
-    return serializer.validated_data if serializer.is_valid() else serializer.errors
+    return RecommendInput.model_validate(data).model_dump(exclude_none=True)
 
 
 def test_recommend_request_defaults_and_normalizes_gpu():
@@ -78,10 +75,19 @@ def test_recommend_request_defaults_and_normalizes_gpu():
     assert data["conditions"] == {"gpu_in": ["RTX 5070Ti"], "ports": ["hdmi"], "panel": "oled"}
 
 
-def test_recommend_request_lists_options_for_unknown_gpu_and_brand():
-    errors = validate_request({"conditions": {"gpu_in": ["RTX 4090"], "brands": ["苹果"]}})["conditions"]
-    assert "RTX 4090" in str(errors["gpu_in"]) and "RTX 5060、RTX 5070Ti" in str(errors["gpu_in"])
-    assert "联想、华为" in str(errors["brands"])
+def test_recommend_request_treats_null_as_omitted():
+    assert validate_request({"conditions": None, "preference": None, "top_k": None}) == {
+        "conditions": {}, "preference": "", "top_k": 5}
+    assert validate_request({"conditions": {"price_min": None, "has_dgpu": False, "gpu_in": None}}) == {
+        "conditions": {"has_dgpu": False}, "preference": "", "top_k": 5}
+
+
+def test_recommend_request_lists_enum_options_for_unknown_gpu_and_brand():
+    with pytest.raises(ValidationError) as error:
+        validate_request({"conditions": {"gpu_in": ["RTX 4090"], "brands": ["不存在"]}})
+    errors = str(error.value)
+    assert "RTX 4090" in errors and "RTX 5070" in errors and "RTX 5090" in errors
+    assert "不存在" in errors and "雷蛇" in errors
 
 
 @pytest.mark.parametrize("data", [
@@ -92,9 +98,11 @@ def test_recommend_request_lists_options_for_unknown_gpu_and_brand():
     {"conditions": {"price_max": "nan"}},
     {"top_k": 21},
     {"query": "游戏本"},
+    {"unknown": 1},
 ])
 def test_recommend_request_rejects_invalid_values(data):
-    assert not RecommendSerializer(data=data, context=OPTIONS).is_valid()
+    with pytest.raises(ValidationError):
+        validate_request(data)
 
 
 def test_tool_definitions_match_contracts_and_spec_file():
@@ -103,15 +111,16 @@ def test_tool_definitions_match_contracts_and_spec_file():
     blocks = re.findall(r"```json\n(.*?)\n```", text, re.S)
     tools = {tool["name"]: tool["parameters"]["properties"] for tool in map(json.loads, blocks)}
     assert len(blocks) == 2
-    assert set(tools["search_knowledge"]) == set(QuerySerializer().fields)
-    assert set(tools["search_knowledge"]["filters"]["properties"]) == set(QuerySerializer().fields["filters"].fields)
-    assert set(tools["recommend_laptops"]) == set(RecommendSerializer().fields)
+    assert set(tools["search_knowledge"]) == set(QueryInput.model_fields)
+    assert set(tools["search_knowledge"]["filters"]["properties"]) == set(QueryInput.model_fields["filters"].annotation.model_fields)
+    assert set(tools["recommend_laptops"]) == set(RecommendInput.model_fields)
 
     conditions = tools["recommend_laptops"]["conditions"]["properties"]
-    assert set(conditions) == set(ConditionsSerializer().fields)
-    assert conditions["ports"]["items"]["enum"] == PORTS and conditions["panel"]["enum"] == PANELS
+    assert set(conditions) == set(Conditions.model_fields)
+    assert conditions["ports"]["items"]["enum"] == list(PORTS) and conditions["panel"]["enum"] == list(PANELS)
     records = json.loads(SPEC_FILE.read_text(encoding="utf-8"))
-    gpus = conditions["gpu_in"]["items"]["enum"]
-    assert set(gpus) == {normalize_gpu(record["gpu"]) for record in records if record.get("gpu")}
-    assert " < ".join(gpus) in prompt  # 提示词中的显卡档次与 enum 顺序一致
-    assert set(conditions["brands"]["items"]["enum"]) == {record["brand"] for record in records}
+    assert set(GPUS) == {normalize_gpu(record["gpu"]) for record in records if record.get("gpu")}
+    assert set(BRANDS) == {record["brand"] for record in records}
+    assert conditions["gpu_in"]["items"]["enum"] == list(GPUS)
+    assert conditions["brands"]["items"]["enum"] == list(BRANDS)
+    assert " < ".join(GPUS) in prompt  # 提示词中的显卡档次与 enum 顺序一致

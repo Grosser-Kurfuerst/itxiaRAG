@@ -1,6 +1,6 @@
 # MCP 服务方案
 
-状态：已实现（2026-10-18）。已用当前端点支持的 `gpt-5.6-terra` 完成新模型评测基线；persona 接入验证与 `deepseek-flash` 同模型重跑待执行。对应[机型规格库方案](product-spec-design.md) P3 的上层接入。
+状态：已实现（2026-10-18）。已用当前端点支持的 `gpt-5.6-terra` 完成新模型评测基线，persona 接入验证已完成（mock 宿主）；`deepseek-flash` 同模型重跑待执行。对应[机型规格库方案](product-spec-design.md) P3 的上层接入。
 
 ## 1. 目标与边界
 

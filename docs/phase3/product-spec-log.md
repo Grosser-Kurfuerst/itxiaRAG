@@ -162,3 +162,19 @@ docker compose --env-file .env.docker -p itxia run --rm --no-deps \
 - D 类 19 条全部 P@5=1.000；18 条有标准条件的 nDCG@5 为 0.920，略高于链路的 0.915。
 
 按方案阶段 3 的数值验收线，本次均达到（工具选择不低于 164/170、条件换算不低于 15/18、D 类 P@5 不低于 0.95 且 nDCG@5 不低于 0.87、补充样例工具选择不低于 10/11、平铺参数不超过 2）；但模型与 llm-v2 不同，不能据此宣布同模型回归通过。结果文件为 `.runtime/eval/corpus-v5/llm-mcp-gpt56-terra.json`，不提交。
+
+## 6. persona 接入验证（2026-10-18）
+
+[MCP 服务方案](mcp-server-design.md)阶段 4 只改配置，不改代码。验证使用 kei 的 mock 适配器和 `/tmp/persona-stage4` 下的临时最小宿主，宿主空导入 persona 插件并读取 `.runtime/` 中的本地配置；persona 使用只读账号、`mcp_url`、`mcp_extra_headers`、`tools_call_timeout: 15s`、`tools_result_max_chars: 12000`，人格提示词取自[工具定义](../../products/tool-definitions.md)第 1 节，工具名改为 `mcp__search_knowledge`、`mcp__recommend_laptops`。
+
+| 验收项 | 结果 |
+| --- | --- |
+| `/persona tools` | `persona: tools=[mcp__recommend_laptops mcp__search_knowledge]` |
+| 具体机型问题 | 问“雷神 猎刃S 的内存是板载的吗？”，调用 `search_knowledge` 后回答“不是板载。评测拆机显示它有两个 DDR5 内存插槽，出厂是单条 16GB DDR5-5600，可以自己加装或更换。” |
+| 预算选购问题 | 问“预算 8000 元，主要写代码，推荐一台笔记本。”，调用 `recommend_laptops` 后推荐荣耀 MagicBook Pro 14 与机械革命星耀 14，附评测价格、重量、续航和评测链接 |
+| 错误 Token | 吊销 Token 后执行 `/persona tools reload`，回复 `persona: MCP 工具刷新失败：MCP 请求失败：http_401` |
+| 恢复 | 重新签发 Token 并重启宿主后，`/persona tools` 恢复两个工具，`/persona tools reload` 回复 `persona: MCP 工具刷新成功，工具 2 个` |
+
+两次问答期间 MCP 访问日志各有一次工具调用请求，工具目录在宿主启动时经 `initialize`、`initialized`、`tools/list` 建立。Token、persona 配置和临时宿主均不在仓库提交范围内；`git status` 未出现 `.runtime/` 或配置文件。
+
+本次没有接入真实飞书/QQ 群聊，也没有验证生产主机的网络与 `ALLOWED_HOSTS` 配置；这些属于部署环境验证，persona 侧的 MCP 发现、调用、认证失败与恢复流程已按方案阶段 4 验收。

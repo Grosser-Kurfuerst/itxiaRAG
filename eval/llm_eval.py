@@ -50,6 +50,12 @@ def load_tools(path=TOOL_FILE):
     return prompt, tools
 
 
+def schema_digest(tools):
+    """工具定义的哈希；包含 schema，pydantic 字段或约束变化时会改变。"""
+    payload = json.dumps(tools, sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
 class ChatModel:
     def __init__(self, prompt, tools):
         self.url = os.environ["EVAL_LLM_BASE_URL"].rstrip("/") + "/chat/completions"
@@ -174,7 +180,8 @@ def _print_conditions(rows):
 
 
 def print_report(meta, spec, extra, chain):
-    print(f"模型 {meta['model']}；提示词 sha256 {meta['tools_sha256'][:12]}；补充样例 {meta['extra_version']}\n")
+    print(f"模型 {meta['model']}；提示词 sha256 {meta['tools_sha256'][:12]}；"
+          f"schema sha256 {(meta.get('schema_sha256') or '未记录')[:12]}；补充样例 {meta['extra_version']}\n")
     print("== 工具选择")
     by_cat = defaultdict(list)
     for r in spec:
@@ -213,9 +220,12 @@ def main():
     extra = json.loads(args.extra.read_text(encoding="utf-8"))
     corpus = load_corpus(spec, args.spec.parent)
     recommender = Recommender()
-    model = ChatModel(*load_tools())
+    prompt, tools = load_tools()
+    model = ChatModel(prompt, tools)
     result = {"meta": {"model": model.model, "extra_version": extra["version"],
-                       "tools_sha256": hashlib.sha256(TOOL_FILE.read_bytes()).hexdigest()},
+                       # 保留旧字段名，兼容历史结果；它只覆盖提示词文档。
+                       "tools_sha256": hashlib.sha256(TOOL_FILE.read_bytes()).hexdigest(),
+                       "schema_sha256": schema_digest(tools)},
               "spec": spec_rows(spec["queries"], corpus, recommender, model),
               "extra": extra_rows(extra["queries"], recommender, model),
               "chain": chain_rows(spec["queries"], corpus, recommender)}

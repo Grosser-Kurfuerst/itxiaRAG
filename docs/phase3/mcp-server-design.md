@@ -444,7 +444,7 @@ app = TokenAuthMiddleware(http_app())
 | 项 | 改动 |
 | --- | --- |
 | [recommend_eval.py](../../eval/recommend_eval.py) `Recommender` | `keys` 改用 `parse_model(RecommendInput, …)` 和 `model_dump(exclude_none=True)`，删除 `self.options` 和对 `condition_options` 的导入。报错仍是 DRF `ValidationError`，`llm_eval.recommend_with` 的异常处理不变 |
-| [llm_eval.py](../../eval/llm_eval.py) `load_tools` | 提示词仍取自 tool-definitions.md 的 `text` 代码块；工具定义改为 `asyncio.run(mcp.list_tools())`，转成 `{"type": "function", "function": {"name", "description", "parameters": tool.input_schema}}`。2.x 的 `Tool` 字段名是 `input_schema`，序列化成 JSON 时才是 `inputSchema`。`tools_sha256` 照常记录 |
+| [llm_eval.py](../../eval/llm_eval.py) `load_tools` | 提示词仍取自 tool-definitions.md 的 `text` 代码块；工具定义改为 `asyncio.run(mcp.list_tools())`，转成 `{"type": "function", "function": {"name", "description", "parameters": tool.input_schema}}`。2.x 的 `Tool` 字段名是 `input_schema`，序列化成 JSON 时才是 `inputSchema`。`tools_sha256` 保留为提示词文档哈希，兼容历史结果；新增 `schema_sha256` 对生成的 tools（含 schema）取哈希 |
 | [tool-definitions.md](../../products/tool-definitions.md) | 见下文 |
 | 重跑评测 | 用与上次相同的模型（deepseek-flash）重跑 `llm_eval`，结果写入[实施记录](product-spec-log.md)新的一节。对照基线是第 4 节的 llm-v2（查询集 v19），验收线见第 10 节阶段 3。端点不支持 `deepseek-flash` 时按新模型基线记录，同模型重跑另行补做 |
 
@@ -611,7 +611,7 @@ persona 会给工具名加上 `mcp__` 前缀，所以提示词中的工具名要
 **验收**：
 
 1. `make test` 全部通过；tool-definitions.md 中不再有 `json` 代码块，提示词仍是唯一的 `text` 代码块。
-2. `llm_eval` 跑完 170 条查询和补充样例，结果写入实施记录，并附 `tools_sha256`、平铺参数的次数和逐条差异。
+2. `llm_eval` 跑完 170 条查询和补充样例，结果写入实施记录，并附 `tools_sha256`、`schema_sha256`、平铺参数的次数和逐条差异。
 3. 与 llm-v2 相比：
    - 工具选择不低于 164/170；
    - 条件换算一致不低于 15/18；

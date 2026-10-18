@@ -146,7 +146,7 @@ docker compose --env-file .env.docker -p itxia run --rm --no-deps \
   python eval/llm_eval.py eval/queries.json eval/llm-queries.json /data/corpus-v5/llm-mcp-gpt56-terra.json
 ```
 
-`tools_sha256` 为 `c65ea69fbabd12c040b9b255cbf950645bd8dfcd69773883b92a4a858461dcf8`，对应本次 `products/tool-definitions.md` 的内容；工具 schema 另由 MCP 服务从 pydantic 模型生成。平铺参数（顶层直接传 `price_max` 等）为 0 次。
+`tools_sha256` 为 `c65ea69fbabd12c040b9b255cbf950645bd8dfcd69773883b92a4a858461dcf8`，对应本次 `products/tool-definitions.md` 的内容（历史字段，只覆盖提示词文档）；工具 schema 自阶段 3 未变，按当前 MCP 定义补算的 `schema_sha256` 为 `d58a1fe0d0c229e0eb8c5d3c339c8237dc1691df23f2add4d0bb83d9c520211f`，覆盖两个工具的完整 function 定义。平铺参数（顶层直接传 `price_max` 等）为 0 次。
 
 | 指标 | llm-v2（deepseek-flash） | 本次（gpt-5.6-terra） |
 | --- | --- | --- |

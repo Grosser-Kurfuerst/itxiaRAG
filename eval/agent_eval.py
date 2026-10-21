@@ -93,9 +93,11 @@ def sent_text(record):
                    if s.get("Type") == "text")
 
 
-def execute(item, persona_url, proxy, timeout, run_id):
+def execute(item, persona_url, proxy, timeout, run_id, progress=None):
     user = f"eval-{run_id}-{item['id']}"
-    answers, started = [], time.monotonic()
+    answers, trace_ends, started = [], [], time.monotonic()
+    if progress is not None:
+        progress.update(answers=answers, trace_ends=trace_ends)
     with proxy.lock:
         proxy.active = item["id"]
     try:
@@ -114,12 +116,19 @@ def execute(item, persona_url, proxy, timeout, run_id):
                     if not answer.strip():
                         raise ValueError("宿主发送的答案为空")
                     answers.append(answer)
+                    with proxy.lock:
+                        trace_ends.append(len(proxy.events.get(item["id"], [])))
                     break
+                with proxy.lock:
+                    if any("error" in event for event in proxy.events.get(item["id"], [])):
+                        raise ValueError("模型接口调用失败；停止等待宿主答复")
                 time.sleep(0.2)
             else:
                 raise TimeoutError("persona 未在预算内发送答案")
-        return {"status": "generated", "answers": answers, "elapsed_seconds": round(time.monotonic() - started, 3)}
+        return {"status": "generated", "answers": answers, "trace_ends": trace_ends, "elapsed_seconds": round(time.monotonic() - started, 3)}
     finally:
+        if progress is not None:
+            progress["elapsed_seconds"] = round(time.monotonic() - started, 3)
         with proxy.lock:
             proxy.active = None
 
@@ -172,6 +181,9 @@ def gold_for(item, spec, contexts, products):
 
 
 def verdict(item, answers, judgement, gold):
+    for key in ("needs", "errors", "unsupported_claims", "recommended_keys"):
+        if not isinstance(judgement[key], list):
+            raise ValueError(f"评审 {key} 必须为列表")
     needs = judgement["needs"]
     expected = {n["id"] for n in item["needs"]}
     if len(needs) != len(expected) or {n["id"] for n in needs} != expected:
@@ -209,7 +221,8 @@ def judge(item, result, gold, config):
     body = {"model": config["MODEL"], "temperature": 0,
             "messages": [{"role": "system", "content": JUDGE_FILE.read_text()},
                          {"role": "user", "content": json.dumps({"case": item, "gold": gold,
-                          "visible_tools": visible_tools(result["trace"]), "answers": result["answers"]}, ensure_ascii=False)}]}
+                          "visible_tools": visible_tools(result["trace"]), "answers": result["answers"],
+                          "conversation": result.get("conversation", [])}, ensure_ascii=False)}]}
     headers = {"Authorization": "Bearer " + config["API_KEY"]} if config["API_KEY"] else {}
     response = request_json(config["BASE_URL"].rstrip("/") + "/chat/completions", body, headers)
     raw = response["choices"][0]["message"]["content"].strip()
@@ -219,11 +232,43 @@ def judge(item, result, gold, config):
     return {"judgement": judgement, "judge_usage": response.get("usage")}
 
 
+
+def turn_item(item, index):
+    """每轮使用自己的验收点及累计硬条件，不向评委暴露未来追问。"""
+    active = {**item, "agent": {k: v for k, v in item["agent"].items() if k not in ("turns", "turn_checks")}}
+    if index:
+        active.update(item["agent"]["turn_checks"][index - 1])
+        active["q"] = item["agent"]["turns"][index - 1]
+    return active
+
+
+def assess_turns(item, result, spec, contexts, products, config):
+    answers, trace = result["answers"], result["trace"]
+    if len(answers) != 1 + len(item["agent"].get("turns", [])):
+        raise ValueError("实际答复数与用例轮数不符")
+    ends = result.get("trace_ends", [len(trace)] if len(answers) == 1 else [])
+    if len(ends) != len(answers) or ends != sorted(ends) or not ends or ends[0] < 1 or ends[-1] != len(trace):
+        raise ValueError("缺少有效的逐轮工具证据边界")
+    turns, conversation = result.setdefault("turn_results", []), []
+    for i, (answer, end) in enumerate(zip(answers, ends)):
+        active = turn_item(item, i)
+        gold = gold_for(active, spec, contexts, products)
+        assessment = judge(active, {"answers": [answer], "trace": trace[:end],
+                                    "conversation": conversation}, gold, config)
+        assessment["trace_end"] = end
+        turns.append(assessment)  # 即使引用校验失败，也保留评委原始输出。
+        assessment.update(verdict(active, [answer], assessment["judgement"], gold))
+        conversation.append({"user": active["q"], "answer": answer})
+    return {"turn_results": turns, "turn_count": len(turns),
+            "coverage": mean(t["coverage"] for t in turns), "task_pass": all(t["task_pass"] for t in turns)}
+
 def summarize(rows):
     groups = {"ALL": rows}
     for key in ("cat", "split", "origin"):
         for value in sorted({r[key] for r in rows}):
             groups[f"{key}:{value}"] = [r for r in rows if r[key] == value]
+    for label, multiple in (("single", False), ("multi", True)):
+        groups[label] = [r for r in rows if (r.get("turn_count", 1) > 1) == multiple]
     summary = {}
     for name, sub in groups.items():
         scored = [r for r in sub if r["status"] == "scored"]
@@ -231,7 +276,10 @@ def summarize(rows):
                          "coverage": mean(r["coverage"] for r in scored) if scored else None,
                          "passed": sum(r.get("task_pass", False) for r in sub),
                          "task_pass_rate": sum(r["task_pass"] for r in scored) / len(scored) if scored else None,
-                         "effective_pass_rate": sum(r.get("task_pass", False) for r in sub) / len(sub) if sub else None}
+                         "effective_pass_rate": sum(r.get("task_pass", False) for r in sub) / len(sub) if sub else None,
+                         "incomplete": sum(r["coverage"] < 1 for r in scored),
+                         "unsupported": sum(any(t["judgement"]["unsupported_claims"] for t in r.get("turn_results", [])) for r in scored),
+                         "rule_errors": sum(any(t["rule_errors"] for t in r.get("turn_results", [])) for r in scored)}
     return summary
 
 
@@ -240,7 +288,7 @@ def execution_metadata(recorded, model, assessor, spec, contexts, products):
         "started_at": datetime.now(timezone.utc).isoformat(), "runtime": "persona-mock",
         "agent_model": model["MODEL"], "cases_sha256": digest(spec),
         "corpus_sha256": digest(contexts), "specs_sha256": digest(products)}
-    metadata.update(judge_model=assessor["MODEL"], judge_sha256=digest(JUDGE_FILE.read_text()),
+    metadata.update(judge_protocol="per-turn-v2", judge_model=assessor["MODEL"], judge_sha256=digest(JUDGE_FILE.read_text()),
                     judged_at=datetime.now(timezone.utc).isoformat(), complete=False)
     if recorded:
         metadata["recorded_sha256"] = digest(recorded)
@@ -319,7 +367,8 @@ def main():
     with ModelProxy(args.proxy_port, model) as proxy:
         for item in queries:
             row = {"id": item["id"], "cat": item["cat"], "split": item.get("split", "dev"),
-                   "origin": "expanded" if item.get("origin") == "expanded" else "legacy"}
+                   "origin": "expanded" if item.get("origin") == "expanded" else "legacy",
+                   "turn_count": 1 + len(item["agent"].get("turns", []))}
             if stopped:
                 row.update(status="not_run", error="先前执行失败；为避免宿主晚到请求污染轨迹，停止本批生成")
                 checkpoint(row)
@@ -329,9 +378,9 @@ def main():
                     previous = next(r for r in recorded["rows"] if r["id"] == item["id"])
                     if not previous.get("answers") or not previous.get("trace"):
                         raise ValueError("没有完整的真实执行记录")
-                    row.update({k: previous[k] for k in ("answers", "trace", "elapsed_seconds")})
+                    row.update({k: previous[k] for k in ("answers", "trace", "elapsed_seconds", "trace_ends") if k in previous})
                 else:
-                    row.update(execute(item, args.persona_url.rstrip("/"), proxy, args.timeout, run_id))
+                    row.update(execute(item, args.persona_url.rstrip("/"), proxy, args.timeout, run_id, row))
                     row["trace"] = proxy.events.get(item["id"], [])
                     if not row["trace"] or any("error" in e for e in row["trace"]):
                         raise ValueError("模型执行记录缺失或模型接口失败")
@@ -347,9 +396,7 @@ def main():
                 stopped = not recorded
             else:
                 try:
-                    gold = gold_for(item, spec, contexts, products)
-                    row.update(judge(item, row, gold, assessor))
-                    row.update(verdict(item, row["answers"], row["judgement"], gold), status="scored")
+                    row.update(assess_turns(item, row, spec, contexts, products, assessor), status="scored")
                 except Exception as error:
                     row.update(status="judge_error", error=f"{type(error).__name__}: {error}")
             checkpoint(row)

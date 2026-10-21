@@ -1996,7 +1996,37 @@
         }
       ],
       "rel": [],
-      "split": "dev"
+      "split": "dev",
+      "agent": {
+        "mode": "recommend",
+        "critical_errors": [],
+        "turns": [
+          "预算改成6000元以内，仍要轻薄本，请重新推荐一台。"
+        ],
+        "turn_checks": [
+          {
+            "constraints": {
+              "price": [
+                null,
+                6000
+              ],
+              "thin_light": true
+            },
+            "needs": [
+              {
+                "id": "selection",
+                "answer": "按本轮变更后的全部硬条件重新推荐至少一台可用机型，不沿用已失效的旧条件",
+                "evidence": []
+              },
+              {
+                "id": "basis",
+                "answer": "用评测时价格、配置等说明推荐理由，附上实际来源；不把历史价当实时价",
+                "evidence": []
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "D09",
@@ -2026,7 +2056,37 @@
         }
       ],
       "rel": [],
-      "split": "dev"
+      "split": "dev",
+      "agent": {
+        "mode": "recommend",
+        "critical_errors": [],
+        "turns": [
+          "预算改成7000元以内，仍需USB-A、USB-C和视频输出，请重新推荐。"
+        ],
+        "turn_checks": [
+          {
+            "constraints": {
+              "price": [
+                null,
+                7000
+              ],
+              "ports_rich": true
+            },
+            "needs": [
+              {
+                "id": "selection",
+                "answer": "按本轮变更后的全部硬条件重新推荐至少一台可用机型，不沿用已失效的旧条件",
+                "evidence": []
+              },
+              {
+                "id": "basis",
+                "answer": "用评测时价格、配置等说明推荐理由，附上实际来源；不把历史价当实时价",
+                "evidence": []
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "D10",
@@ -2192,7 +2252,40 @@
         }
       ],
       "rel": [],
-      "split": "test"
+      "split": "test",
+      "agent": {
+        "mode": "recommend",
+        "critical_errors": [],
+        "turns": [
+          "再加上6000元以内，原来的轻薄和网口条件都要保留。"
+        ],
+        "turn_checks": [
+          {
+            "constraints": {
+              "price": [
+                null,
+                6000
+              ],
+              "thin_light": true,
+              "ports": [
+                "rj45"
+              ]
+            },
+            "needs": [
+              {
+                "id": "selection",
+                "answer": "按本轮变更后的全部硬条件重新推荐至少一台可用机型，不沿用已失效的旧条件",
+                "evidence": []
+              },
+              {
+                "id": "basis",
+                "answer": "用评测时价格、配置等说明推荐理由，附上实际来源；不把历史价当实时价",
+                "evidence": []
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "D15",
@@ -2372,7 +2465,37 @@
         }
       ],
       "rel": [],
-      "split": "test"
+      "split": "test",
+      "agent": {
+        "mode": "recommend",
+        "critical_errors": [],
+        "turns": [
+          "重量可以放宽到1.3kg，续航仍至少12小时，还要有雷电接口。"
+        ],
+        "turn_checks": [
+          {
+            "constraints": {
+              "weight_max": 1.3,
+              "battery_min": 12,
+              "ports": [
+                "thunderbolt"
+              ]
+            },
+            "needs": [
+              {
+                "id": "selection",
+                "answer": "按本轮变更后的全部硬条件重新推荐至少一台可用机型，不沿用已失效的旧条件",
+                "evidence": []
+              },
+              {
+                "id": "basis",
+                "answer": "用评测时价格、配置等说明推荐理由，附上实际来源；不把历史价当实时价",
+                "evidence": []
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "E01",
@@ -6516,7 +6639,11 @@
       "construction": "new_fact",
       "group": "苹果 MacBook Pro 16:weight",
       "qrels_complete": true,
-      "split": "test"
+      "split": "test",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "A10",
@@ -7112,10 +7239,10 @@
       ],
       "origin": "expanded",
       "construction": "paraphrase",
-      "group": "联想 来酷Air 16:memory",
+      "group": "联想 来酷GT 16 酷睿版:memory",
       "qrels_complete": true,
       "split": "dev",
-      "variant_of": "C01"
+      "variant_of": "B05"
     },
     {
       "id": "F13",
@@ -7128,11 +7255,15 @@
       "needs": [
         {
           "id": "noise",
-          "answer": "噪音方面，它的日常环境满载人位分贝值为55.0dB，双烤为49.5dB；",
+          "answer": "给出有依据的满载人位噪音：日常环境55.0dB或静音室48.8dB，说明对应测试口径；任一口径即可",
           "evidence": [
             {
               "ref": "联想 ThinkBook 14+ 酷睿版",
               "quote": "噪音方面，它的日常环境满载人位分贝值为55.0dB，双烤为49.5dB；"
+            },
+            {
+              "ref": "联想 ThinkBook 14+ 酷睿版",
+              "quote": "静音室内满载人位分贝值为48.8dB，双烤为42.6dB。"
             }
           ]
         }
@@ -7154,7 +7285,7 @@
       "needs": [
         {
           "id": "brightness",
-          "answer": "屏幕方面，实测色域容积109.1%sRGB，色域覆盖99.4%sRGB。以sRGB为参考，平均ΔE 0.55，最大ΔE 1.59。实测屏幕最大亮度587nits。",
+          "answer": "实测最大亮度587nits",
           "evidence": [
             {
               "ref": "机械革命 耀世16 Ultra RTX 5070 Ti版",
@@ -7167,7 +7298,11 @@
       "construction": "new_fact",
       "group": "机械革命 耀世16 Ultra RTX 5070 Ti版:brightness",
       "qrels_complete": true,
-      "split": "test"
+      "split": "test",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "F15",
@@ -7180,7 +7315,7 @@
       "needs": [
         {
           "id": "ssd",
-          "answer": "固态硬盘容量2TB，型号三星PM9E1，支持PCIe 5.0×4和NVMe，机器还有一个2280规格，支持PCIe 4.0×4的M.2插槽，如有需要可自行加装或更换固态硬盘。",
+          "answer": "原装固态型号三星PM9E1",
           "evidence": [
             {
               "ref": "微星 泰坦18 Pro 锐龙版",
@@ -7193,7 +7328,11 @@
       "construction": "new_fact",
       "group": "微星 泰坦18 Pro 锐龙版:ssd",
       "qrels_complete": true,
-      "split": "test"
+      "split": "test",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "F16",
@@ -7219,7 +7358,11 @@
       "construction": "new_fact",
       "group": "机械革命 耀世16 Ultra RTX 5090版:weight",
       "qrels_complete": true,
-      "split": "dev"
+      "split": "dev",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "F17",
@@ -7507,7 +7650,11 @@
       "group": "联想 ThinkPad X14:battery",
       "qrels_complete": true,
       "variant_of": "A10",
-      "split": "test"
+      "split": "test",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "B09",
@@ -7520,7 +7667,7 @@
       "needs": [
         {
           "id": "memory",
-          "answer": "单通道16GB DDR5 5600MT/s内存能满足大部分用途的需求，机器有两个内存插槽，如有需求可自行加装内存。",
+          "answer": "有两个内存插槽，支持自行加装或更换",
           "evidence": [
             {
               "ref": "惠普 HyperX 暗影精灵 PRO 16",
@@ -7534,7 +7681,11 @@
       "group": "惠普 HyperX 暗影精灵 PRO 16:memory",
       "qrels_complete": true,
       "variant_of": "A11",
-      "split": "dev"
+      "split": "dev",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "B10",
@@ -8287,7 +8438,7 @@
       ],
       "origin": "expanded",
       "construction": "paraphrase",
-      "group": "联想 来酷Air 16:memory",
+      "group": "联想 来酷GT 16 酷睿版:memory",
       "qrels_complete": true,
       "variant_of": "F12",
       "split": "dev"
@@ -8303,11 +8454,15 @@
       "needs": [
         {
           "id": "noise",
-          "answer": "噪音方面，它的日常环境满载人位分贝值为55.0dB，双烤为49.5dB；",
+          "answer": "给出有依据的满载人位噪音：日常环境55.0dB或静音室48.8dB，说明对应测试口径；任一口径即可",
           "evidence": [
             {
               "ref": "联想 ThinkBook 14+ 酷睿版",
               "quote": "噪音方面，它的日常环境满载人位分贝值为55.0dB，双烤为49.5dB；"
+            },
+            {
+              "ref": "联想 ThinkBook 14+ 酷睿版",
+              "quote": "静音室内满载人位分贝值为48.8dB，双烤为42.6dB。"
             }
           ]
         }
@@ -8317,7 +8472,11 @@
       "group": "联想 ThinkBook 14+ 酷睿版:noise",
       "qrels_complete": true,
       "variant_of": "F13",
-      "split": "dev"
+      "split": "dev",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "C19",
@@ -8438,7 +8597,7 @@
       "needs": [
         {
           "id": "memory",
-          "answer": "2，板载内存+单M.2，内部扩展性较差",
+          "answer": "板载内存，不能自行加装或更换",
           "evidence": [
             {
               "ref": "ROG 幻14 Air 2026",
@@ -8452,7 +8611,11 @@
       "group": "ROG 幻14 Air 2026:memory",
       "qrels_complete": true,
       "variant_of": "F18",
-      "split": "test"
+      "split": "test",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "C24",
@@ -8537,7 +8700,37 @@
       "construction": "new_fact",
       "group": "D21",
       "qrels_complete": true,
-      "split": "test"
+      "split": "test",
+      "agent": {
+        "mode": "recommend",
+        "critical_errors": [],
+        "turns": [
+          "预算可以放宽到7000元以内，但续航要至少15小时，请重新推荐。"
+        ],
+        "turn_checks": [
+          {
+            "constraints": {
+              "price": [
+                null,
+                7000
+              ],
+              "battery_min": 15
+            },
+            "needs": [
+              {
+                "id": "selection",
+                "answer": "按本轮变更后的全部硬条件重新推荐至少一台可用机型，不沿用已失效的旧条件",
+                "evidence": []
+              },
+              {
+                "id": "basis",
+                "answer": "用评测时价格、配置等说明推荐理由，附上实际来源；不把历史价当实时价",
+                "evidence": []
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "D22",
@@ -8567,7 +8760,40 @@
       "construction": "new_fact",
       "group": "D22",
       "qrels_complete": true,
-      "split": "dev"
+      "split": "dev",
+      "agent": {
+        "mode": "recommend",
+        "critical_errors": [],
+        "turns": [
+          "再加上6000元以内，重量和雷电接口要求不变。"
+        ],
+        "turn_checks": [
+          {
+            "constraints": {
+              "price": [
+                null,
+                6000
+              ],
+              "weight_max": 1.3,
+              "ports": [
+                "thunderbolt"
+              ]
+            },
+            "needs": [
+              {
+                "id": "selection",
+                "answer": "按本轮变更后的全部硬条件重新推荐至少一台可用机型，不沿用已失效的旧条件",
+                "evidence": []
+              },
+              {
+                "id": "basis",
+                "answer": "用评测时价格、配置等说明推荐理由，附上实际来源；不把历史价当实时价",
+                "evidence": []
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "D23",
@@ -8875,7 +9101,11 @@
       "construction": "new_fact",
       "group": "G12",
       "qrels_complete": false,
-      "split": "test"
+      "split": "test",
+      "agent": {
+        "mode": "no_answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "G13",
@@ -8951,7 +9181,11 @@
       "construction": "new_fact",
       "group": "G16",
       "qrels_complete": false,
-      "split": "test"
+      "split": "test",
+      "agent": {
+        "mode": "no_answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "G17",
@@ -9019,7 +9253,7 @@
       "needs": [
         {
           "id": "boundary",
-          "answer": "说明现有知识库/工具或用户信息不足以给出所问的可靠结论；可追问必要信息，不编造具体数据、记录或实时状态",
+          "answer": "无法给出准确维修报价，需机型、故障与实际检测信息；可追问，不编造固定金额",
           "evidence": []
         }
       ],
@@ -9027,7 +9261,11 @@
       "construction": "new_fact",
       "group": "G20",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "agent": {
+        "mode": "clarify",
+        "critical_errors": []
+      }
     },
     {
       "id": "G21",
@@ -9103,7 +9341,11 @@
       "construction": "new_fact",
       "group": "G24",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "agent": {
+        "mode": "no_answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "G25",
@@ -9243,7 +9485,11 @@
       "construction": "new_fact",
       "group": "T22",
       "qrels_complete": false,
-      "split": "test"
+      "split": "test",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "T23",
@@ -9321,7 +9567,30 @@
       "construction": "new_fact",
       "group": "T25",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": [],
+        "turns": [
+          "我明天出差没网也要打开这些文件，刚才释放空间后的状态够吗？"
+        ],
+        "turn_checks": [
+          {
+            "needs": [
+              {
+                "id": "operation",
+                "answer": "释放空间后文件可能仅联机可用，不满足离线需求；应选择始终在此设备上保留并等待下载",
+                "evidence": [
+                  {
+                    "ref": "证据:如何管理OneDrive文件同步？:f96f6f",
+                    "quote": "| 始终在此设备上保留 | 勾选后文件将“始终在此设备上可用”；取消后则会“在此设备上可用”，会被“存储感知”定时清理 |"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "T26",
@@ -9399,7 +9668,11 @@
       "construction": "new_fact",
       "group": "T28",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "T29",
@@ -9647,7 +9920,11 @@
       "construction": "new_fact",
       "group": "K31",
       "qrels_complete": false,
-      "split": "test"
+      "split": "test",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "K32",
@@ -9699,7 +9976,11 @@
       "construction": "new_fact",
       "group": "K33",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "K34",
@@ -9763,6 +10044,16 @@
       "facts": [],
       "needs": [
         {
+          "id": "default",
+          "answer": "同磁盘内拖拽默认为移动，跨磁盘拖拽默认为复制",
+          "evidence": [
+            {
+              "ref": "证据:简明：面向无使用经验的电脑用户 > 第三:491898",
+              "quote": "在一些情况下，例如同个磁盘里桌面和文件夹中拖拽文件到另一个文件文件夹位置处，Windows将自动为你移动该文件至目标位置。此处【移动】的意义等同于【剪切】；\n\n而如果是不同磁盘（例如，从C盘的一个文件夹移动到D盘的一个文件夹），拖拽则会变成【复制】："
+            }
+          ]
+        },
+        {
           "id": "principle",
           "answer": "`Shift`：无论原本操作是什么，强制变为“移动到XXX”",
           "evidence": [
@@ -9787,7 +10078,11 @@
       "construction": "new_fact",
       "group": "K36",
       "qrels_complete": false,
-      "split": "test"
+      "split": "test",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "K37",
@@ -9914,7 +10209,7 @@
       "needs": [
         {
           "id": "tool",
-          "answer": "另一款常用的 PE。使用 Win11PE 内核，并且有完整网络支持。",
+          "answer": "推荐FirPE，使用Win11PE内核且有完整网络支持",
           "evidence": [
             {
               "ref": "证据:工具盘维护 > FirPE:6e173b",
@@ -9924,7 +10219,7 @@
         },
         {
           "id": "condition",
-          "answer": "由于和 WePE 使用了不一样的内核，可以在 FirPE 里进行编辑原系统文件夹的权限等操作",
+          "answer": "可以编辑原系统文件夹权限",
           "evidence": [
             {
               "ref": "证据:工具盘维护 > FirPE:6e173b",
@@ -9937,7 +10232,11 @@
       "construction": "new_fact",
       "group": "U28",
       "qrels_complete": false,
-      "split": "test"
+      "split": "test",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "U29",
@@ -10025,7 +10324,11 @@
       "construction": "new_fact",
       "group": "U31",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "U32",
@@ -10088,7 +10391,11 @@
       "construction": "new_fact",
       "group": "U33",
       "qrels_complete": false,
-      "split": "test"
+      "split": "test",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "U34",
@@ -10318,7 +10625,11 @@
       "construction": "new_fact",
       "group": "R30",
       "qrels_complete": false,
-      "split": "test"
+      "split": "test",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "R31",
@@ -10393,17 +10704,17 @@
       "needs": [
         {
           "id": "diagnosis",
-          "answer": "list volume",
+          "answer": "使用diskpart的list volume查看卷信息",
           "evidence": [
             {
               "ref": "证据:2、系统文件修复:c8a596",
-              "quote": "list volume"
+              "quote": "diskpart\n```\n\n启动磁盘工具；\n\n输入：\n\n```powershell\nlist volume"
             }
           ]
         },
         {
           "id": "condition",
-          "answer": "记下系统分区盘符，通常不是 C ！！！",
+          "answer": "识别实际Windows系统分区盘符，不直接假定为C盘",
           "evidence": [
             {
               "ref": "证据:2、系统文件修复:c8a596",
@@ -10416,7 +10727,30 @@
       "construction": "new_fact",
       "group": "R33",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": [],
+        "turns": [
+          "还没确认盘符时，我能直接照抄网上离线SFC命令中的C盘吗？"
+        ],
+        "turn_checks": [
+          {
+            "needs": [
+              {
+                "id": "condition",
+                "answer": "识别实际Windows系统分区盘符，不直接假定为C盘",
+                "evidence": [
+                  {
+                    "ref": "证据:2、系统文件修复:c8a596",
+                    "quote": "记下系统分区盘符，通常不是 C ！！！"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "R34",
@@ -10514,7 +10848,11 @@
       "construction": "new_fact",
       "group": "R36",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "R37",
@@ -10783,7 +11121,7 @@
         },
         {
           "id": "right",
-          "answer": "重量 1.05kg",
+          "answer": "重量 1.05kg；结合双方机身重量明确比较，机械革命星耀14更轻：1.05kg对2.15kg",
           "evidence": [
             {
               "ref": "机械革命 星耀14",
@@ -10796,7 +11134,11 @@
       "construction": "new_fact",
       "group": "E05",
       "qrels_complete": true,
-      "split": "test"
+      "split": "test",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "E06",
@@ -10820,7 +11162,7 @@
         },
         {
           "id": "right",
-          "answer": "重量 2.27kg",
+          "answer": "重量 2.27kg；结合双方机身重量明确比较，ThinkPad X14更轻：1.19kg对2.27kg",
           "evidence": [
             {
               "ref": "机械革命 蛟龙16 Pro",
@@ -10833,7 +11175,11 @@
       "construction": "new_fact",
       "group": "E06",
       "qrels_complete": true,
-      "split": "test"
+      "split": "test",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "E07",
@@ -10847,7 +11193,7 @@
       "needs": [
         {
           "id": "left",
-          "answer": "单通道16GB DDR5 5600MT/s内存能满足大部分用途的需求，机器有两个内存插槽，如有需求可自行加装内存。",
+          "answer": "该机有两个内存插槽，支持自行加装或更换内存",
           "evidence": [
             {
               "ref": "惠普 HyperX 暗影精灵 PRO 16",
@@ -10857,7 +11203,7 @@
         },
         {
           "id": "right",
-          "answer": "单条16GB DDR5 5600MT/s内存能满足大部分用途的需求，（因处理器限制实际运行在5200MT/s）机器有两个内存插槽，如有需求可加装内存。",
+          "answer": "该机有两个内存插槽，支持自行加装或更换内存",
           "evidence": [
             {
               "ref": "联想 ThinkBook 16p 锐龙版",
@@ -10870,7 +11216,11 @@
       "construction": "new_fact",
       "group": "E07",
       "qrels_complete": true,
-      "split": "dev"
+      "split": "dev",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "E08",
@@ -10884,17 +11234,21 @@
       "needs": [
         {
           "id": "left",
-          "answer": "噪音方面，它的日常环境增强模式满载人位分贝值为59.0dB、手动模式为61.8dB；",
+          "answer": "报告ROG魔霸新锐酷睿版一种满载人位噪音并对应环境、模式：日常增强59.0dB或手动61.8dB，静音室增强51.3dB或手动53.8dB，任一即可",
           "evidence": [
             {
               "ref": "ROG 魔霸新锐 酷睿版",
               "quote": "噪音方面，它的日常环境增强模式满载人位分贝值为59.0dB、手动模式为61.8dB；"
+            },
+            {
+              "ref": "ROG 魔霸新锐 酷睿版",
+              "quote": "静音室内增强模式满载人位分贝值为51.3dB、手动模式为53.8dB。"
             }
           ]
         },
         {
           "id": "right",
-          "answer": "噪音方面，它的满载人位分贝值为60.4dB，强冷模式为61.5dB。（环境噪音为31.8dB）",
+          "answer": "报告微星泰坦16 AI的一种满载人位噪音并说明环境噪音31.8dB：常规60.4dB或强冷61.5dB，任一即可",
           "evidence": [
             {
               "ref": "微星 泰坦16 AI",
@@ -10907,7 +11261,11 @@
       "construction": "new_fact",
       "group": "E08",
       "qrels_complete": true,
-      "split": "dev"
+      "split": "dev",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "E09",
@@ -11366,7 +11724,7 @@
       "needs": [
         {
           "id": "support",
-          "answer": "单通道16GB DDR5 5600MT/s内存能满足大部分用途的需求，机器有两个内存插槽，如有需求可自行加装内存。",
+          "answer": "该机有两个内存插槽，支持自行加装或更换内存",
           "evidence": [
             {
               "ref": "惠普 HyperX 暗影精灵 PRO 16",
@@ -11399,7 +11757,11 @@
       "construction": "new_fact",
       "group": "X06",
       "qrels_complete": false,
-      "split": "test"
+      "split": "test",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "X07",
@@ -11414,7 +11776,7 @@
       "needs": [
         {
           "id": "support",
-          "answer": "单通道 16GB DDR5 5600MT/s内存能满足大部分用途的需求，机器有两个内存插槽，如有需求可自行加装内存。",
+          "answer": "该机有两个内存插槽，支持自行加装或更换内存",
           "evidence": [
             {
               "ref": "ROG 魔霸新锐 酷睿版",
@@ -11447,7 +11809,11 @@
       "construction": "new_fact",
       "group": "X07",
       "qrels_complete": false,
-      "split": "test"
+      "split": "test",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "X08",
@@ -11462,7 +11828,7 @@
       "needs": [
         {
           "id": "support",
-          "answer": "单条32GB DDR5 5600MT/s内存能满足大部分用途的需求，机器有两个内存插槽，如有需求可自行加装或更换内存。",
+          "answer": "该机有两个内存插槽，支持自行加装或更换内存",
           "evidence": [
             {
               "ref": "机械革命 苍龙16X Pro",
@@ -11495,7 +11861,30 @@
       "construction": "new_fact",
       "group": "X08",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": [],
+        "turns": [
+          "我只关机并拔掉充电器，内置电池不拔就换，可以吗？"
+        ],
+        "turn_checks": [
+          {
+            "needs": [
+              {
+                "id": "power",
+                "answer": "不能仅关机拔充电器；更换前还应断开内置电池",
+                "evidence": [
+                  {
+                    "ref": "语雀:更换前准备",
+                    "quote": "1. **断电**：断开电源，尽可能卸下所有电池。个别老旧机型存在双内置电池的情况，但绝大多数电脑都是一块内置（需要拆机）或外置（可直接拔插）的电池。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "X09",
@@ -11510,7 +11899,7 @@
       "needs": [
         {
           "id": "support",
-          "answer": "双通道24GB DDR5 5600MHz内存能满足大部分用途的需求，机器有两个内存插槽，有需求可自行更换内存。",
+          "answer": "该机有两个内存插槽，支持自行加装或更换内存",
           "evidence": [
             {
               "ref": "机械革命 无界15X",
@@ -11543,7 +11932,30 @@
       "construction": "new_fact",
       "group": "X09",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": [],
+        "turns": [
+          "内存插上后两边卡扣没扣牢，能直接开机试一下吗？"
+        ],
+        "turn_checks": [
+          {
+            "needs": [
+              {
+                "id": "install",
+                "answer": "卡扣未扣牢时不要开机；应重新插紧、下压，确认两侧卡扣锁牢后再开机",
+                "evidence": [
+                  {
+                    "ref": "语雀:硬件更换",
+                    "quote": "内存：内存加装，斜插进去（能插进去就能用，它有防呆口） ，下压，两边卡扣卡塔一声后即可。更换的话，两边卡扣同时向外扣去，让原内存弹起来就好。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "X10",
@@ -11558,7 +11970,7 @@
       "needs": [
         {
           "id": "support",
-          "answer": "双通道64GB DDR5 6400MT/s内存能满足绝大部分用途的需求，机器有两个内存插槽，如有需求可自行更换内存。",
+          "answer": "该机有两个内存插槽，支持自行加装或更换内存",
           "evidence": [
             {
               "ref": "微星 泰坦18 Pro AI 2025",
@@ -11591,7 +12003,11 @@
       "construction": "new_fact",
       "group": "X10",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "X11",
@@ -11606,7 +12022,7 @@
       "needs": [
         {
           "id": "support",
-          "answer": "单通道16GB DDR5 5600MT/s内存（受CPU平台限制实际运行在5200MT/s）能满足大部分用途的需求，机器有两个内存插槽，如有需求可自行加装内存。",
+          "answer": "该机有两个内存插槽，支持自行加装或更换内存",
           "evidence": [
             {
               "ref": "机械师 曙光16S",
@@ -11639,7 +12055,11 @@
       "construction": "new_fact",
       "group": "X11",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      }
     },
     {
       "id": "X12",
@@ -12074,5 +12494,5 @@
       "split": "dev"
     }
   ],
-  "version": "expanded-v1-recall"
+  "version": "expanded-v1"
 }

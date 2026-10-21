@@ -71,11 +71,44 @@ def test_execution_uses_real_previous_answers_and_distinct_sessions(evaluator, m
         return deepcopy(records) if records else None
 
     monkeypatch.setattr(evaluator, "request_json", fake_request)
-    proxy = SimpleNamespace(lock=threading.Lock(), active=None)
+    proxy = SimpleNamespace(lock=threading.Lock(), active=None, events={})
     result = evaluator.execute(item, "http://mock", proxy, 1, "run")
     assert result["answers"] == ["推荐A", "推荐A"]
     assert [r["text"] for r in incoming] == [item["q"], item["agent"]["turns"][0]]
     assert incoming[0]["user_id"] == incoming[1]["user_id"] == "eval-run-D01"
+    assert proxy.active is None
+
+
+def test_later_turn_failure_preserves_actual_earlier_answer(evaluator, monkeypatch, item):
+    item['agent']['turns'] = ['第二轮']
+    records, progress = [], {}
+
+    def fake_request(url, body=None, **kwargs):
+        if url.endswith('/inject'):
+            if records:
+                raise TimeoutError('第二轮失败')
+            records.append({'Request': {'Target': {'UserID': body['user_id']}, 'Message': {
+                'Segments': [{'Type': 'text', 'Data': {'text': '首轮实际答案'}}]}}})
+            return {}
+        return deepcopy(records)
+
+    monkeypatch.setattr(evaluator, 'request_json', fake_request)
+    proxy = SimpleNamespace(lock=threading.Lock(), active=None, events={item['id']: [{}]})
+    with pytest.raises(TimeoutError, match='第二轮失败'):
+        evaluator.execute(item, 'http://mock', proxy, 1, 'run', progress)
+    assert progress['answers'] == ['首轮实际答案']
+    assert progress['trace_ends'] == [1]
+    assert progress['elapsed_seconds'] >= 0
+    assert proxy.active is None
+
+
+def test_known_model_failure_stops_waiting_without_timeout(evaluator, monkeypatch, item):
+    monkeypatch.setattr(evaluator, 'request_json', lambda *args, **kwargs: None)
+    monkeypatch.setattr(evaluator.time, 'sleep', lambda _: pytest.fail('已知接口错误不应继续轮询'))
+    proxy = SimpleNamespace(lock=threading.Lock(), active=None,
+                            events={item['id']: [{'error': 'model_proxy:HTTPError:503'}]})
+    with pytest.raises(ValueError, match='模型接口调用失败'):
+        evaluator.execute(item, 'http://mock', proxy, 240, 'run')
     assert proxy.active is None
 
 
@@ -163,3 +196,37 @@ def test_timeout_stops_batch_before_another_case_can_receive_late_requests(evalu
     assert calls == ["D01"]
     assert [r["status"] for r in result["rows"]] == ["execution_error", "not_run"]
     assert not result["metadata"]["complete"]
+
+
+@pytest.mark.parametrize('second_key,passed', [('B', True), ('A', False)])
+def test_multi_turn_uses_evidence_available_then_and_current_constraints(evaluator, item, monkeypatch, second_key, passed):
+    item['constraints'] = {'price': [None, 5000]}
+    item['agent'].update(turns=['改成三千以内'], turn_checks=[{'constraints': {'price': [None, 3000]}, 'needs': item['needs']}])
+    products = [{'key': 'A', 'price_cny': 4000}, {'key': 'B', 'price_cny': 2000}]
+    trace = [{'request': {'messages': [{'role': 'tool', 'content': text}]}} for text in ['早期证据', '未来证据']]
+    seen = []
+
+    def fake_judge(active, result, gold, config):
+        tools = evaluator.visible_tools(result['trace'])
+        seen.append((tools, {p['key'] for p in gold['allowed_products']}, result['conversation'][:]))
+        assert 'turns' not in active['agent']
+        answer = result['answers'][0]
+        return {'judgement': {'needs': [{'id': 'selection', 'status': 'full', 'answer_quote': answer}],
+                             'recommended_keys': [answer[-1]], 'unsupported_claims': [], 'errors': []}}
+
+    monkeypatch.setattr(evaluator, 'judge', fake_judge)
+    result = evaluator.assess_turns(item, {'answers': ['推荐A', '推荐' + second_key], 'trace': trace, 'trace_ends': [1, 2]}, {}, [], products, {})
+    assert result['task_pass'] is passed
+    assert len(seen[0][0]) == 1 and seen[0][1] == {'A', 'B'} and not seen[0][2]
+    assert len(seen[1][0]) == 2 and seen[1][1] == {'B'} and len(seen[1][2]) == 1
+
+
+def test_multi_turn_record_without_evidence_boundaries_is_rejected(evaluator, item):
+    item['agent']['turns'] = ['再问一次']
+    with pytest.raises(ValueError, match='逐轮工具证据边界'):
+        evaluator.assess_turns(item, {'answers': ['a', 'b'], 'trace': [{}]}, {}, [], [], {})
+
+
+def test_quote_from_prior_turn_cannot_prove_current_answer(evaluator, item, judgement):
+    with pytest.raises(ValueError, match='引用不在'):
+        evaluator.verdict(item, ['我不知道'], judgement, {'allowed_products': [{'key': 'A'}]})

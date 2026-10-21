@@ -53,20 +53,26 @@ def validate(spec, contexts=None, full=False, recall_full=False):
         for ref in item.get("rel", []):
             assert ref in aliases, (tag, ref)
         needs = item.get("needs", [])
-        assert len({n["id"] for n in needs}) == len(needs), f"重复需求: {tag}"
-        for need in needs:
-            assert need["answer"].strip(), tag
-            evidence = need.get("evidence", [])
-            assert evidence or item["cat"] in ("D", "G"), f"缺证据: {tag}/{need['id']}"
-            for e in evidence:
-                assert e["ref"] in aliases and e["quote"].strip(), (tag, e)
-                if resolved is not None:
-                    assert any(contains(c["body"], e["quote"]) for c in resolved[e["ref"]]), \
-                        f"原文不存在: {tag}/{need['id']}/{e['ref']}: {e['quote']}"
+        checks = item.get("agent", {}).get("turn_checks", [])
+        for needs in [needs, *(c["needs"] for c in checks)]:
+            assert len({n["id"] for n in needs}) == len(needs), f"重复需求: {tag}"
+            for need in needs:
+                assert need["answer"].strip(), tag
+                evidence = need.get("evidence", [])
+                assert evidence or item["cat"] in ("D", "G"), f"缺证据: {tag}/{need['id']}"
+                for e in evidence:
+                    assert e["ref"] in aliases and e["quote"].strip(), (tag, e)
+                    if resolved is not None:
+                        assert any(contains(c["body"], e["quote"]) for c in resolved[e["ref"]]), \
+                            f"原文不存在: {tag}/{need['id']}/{e['ref']}: {e['quote']}"
+        needs = item.get("needs", [])
         if item.get("agent"):
             assert needs, f"Agent 缺要点: {tag}"
             assert item["agent"].get("mode", "answer") in ("answer", "no_answer", "recommend", "clarify"), tag
-            assert all(isinstance(t, str) and t.strip() for t in item["agent"].get("turns", [])), tag
+            turns = item["agent"].get("turns", [])
+            assert all(isinstance(t, str) and t.strip() for t in turns), tag
+            assert len(checks) == len(turns), f"缺少逐轮验收: {tag}"
+            assert all(c.get("needs") for c in checks), f"追问缺必要需求: {tag}"
         if full or recall_full:
             assert "group" in item and "split" in item, tag
             assert needs, f"缺少必要需求: {tag}"

@@ -1,2921 +1,3429 @@
 {
- "scopes": {
-  "reviews": [
-   "product_review"
+  "scopes": {
+    "reviews": [
+      "product_review"
+    ],
+    "all": [
+      "product_review",
+      "tutorial",
+      "knowledge",
+      "tool_card",
+      "troubleshooting",
+      "experience_case"
+    ]
+  },
+  "aliases": {
+    "GT16": "联想 来酷GT 16 酷睿版",
+    "Air16": "联想 来酷Air 16",
+    "Air14": "联想 来酷Air 14",
+    "TB锐龙": "联想 ThinkBook 14+ 锐龙版 2026",
+    "TB酷睿": "联想 ThinkBook 14+ 酷睿版",
+    "7000P": "联想 来酷 斗战者 战7000P",
+    "7000X": "联想 来酷 斗战者 战7000X",
+    "H7": "荣耀 WIN游戏本 H7",
+    "H9": "荣耀 WIN游戏本 H9",
+    "星耀14PTL": "机械革命 星耀14 PTL酷睿版",
+    "耀世5090": "机械革命 耀世16 Ultra RTX 5090版",
+    "耀世5070Ti": "机械革命 耀世16 Ultra RTX 5070 Ti版",
+    "7000P锐龙": "联想 来酷 斗战者 战7000P 锐龙版",
+    "MBA15": "苹果 MacBook Air 15",
+    "MBA13": "苹果 MacBook Air 13",
+    "Y7000X": "联想 拯救者 Y7000X",
+    "Y9000P": "联想 拯救者 Y9000P 至尊版 2026",
+    "蛟龙潮玩": "机械革命 蛟龙16 Pro 潮玩版",
+    "无界暴风雪": "机械革命 无界15X Pro 暴风雪",
+    "泰坦18锐龙": "微星 泰坦18 Pro 锐龙版",
+    "TB16+": "联想 ThinkBook 16+ 酷睿独显版",
+    "a豆14": "华硕 a豆14 Air 2026",
+    "YOGA14": "联想 YOGA Air 14 Ultra Aura",
+    "MateS": "华为 MateBook Pro S",
+    "语雀:校园网导读": {
+      "doc": "help/nju_network_guide",
+      "titles": [
+        "1 校园网使用简单导读",
+        "2 使用无线连接",
+        "3 使用有线连接 > 3.1 怎么物理接入网络",
+        "3 使用有线连接 > 3.2 采用网线直连的方式连接"
+      ]
+    },
+    "语雀:宿舍路由器": {
+      "doc": "help/nju_network_guide",
+      "titles": [
+        "3 使用有线连接 > 3.3 采用路由器连接 > 3.3.3 连接路由器",
+        "3 使用有线连接 > 3.3 采用路由器连接 > 3.3.4 配置路由器"
+      ]
+    },
+    "语雀:无脑激活": {
+      "doc": "help/win10_activation_short",
+      "titles": [
+        "Windows 10/11 无脑激活与版本转换指南",
+        "无脑参照表"
+      ]
+    },
+    "语雀:装机激活": {
+      "doc": "help/install_win10",
+      "titles": [
+        "激活设置篇 > 三、激活吧！我的Windows！"
+      ]
+    },
+    "语雀:验机激活": {
+      "doc": "help/hello_my_pc",
+      "titles": [
+        "六、系统初步设置 > 6.3、激活Windows并登入微软账户绑定"
+      ]
+    },
+    "语雀:教材激活": {
+      "doc": "textbook/yo04izg5or2hurpo",
+      "titles": [
+        "激活"
+      ]
+    },
+    "语雀:分区调整": {
+      "doc": "help/partition-resize",
+      "titles": [
+        "一、序言与准备工作",
+        "三、进行调整"
+      ]
+    },
+    "语雀:改用户名": {
+      "doc": "help/change_win_account_name"
+    },
+    "语雀:流氓软件": {
+      "doc": "help/sweep_out_malware",
+      "titles": [
+        "〇、神秘图标",
+        "二、顺藤摸瓜",
+        "三、不行就分"
+      ]
+    },
+    "语雀:南大Office": {
+      "doc": "help/setup_office",
+      "titles": [
+        "二、安装南大正版 MS Office 相关问题"
+      ]
+    },
+    "语雀:OTP装Office": {
+      "doc": "article/otp_intro",
+      "titles": [
+        "操作流程"
+      ]
+    },
+    "语雀:新机验机": {
+      "doc": "help/hello_my_pc",
+      "titles": [
+        "面向南京大学师生的新笔记本电脑验机/设置指南",
+        "二、开箱检查",
+        "三、开机检查并进入审核模式（OOBE）",
+        "四、检查电脑配置"
+      ]
+    },
+    "语雀:U盘装系统": {
+      "doc": "help/install_win10",
+      "titles": [
+        "准备篇",
+        "安装篇 > 二、进入装机盘",
+        "安装篇 > 三、开始安装"
+      ]
+    },
+    "语雀:进入装机盘": {
+      "doc": "help/install_win10",
+      "titles": [
+        "安装篇 > 二、进入装机盘"
+      ]
+    },
+    "语雀:驱动降级": {
+      "doc": "help/win_drivers",
+      "titles": [
+        "2、驱动重装（或降级）"
+      ]
+    },
+    "语雀:远程连接": {
+      "doc": "help/remote_access",
+      "titles": [
+        "如何远程连接到宿舍/实验室的电脑（文档建设中）",
+        "本地直连的远程服务 > RDP",
+        "本地直连的远程服务 > VNC",
+        "具有云服务的远程服务",
+        "使用校内接入服务"
+      ]
+    },
+    "语雀:Mac装Win": {
+      "doc": "help/win10_on_intel_mac",
+      "titles": [
+        "面向小白的Intel处理器MacBook上Win10安装傻瓜教程",
+        "本篇概览",
+        "写在前头",
+        "第二步：使用启动转换助理"
+      ]
+    },
+    "语雀:Adobe激活": {
+      "doc": "article/nju_adobe_tips",
+      "titles": [
+        "Q7：学校的Adobe到底要不要激活？"
+      ]
+    },
+    "语雀:OneDrive1T": {
+      "doc": "article/hlkpwa",
+      "titles": [
+        "免费1T的OneDrive怎么薅？",
+        "如何获取Office教育版的OneDrive"
+      ]
+    },
+    "语雀:A1国际版": {
+      "doc": "help/get_o365",
+      "titles": [
+        "四、如何获取 Office365 A1 国际版"
+      ]
+    },
+    "语雀:EndNote写作": {
+      "doc": "help/vhqnnk",
+      "titles": [
+        "三、EndNote怎么用？ > 论文写作"
+      ]
+    },
+    "语雀:校园网报修": {
+      "doc": "help/nju_itsc_warranty",
+      "titles": [
+        "一、搞清楚负责单位",
+        "三、信息化中心报修"
+      ]
+    },
+    "语雀:官方售后": {
+      "doc": "help/find_your_support",
+      "titles": [
+        "线上寻找售后支持",
+        "线下寻找售后支持 > 假冒官方售后的危害",
+        "线下寻找售后支持 > 寻找售后的注意事项"
+      ]
+    },
+    "语雀:真假官网": {
+      "doc": "help/find_official_website",
+      "titles": [
+        "准确的搜索",
+        "检查网址",
+        "检查网页内容"
+      ]
+    },
+    "语雀:防患未然": {
+      "doc": "help/sweep_out_malware",
+      "titles": [
+        "一、防患未然"
+      ]
+    },
+    "语雀:制作PE": {
+      "doc": "textbook/make_pe"
+    },
+    "语雀:系统清理": {
+      "doc": "help/clean_and_backup",
+      "titles": [
+        "一、系统功能：深藏不露"
+      ]
+    },
+    "语雀:教材清理": {
+      "doc": "textbook/manage_data",
+      "titles": [
+        "系统清理"
+      ]
+    },
+    "语雀:螺丝技巧": {
+      "doc": "textbook/au70ga5onvxr2vqa",
+      "titles": [
+        "一些小技巧"
+      ]
+    },
+    "语雀:硬件更换": {
+      "doc": "textbook/hardware_maintenance",
+      "titles": [
+        "常见的硬件更换"
+      ]
+    },
+    "语雀:清灰": {
+      "doc": "textbook/physical_cleaning"
+    },
+    "语雀:激活详解": {
+      "doc": "help/win10_activation",
+      "titles": [
+        "2、数字权利激活问题",
+        "3、学校KMS激活问题"
+      ]
+    },
+    "语雀:版本选择": {
+      "doc": "help/win10_activation",
+      "titles": [
+        "1、自行安装Windows 10时版本的选择"
+      ]
+    },
+    "语雀:查看密钥": {
+      "doc": "help/win10_activation",
+      "titles": [
+        "5、查看本机密钥"
+      ]
+    },
+    "语雀:网络常见问题": {
+      "doc": "textbook/fix_network",
+      "titles": [
+        "常见问题"
+      ]
+    },
+    "语雀:访问校外网络": {
+      "doc": "help/nju_network_guide",
+      "titles": [
+        "4 访问校外网络"
+      ]
+    },
+    "语雀:校园网收费": {
+      "doc": "help/nju_network_cost"
+    },
+    "语雀:镜像下载途径": {
+      "doc": "help/download_win10",
+      "titles": [
+        "下载途径"
+      ]
+    },
+    "语雀:用户文件夹": {
+      "doc": "help/sys_volume",
+      "titles": [
+        "Users 用户们的文件夹"
+      ]
+    },
+    "语雀:Office选择": {
+      "doc": "help/to_office_or_not_to_office",
+      "titles": [
+        "一、世上不仅有 MS Office",
+        "二、但你可能还是需要选 MS Office"
+      ]
+    },
+    "语雀:电池充电": {
+      "doc": "basic-computer/vrash83101eeivsm",
+      "titles": [
+        "三层次：有一定电脑使用经验，但不完全了解基础操作 > 第二章：电源与睡眠"
+      ]
+    },
+    "语雀:文件后缀": {
+      "doc": "basic-computer/vrash83101eeivsm",
+      "titles": [
+        "三层次：有一定电脑使用经验，但不完全了解基础操作 > 第五章：（基础）文件浏览"
+      ]
+    },
+    "语雀:BitLocker密钥": {
+      "doc": "textbook/bitlocker",
+      "titles": [
+        "维修实践中的 Bitlocker > 获取 Bitlocker 恢复密钥"
+      ]
+    },
+    "语雀:验机BitLocker": {
+      "doc": "help/hello_my_pc",
+      "titles": [
+        "六、系统初步设置 > 6.1、检查BitLocker"
+      ]
+    },
+    "语雀:快速查阅表": {
+      "doc": "help/windows_short_commands"
+    },
+    "语雀:内存科普": {
+      "doc": "article/vg6cg1",
+      "titles": [
+        "二、内存"
+      ]
+    },
+    "语雀:黑话CPU": {
+      "doc": "textbook/slang",
+      "titles": [
+        "1. 电脑的主要部件 > （1）CPU（中央处理器）"
+      ]
+    },
+    "语雀:CPU科普": {
+      "doc": "article/got2cs",
+      "titles": [
+        "一、CPU"
+      ]
+    },
+    "语雀:微PE": {
+      "doc": "help/wepe"
+    },
+    "语雀:常用微PE": {
+      "doc": "textbook/recommended_tools",
+      "titles": [
+        "工具盘维护 > 微PE（WePE）"
+      ]
+    },
+    "语雀:OTP工具": {
+      "doc": "help/ymi3h6"
+    },
+    "语雀:VAMT": {
+      "doc": "help/eur4p0"
+    },
+    "语雀:TreeSize": {
+      "doc": "help/amz72w"
+    },
+    "语雀:WizTree": {
+      "doc": "help/giq7z502ohos1d3u"
+    },
+    "语雀:SpaceSniffer": {
+      "doc": "help/kziy70"
+    },
+    "语雀:常用空间分析": {
+      "doc": "textbook/recommended_tools",
+      "titles": [
+        "软件工具 > SpaceSniffer 和 WizTree"
+      ]
+    },
+    "语雀:Adobe卸载": {
+      "doc": "help/cos7wm"
+    },
+    "语雀:Adobe安装失败": {
+      "doc": "article/nju_adobe_tips",
+      "titles": [
+        "Q5：安装完成打开提示注册（许可证失效）、无法安装等"
+      ]
+    },
+    "语雀:CrystalDisk": {
+      "doc": "help/mkav0u"
+    },
+    "语雀:常用CrystalDisk": {
+      "doc": "textbook/recommended_tools",
+      "titles": [
+        "硬件检查和测试 > CrystalDisk Info/CrystalDisk Mark"
+      ]
+    },
+    "语雀:ChipGenius": {
+      "doc": "help/qknggf"
+    },
+    "语雀:右键菜单": {
+      "doc": "help/qnliv6"
+    },
+    "语雀:运行库": {
+      "doc": "help/ru5847"
+    },
+    "语雀:Ventoy": {
+      "doc": "help/wf2odk"
+    },
+    "语雀:常用Ventoy": {
+      "doc": "textbook/recommended_tools",
+      "titles": [
+        "工具盘维护 > Ventoy"
+      ]
+    },
+    "语雀:多镜像PE": {
+      "doc": "textbook/make_pe",
+      "titles": [
+        "二、镜像多多，U盘少少！"
+      ]
+    },
+    "语雀:Recuva": {
+      "doc": "help/ycyhqk"
+    },
+    "语雀:SoftCnKiller": {
+      "doc": "help/krtn2e"
+    },
+    "语雀:流氓软件卸载": {
+      "doc": "help/sweep_out_malware",
+      "titles": [
+        "三、不行就分"
+      ]
+    },
+    "语雀:procexp": {
+      "doc": "help/kbmi1w"
+    },
+    "语雀:顺藤摸瓜": {
+      "doc": "help/sweep_out_malware",
+      "titles": [
+        "二、顺藤摸瓜"
+      ]
+    },
+    "语雀:Dism++": {
+      "doc": "help/ge5sbt"
+    },
+    "语雀:常用Dism++": {
+      "doc": "textbook/recommended_tools",
+      "titles": [
+        "软件工具 > Dism++（进阶）"
+      ]
+    },
+    "语雀:键盘测试": {
+      "doc": "help/rcin7u"
+    },
+    "语雀:磁盘占用分析": {
+      "doc": "help/clean_and_backup",
+      "titles": [
+        "二、第三方软件：乾坤大挪移 > 1、使用其他工具分析磁盘占用情况"
+      ]
+    },
+    "语雀:社内选版本": {
+      "doc": "textbook/yo04izg5or2hurpo",
+      "titles": [
+        "选择系统版本"
+      ]
+    },
+    "语雀:Windows.old": {
+      "doc": "help/sys_volume",
+      "titles": [
+        "Windows.old 旧系统文件"
+      ]
+    },
+    "语雀:清除旧系统": {
+      "doc": "help/install_win10",
+      "titles": [
+        "激活设置篇 > 四、调教Windows10：基础"
+      ]
+    },
+    "语雀:Office365": {
+      "doc": "help/to_office_or_not_to_office",
+      "titles": [
+        "三、Office和Office365，傻傻分不清楚？"
+      ]
+    },
+    "语雀:睡眠休眠": {
+      "doc": "basic-computer/vrash83101eeivsm",
+      "titles": [
+        "三层次：有一定电脑使用经验，但不完全了解基础操作 > 二层次：日常使用无障碍，但无法解决基本的小问题"
+      ]
+    },
+    "语雀:手机传文件": {
+      "doc": "basic-computer/vrash83101eeivsm",
+      "titles": [
+        "三层次：有一定电脑使用经验，但不完全了解基础操作 > 第七章：使用U盘和其他移动存储"
+      ]
+    },
+    "语雀:安装注意事项": {
+      "doc": "basic-computer/vrash83101eeivsm",
+      "titles": [
+        "三层次：有一定电脑使用经验，但不完全了解基础操作 > 第九章：下载、安装与卸载"
+      ]
+    },
+    "语雀:强制关机": {
+      "doc": "basic-computer/vrash83101eeivsm",
+      "titles": [
+        "简明：面向无使用经验的电脑用户 > 第二章：电源与睡眠"
+      ]
+    },
+    "语雀:DNS": {
+      "doc": "textbook/fix_network",
+      "titles": [
+        "基础知识 > 域名和 DNS"
+      ]
+    },
+    "语雀:屏幕科普": {
+      "doc": "article/vg6cg1",
+      "titles": [
+        "三、屏幕"
+      ]
+    },
+    "语雀:硬盘科普": {
+      "doc": "article/vg6cg1",
+      "titles": [
+        "一、硬盘"
+      ]
+    },
+    "语雀:黑话硬盘": {
+      "doc": "textbook/slang",
+      "titles": [
+        "1. 电脑的主要部件 > （4）硬盘"
+      ]
+    },
+    "语雀:显卡科普": {
+      "doc": "article/got2cs",
+      "titles": [
+        "二、显卡"
+      ]
+    },
+    "语雀:黑话显卡": {
+      "doc": "textbook/slang",
+      "titles": [
+        "1. 电脑的主要部件 > （2）GPU（显卡）"
+      ]
+    },
+    "语雀:挂起BitLocker": {
+      "doc": "textbook/bitlocker",
+      "titles": [
+        "维修实践中的 Bitlocker > 挂起/恢复 Bitlocker"
+      ]
+    },
+    "语雀:解密BitLocker": {
+      "doc": "textbook/bitlocker",
+      "titles": [
+        "维修实践中的 Bitlocker > 解密 Bitlocker"
+      ]
+    },
+    "语雀:BitLocker概述": {
+      "doc": "textbook/bitlocker",
+      "titles": [
+        "Bitlocker 和设备加密"
+      ]
+    },
+    "语雀:镜像渠道版本": {
+      "doc": "help/win10_activation",
+      "titles": [
+        "0、什么是Business/Consumer Editions？"
+      ]
+    },
+    "语雀:识别假售后": {
+      "doc": "article/ezh9iz",
+      "titles": [
+        "PART II 如何识别“渣男渣女”"
+      ]
+    },
+    "语雀:售后注意事项": {
+      "doc": "help/find_your_support",
+      "titles": [
+        "线下寻找售后支持 > 寻找售后的注意事项"
+      ]
+    },
+    "语雀:序列号位置": {
+      "doc": "article/ezh9iz",
+      "titles": [
+        "PART I 好好享受作为小公举的优待"
+      ]
+    },
+    "语雀:线上售后": {
+      "doc": "help/find_your_support",
+      "titles": [
+        "线上寻找售后支持"
+      ]
+    },
+    "语雀:Chrome彩蛋": {
+      "doc": "article/fayvxs",
+      "titles": [
+        "1、Chrome（谷歌浏览器）"
+      ]
+    },
+    "语雀:惠普电池保护": {
+      "doc": "dygh8t/mwsgeb"
+    },
+    "语雀:拆机必须操作": {
+      "doc": "textbook/hardware_maintenance",
+      "titles": [
+        "必须操作"
+      ]
+    },
+    "语雀:常用DDU": {
+      "doc": "textbook/recommended_tools",
+      "titles": [
+        "驱动相关 > Display Driver Uninstaller（DDU）"
+      ]
+    },
+    "语雀:SDI": {
+      "doc": "help/sdi-driver"
+    },
+    "语雀:常用SDI": {
+      "doc": "textbook/recommended_tools",
+      "titles": [
+        "驱动相关 > Snappy Driver Installer（SDI）"
+      ]
+    },
+    "语雀:装机安装驱动": {
+      "doc": "textbook/yo04izg5or2hurpo",
+      "titles": [
+        "安装驱动"
+      ]
+    },
+    "语雀:常用Aida64": {
+      "doc": "textbook/recommended_tools",
+      "titles": [
+        "硬件检查和测试 > Aida64"
+      ]
+    },
+    "语雀:常用Furmark": {
+      "doc": "textbook/recommended_tools",
+      "titles": [
+        "硬件检查和测试 > Furmark"
+      ]
+    },
+    "语雀:常用HWiNFO": {
+      "doc": "textbook/recommended_tools",
+      "titles": [
+        "硬件检查和测试 > HWiNFO"
+      ]
+    },
+    "语雀:AIDA64": {
+      "doc": "help/ukrb0b"
+    },
+    "语雀:MediaCreationTool": {
+      "doc": "help/fnu0it"
+    },
+    "语雀:重装准备篇": {
+      "doc": "help/install_win10",
+      "titles": [
+        "准备篇"
+      ]
+    },
+    "语雀:rufus": {
+      "doc": "help/ngunw1"
+    },
+    "语雀:UltraISO": {
+      "doc": "help/zghuoa"
+    },
+    "语雀:常用Rufus": {
+      "doc": "textbook/recommended_tools",
+      "titles": [
+        "工具盘维护 > Rufus"
+      ]
+    },
+    "语雀:GeekUninstaller": {
+      "doc": "help/cy1hkp"
+    },
+    "语雀:常用Geek": {
+      "doc": "textbook/recommended_tools",
+      "titles": [
+        "软件工具 > Geek Uninstaller"
+      ]
+    },
+    "语雀:Office移除": {
+      "doc": "help/ieh8qr"
+    },
+    "语雀:Office安装问题": {
+      "doc": "help/setup_office",
+      "titles": [
+        "二、安装南大正版 MS Office 相关问题"
+      ]
+    },
+    "语雀:图吧工具箱": {
+      "doc": "help/st73ly"
+    },
+    "语雀:PowerToys": {
+      "doc": "help/dp21w7"
+    },
+    "语雀:PortableApps": {
+      "doc": "help/vmepfr"
+    },
+    "语雀:常用DiskGenius": {
+      "doc": "textbook/recommended_tools",
+      "titles": [
+        "软件工具 > DiskGenius"
+      ]
+    },
+    "语雀:Kami": {
+      "doc": "article/rholvp"
+    },
+    "语雀:MarkdownHere": {
+      "doc": "article/eup0ky"
+    },
+    "语雀:分区BitLocker": {
+      "doc": "help/partition-resize",
+      "titles": [
+        "一、序言与准备工作"
+      ]
+    },
+    "语雀:OTP卸载": {
+      "doc": "article/otp_intro",
+      "titles": [
+        "利用OTP处理其他问题"
+      ]
+    },
+    "语雀:蓝屏排查顺序": {
+      "doc": "help/windows_problem_cheatsheet",
+      "titles": [
+        "Windows 系统异常（显示错误/蓝屏/死机）的常见解决方案",
+        "0、重启试试、升级看看、原位修复"
+      ]
+    },
+    "语雀:系统文件修复": {
+      "doc": "help/windows_problem_cheatsheet",
+      "titles": [
+        "2、系统文件修复"
+      ]
+    },
+    "语雀:安全模式": {
+      "doc": "help/windows_problem_cheatsheet",
+      "titles": [
+        "1、进入安全模式检查"
+      ]
+    },
+    "语雀:事件查看器": {
+      "doc": "help/windows_problem_cheatsheet",
+      "titles": [
+        "3、利用事件查看器定位问题"
+      ]
+    },
+    "语雀:WinDbg": {
+      "doc": "help/windows_problem_cheatsheet",
+      "titles": [
+        "4、WinDbg定位蓝屏问题"
+      ]
+    },
+    "语雀:重置重装": {
+      "doc": "help/windows_problem_cheatsheet",
+      "titles": [
+        "5、重置、重装与原位修复（仅限Windows10与以后版本）"
+      ]
+    },
+    "语雀:校园网会不会用": {
+      "doc": "help/nju_wlan_qa_pro_plus_max_ultra",
+      "titles": [
+        "零、想一想自己到底会不会上校园网"
+      ]
+    },
+    "语雀:校园网查设备": {
+      "doc": "help/nju_wlan_qa_pro_plus_max_ultra",
+      "titles": [
+        "一、查一查自己设备的问题"
+      ]
+    },
+    "语雀:校园网BUG": {
+      "doc": "help/nju_wlan_qa_pro_plus_max_ultra",
+      "titles": [
+        "二、赌一赌是校园网的BUG"
+      ]
+    },
+    "语雀:登录排查": {
+      "doc": "help/nju_network",
+      "titles": [
+        "2、一般方法：无法登录校园网问题排查"
+      ]
+    },
+    "语雀:判断问题位置": {
+      "doc": "help/network_problem",
+      "titles": [
+        "1、当你在宿舍上网时数据是怎么走的",
+        "2、判断你的问题出在哪一步"
+      ]
+    },
+    "语雀:分步排查": {
+      "doc": "help/network_problem",
+      "titles": [
+        "2、判断你的问题出在哪一步"
+      ]
+    },
+    "语雀:应急上网": {
+      "doc": "help/network_alter"
+    },
+    "语雀:麦克风权限": {
+      "doc": "help/cam_mic_not_work",
+      "titles": [
+        "一、针对Windows系统 > 2、系统应用检查"
+      ]
+    },
+    "语雀:会议软件": {
+      "doc": "help/cam_mic_not_work",
+      "titles": [
+        "一、针对Windows系统 > 3、浏览器/会议软件/通讯软件等检查"
+      ]
+    },
+    "语雀:Mac摄像头": {
+      "doc": "help/cam_mic_not_work",
+      "titles": [
+        "二、针对MacOS"
+      ]
+    },
+    "语雀:OneDrive冲突": {
+      "doc": "help/o365_qa",
+      "titles": [
+        "一、Office365 A1国际版与高校世纪互联版 OneDrive 冲突问题"
+      ]
+    },
+    "语雀:Mac Office卡死": {
+      "doc": "help/ms_office_problems",
+      "titles": [
+        "1、MacOS 运行 MS Office 经常卡死"
+      ]
+    },
+    "语雀:装Visio": {
+      "doc": "help/ms_office_problems",
+      "titles": [
+        "3、我想安装 Visio/已经有 Office 想要再安装 Visio"
+      ]
+    },
+    "语雀:旧设备驱动": {
+      "doc": "article/kbg5vc"
+    },
+    "语雀:查找厂商": {
+      "doc": "article/find_vendor",
+      "titles": [
+        "一、观察包装",
+        "三、查看属性里的信息",
+        "四、寻找可查询的数据库"
+      ]
+    },
+    "语雀:EARLY EXIT": {
+      "doc": "article/ghrq7ikst4cce451"
+    },
+    "语雀:介质驱动": {
+      "doc": "article/vegchy"
+    },
+    "语雀:ms-settings": {
+      "doc": "article/yhsqeg"
+    },
+    "语雀:WinError193": {
+      "doc": "article/rzqnsh"
+    },
+    "语雀:U盘病毒": {
+      "doc": "article/ggwbb1"
+    },
+    "语雀:Dell麦克风": {
+      "doc": "article/mogtov"
+    },
+    "语雀:蓝牙驱动": {
+      "doc": "article/syr9fw"
+    },
+    "语雀:官方维修点": {
+      "doc": "article/geve3g"
+    },
+    "语雀:UWP": {
+      "doc": "article/fqhg6o"
+    },
+    "语雀:世纪互联网页登录": {
+      "doc": "help/double_o365",
+      "titles": [
+        "一、网页端"
+      ]
+    },
+    "语雀:OneDrive共存": {
+      "doc": "help/double_o365",
+      "titles": [
+        "二、OneDrive 客户端冲突问题"
+      ]
+    },
+    "语雀:麦克风硬件": {
+      "doc": "help/cam_mic_not_work",
+      "titles": [
+        "一、针对Windows系统 > 1、电脑硬件检查"
+      ]
+    },
+    "语雀:驱动安装注意": {
+      "doc": "article/find_vendor",
+      "titles": [
+        "六、驱动的选择与安装的注意事项"
+      ]
+    },
+    "小新Air14": "联想 小新Air 14 2026",
+    "星BookProAir14": "惠普 星Book Pro Air 14",
+    "语雀:装机准备分区": {
+      "doc": "textbook/yo04izg5or2hurpo",
+      "titles": [
+        "准备分区"
+      ]
+    },
+    "语雀:社内装系统": {
+      "doc": "textbook/yo04izg5or2hurpo",
+      "titles": [
+        "安装系统"
+      ]
+    },
+    "语雀:社内装Office": {
+      "doc": "textbook/yo04izg5or2hurpo",
+      "titles": [
+        "安装 Office"
+      ]
+    },
+    "语雀:OTP简介": {
+      "doc": "article/otp_intro",
+      "titles": [
+        "换一种更快的姿势装Office"
+      ]
+    },
+    "语雀:Moonlight": {
+      "doc": "help/remote_access",
+      "titles": [
+        "本地直连的远程服务 > Moonlight"
+      ]
+    },
+    "语雀:Parsec": {
+      "doc": "help/remote_access",
+      "titles": [
+        "本地直连的远程服务 > Parsec"
+      ]
+    },
+    "语雀:Mac下载镜像": {
+      "doc": "help/win10_on_intel_mac",
+      "titles": [
+        "第一步：下载一份Windows10镜像"
+      ]
+    },
+    "语雀:Mac驱动设置": {
+      "doc": "help/win10_on_intel_mac",
+      "titles": [
+        "第四步：驱动与设置"
+      ]
+    },
+    "语雀:售后信息": {
+      "doc": "help/find_your_support",
+      "titles": [
+        "线下寻找售后支持 > 售后信息"
+      ]
+    },
+    "语雀:假冒售后": {
+      "doc": "help/find_your_support",
+      "titles": [
+        "线下寻找售后支持 > 假冒官方售后的危害"
+      ]
+    },
+    "语雀:装机盘与PE": {
+      "doc": "help/kbfygn"
+    },
+    "语雀:软件安装位置": {
+      "doc": "help/clean_and_backup",
+      "titles": [
+        "二、第三方软件：乾坤大挪移 > 2、软件的安装、缓存与文档设置"
+      ]
+    },
+    "语雀:开始安装": {
+      "doc": "help/install_win10",
+      "titles": [
+        "安装篇 > 三、开始安装"
+      ]
+    },
+    "语雀:O365订阅区别": {
+      "doc": "article/hlkpwa",
+      "titles": [
+        "什么是Office365教育版"
+      ]
+    },
+    "语雀:A1与桌面版": {
+      "doc": "help/get_o365",
+      "titles": [
+        "一、比较 Office365 A1 与 Office 桌面版"
+      ]
+    },
+    "语雀:预装Office": {
+      "doc": "help/setup_office",
+      "titles": [
+        "一、预装 MS Office"
+      ]
+    },
+    "语雀:MTP协议": {
+      "doc": "basic-computer/vrash83101eeivsm",
+      "titles": [
+        "三层次：有一定电脑使用经验，但不完全了解基础操作 > 一层次：有能力或者能够上网查找解决，并希望了解计算机系统知识"
+      ]
+    },
+    "语雀:BitLocker维修": {
+      "doc": "textbook/bitlocker",
+      "titles": [
+        "维修实践中的 Bitlocker"
+      ]
+    },
+    "语雀:镜像黑话": {
+      "doc": "help/download_win10",
+      "titles": [
+        "Windows 纯净镜像下载途径比较"
+      ]
+    },
+    "语雀:Office混乱": {
+      "doc": "help/ms_office_problems",
+      "titles": [
+        "2、我的 Office 版本很混乱/安装失败"
+      ]
+    },
+    "语雀:更换前准备": {
+      "doc": "textbook/hardware_maintenance",
+      "titles": [
+        "必须操作"
+      ]
+    },
+    "语雀:校园网资费参考": {
+      "doc": "help/nju_wlan_qa_pro_plus_max_ultra",
+      "titles": [
+        "前言"
+      ]
+    }
+  },
+  "specs": "../products/specs/bibar.json",
+  "queries": [
+    {
+      "id": "A01",
+      "cat": "A",
+      "q": "联想来酷GT 16 酷睿版的噪音有多大",
+      "rel": [
+        "GT16"
+      ],
+      "facts": [
+        "55.4dB"
+      ],
+      "needs": [
+        {
+          "id": "noise",
+          "answer": "给出至少一种有原文支持的性能模式满载人位噪音并说明测量场景：日常环境55.4dB，或消声室49.2dB",
+          "evidence": [
+            {
+              "ref": "GT16",
+              "quote": "噪音方面，它的日常环境性能模式满载人位分贝值为55.4dB；"
+            },
+            {
+              "ref": "GT16",
+              "quote": "消声室内性能模式满载人位分贝值为49.2dB。"
+            }
+          ]
+        }
+      ],
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      },
+      "group": "A01",
+      "split": "dev"
+    },
+    {
+      "id": "A02",
+      "cat": "A",
+      "q": "来酷Air 16 续航多久",
+      "rel": [
+        "Air16"
+      ],
+      "facts": [
+        "9小时56分"
+      ],
+      "needs": [
+        {
+          "id": "battery",
+          "answer": "日常应用仿真脚本测试9小时56分，不当作所有场景续航保证",
+          "evidence": [
+            {
+              "ref": "Air16",
+              "quote": "续航方面，它的日常应用仿真脚本的测试成绩为9小时56分。"
+            }
+          ]
+        }
+      ],
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      },
+      "group": "A02",
+      "split": "dev"
+    },
+    {
+      "id": "A03",
+      "cat": "A",
+      "q": "ThinkBook 14+ 锐龙版 2026 多少钱",
+      "rel": [
+        "TB锐龙"
+      ],
+      "facts": [
+        "5099.15"
+      ]
+    },
+    {
+      "id": "A04",
+      "cat": "A",
+      "q": "战7000X 用的是什么固态硬盘",
+      "rel": [
+        "7000X"
+      ],
+      "facts": [
+        "群联"
+      ]
+    },
+    {
+      "id": "A05",
+      "cat": "A",
+      "q": "荣耀WIN游戏本H7 的屏幕亮度",
+      "rel": [
+        "H7"
+      ],
+      "facts": [
+        "528nits"
+      ]
+    },
+    {
+      "id": "A06",
+      "cat": "A",
+      "q": "荣耀WIN游戏本 H9 的散热模组是什么结构",
+      "rel": [
+        "H9"
+      ],
+      "facts": [
+        "5热管"
+      ]
+    },
+    {
+      "id": "B01",
+      "cat": "B",
+      "q": "7000P 噪音",
+      "rel": [
+        "7000P",
+        "7000P锐龙"
+      ],
+      "facts": [
+        "55.0dB"
+      ]
+    },
+    {
+      "id": "B02",
+      "cat": "B",
+      "q": "TB14+ 酷睿 内存能换吗",
+      "rel": [
+        "TB酷睿"
+      ],
+      "facts": [
+        "LPCAMM2"
+      ]
+    },
+    {
+      "id": "B03",
+      "cat": "B",
+      "q": "H9 有几个风扇",
+      "rel": [
+        "H9"
+      ],
+      "facts": [
+        "六个风扇"
+      ]
+    },
+    {
+      "id": "B04",
+      "cat": "B",
+      "q": "air14 多重",
+      "rel": [
+        "Air14",
+        "YOGA14",
+        "小新Air14",
+        "星BookProAir14"
+      ],
+      "facts": [
+        "984g"
+      ]
+    },
+    {
+      "id": "B05",
+      "cat": "B",
+      "q": "GT16 能加内存吗",
+      "rel": [
+        "GT16"
+      ],
+      "facts": [
+        "内存插槽"
+      ],
+      "needs": [
+        {
+          "id": "slots",
+          "answer": "有两个内存插槽，可以加装内存",
+          "evidence": [
+            {
+              "ref": "GT16",
+              "quote": "单通道 16GB DDR4 3200MT/s内存能满足大部分用途的需求，机器有两个内存插槽，如有需求可自行加装内存。"
+            }
+          ]
+        }
+      ],
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      },
+      "group": "B05",
+      "split": "dev"
+    },
+    {
+      "id": "B06",
+      "cat": "B",
+      "q": "7000X 适配器多重",
+      "rel": [
+        "7000X",
+        "Y7000X"
+      ],
+      "facts": [
+        "438g"
+      ]
+    },
+    {
+      "id": "C01",
+      "cat": "C",
+      "q": "来酷air16的内存可以自己升级吗",
+      "rel": [
+        "Air16"
+      ],
+      "facts": [
+        "板载"
+      ],
+      "needs": [
+        {
+          "id": "memory",
+          "answer": "12GB内存为板载，不能自行加装或更换",
+          "evidence": [
+            {
+              "ref": "Air16",
+              "quote": "单通道 12GB LPDDR5 5600MT/s内存能满足大部分用途的需求，内存为板载无法更换。"
+            }
+          ]
+        }
+      ],
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      },
+      "group": "C01",
+      "split": "dev"
+    },
+    {
+      "id": "C02",
+      "cat": "C",
+      "q": "荣耀那台六个风扇的游戏本烤机CPU多少度",
+      "rel": [
+        "H9"
+      ],
+      "facts": [
+        "100℃"
+      ]
+    },
+    {
+      "id": "C03",
+      "cat": "C",
+      "q": "thinkbook锐龙版续航咋样，能撑一天吗",
+      "rel": [
+        "TB锐龙"
+      ],
+      "facts": [
+        "12小时40分"
+      ]
+    },
+    {
+      "id": "C04",
+      "cat": "C",
+      "q": "战7000P双烤为啥要从电池取电",
+      "rel": [
+        "7000P"
+      ],
+      "facts": [
+        "电池"
+      ]
+    },
+    {
+      "id": "C05",
+      "cat": "C",
+      "q": "H7的硬盘是不是QLC的",
+      "rel": [
+        "H7"
+      ],
+      "facts": [
+        "QLC"
+      ]
+    },
+    {
+      "id": "D01",
+      "cat": "D",
+      "q": "一万五以内、机身轻薄、性能释放强的游戏本",
+      "constraints": {
+        "gaming": true,
+        "price": [
+          null,
+          15000
+        ],
+        "weight_max": 2.0
+      },
+      "facts": []
+    },
+    {
+      "id": "D03",
+      "cat": "D",
+      "q": "带OCuLink接口的笔记本",
+      "constraints": {
+        "ports": [
+          "oculink"
+        ]
+      },
+      "facts": []
+    },
+    {
+      "id": "D04",
+      "cat": "D",
+      "q": "用石墨烯导热的游戏本",
+      "rel": [
+        "H9"
+      ],
+      "facts": [
+        "石墨烯"
+      ],
+      "needs": [
+        {
+          "id": "selection",
+          "answer": "推荐满足题目全部硬条件的机型；存在符合机型时至少推荐一台，不擅自改变条件",
+          "evidence": []
+        },
+        {
+          "id": "basis",
+          "answer": "用评测时价格、配置等说明推荐理由，附上实际来源；不把历史价当实时价",
+          "evidence": []
+        }
+      ],
+      "agent": {
+        "mode": "recommend",
+        "critical_errors": []
+      },
+      "group": "D04",
+      "split": "dev"
+    },
+    {
+      "id": "D05",
+      "cat": "D",
+      "q": "1kg以下的轻薄本推荐",
+      "constraints": {
+        "thin_light": true,
+        "weight_max": 1.0
+      },
+      "facts": []
+    },
+    {
+      "id": "D06",
+      "cat": "D",
+      "q": "支持TGX接口外接显卡的笔记本",
+      "constraints": {
+        "ports": [
+          "oculink"
+        ]
+      },
+      "facts": []
+    },
+    {
+      "id": "D07",
+      "cat": "D",
+      "q": "5000多块钱的入门游戏本，RTX 3050",
+      "constraints": {
+        "gaming": true,
+        "price": [
+          5000,
+          5999
+        ],
+        "gpu": [
+          "RTX 3050"
+        ]
+      },
+      "facts": []
+    },
+    {
+      "id": "D08",
+      "cat": "D",
+      "q": "预算8000元，推荐一台轻薄本",
+      "constraints": {
+        "price": [
+          6000.0,
+          8800.0
+        ],
+        "thin_light": true
+      },
+      "facts": []
+    },
+    {
+      "id": "D09",
+      "cat": "D",
+      "q": "预算8000元，推荐一台接口丰富的笔记本",
+      "constraints": {
+        "price": [
+          6000.0,
+          8800.0
+        ],
+        "ports_rich": true
+      },
+      "facts": []
+    },
+    {
+      "id": "D10",
+      "cat": "D",
+      "q": "5000元以内的轻薄本",
+      "constraints": {
+        "price": [
+          null,
+          5000
+        ],
+        "thin_light": true
+      },
+      "facts": []
+    },
+    {
+      "id": "D11",
+      "cat": "D",
+      "q": "8000左右的RTX 5060游戏本",
+      "constraints": {
+        "price": [
+          7200.0,
+          8800.0
+        ],
+        "gaming": true,
+        "gpu": [
+          "RTX 5060"
+        ]
+      },
+      "facts": [],
+      "needs": [
+        {
+          "id": "selection",
+          "answer": "推荐满足题目全部硬条件的机型；存在符合机型时至少推荐一台，不擅自改变条件",
+          "evidence": []
+        },
+        {
+          "id": "basis",
+          "answer": "用评测时价格、配置等说明推荐理由，附上实际来源；不把历史价当实时价",
+          "evidence": []
+        }
+      ],
+      "agent": {
+        "mode": "recommend",
+        "critical_errors": []
+      },
+      "group": "D11",
+      "split": "dev"
+    },
+    {
+      "id": "D12",
+      "cat": "D",
+      "q": "预算一万左右，显卡要5070以上的游戏本",
+      "constraints": {
+        "price": [
+          9000.0,
+          11000.0
+        ],
+        "gaming": true,
+        "gpu": [
+          "RTX 5070",
+          "RTX 5070Ti",
+          "RTX 5080",
+          "RTX 5090"
+        ]
+      },
+      "facts": [],
+      "needs": [
+        {
+          "id": "selection",
+          "answer": "推荐满足题目全部硬条件的机型；存在符合机型时至少推荐一台，不擅自改变条件",
+          "evidence": []
+        },
+        {
+          "id": "basis",
+          "answer": "用评测时价格、配置等说明推荐理由，附上实际来源；不把历史价当实时价",
+          "evidence": []
+        }
+      ],
+      "agent": {
+        "mode": "recommend",
+        "critical_errors": []
+      },
+      "group": "D12",
+      "split": "dev"
+    },
+    {
+      "id": "D13",
+      "cat": "D",
+      "q": "两万以上的顶级游戏本",
+      "constraints": {
+        "price": [
+          20000,
+          null
+        ],
+        "gaming": true
+      },
+      "facts": []
+    },
+    {
+      "id": "D14",
+      "cat": "D",
+      "q": "带网口的轻薄本",
+      "constraints": {
+        "thin_light": true,
+        "ports": [
+          "rj45"
+        ]
+      },
+      "facts": []
+    },
+    {
+      "id": "D15",
+      "cat": "D",
+      "q": "预算7000，想要OLED屏的笔记本",
+      "constraints": {
+        "price": [
+          5250.0,
+          7700.000000000001
+        ],
+        "oled": true
+      },
+      "facts": [],
+      "needs": [
+        {
+          "id": "selection",
+          "answer": "推荐满足题目全部硬条件的机型；存在符合机型时至少推荐一台，不擅自改变条件",
+          "evidence": []
+        },
+        {
+          "id": "basis",
+          "answer": "用评测时价格、配置等说明推荐理由，附上实际来源；不把历史价当实时价",
+          "evidence": []
+        }
+      ],
+      "agent": {
+        "mode": "recommend",
+        "critical_errors": []
+      },
+      "group": "D15",
+      "split": "dev"
+    },
+    {
+      "id": "D16",
+      "cat": "D",
+      "q": "16寸的大屏轻薄本",
+      "constraints": {
+        "thin_light": true,
+        "screen_min": 16
+      },
+      "facts": []
+    },
+    {
+      "id": "D17",
+      "cat": "D",
+      "q": "续航10小时以上、6000元以内的笔记本",
+      "constraints": {
+        "battery_min": 10,
+        "price": [
+          null,
+          6000
+        ]
+      },
+      "facts": []
+    },
+    {
+      "id": "D18",
+      "cat": "D",
+      "q": "4000多的笔记本推荐",
+      "constraints": {
+        "price": [
+          4000,
+          4999
+        ]
+      },
+      "facts": []
+    },
+    {
+      "id": "D19",
+      "cat": "D",
+      "q": "带雷电接口、5000元以内的轻薄本",
+      "constraints": {
+        "thin_light": true,
+        "price": [
+          null,
+          5000
+        ],
+        "ports": [
+          "thunderbolt"
+        ]
+      },
+      "facts": []
+    },
+    {
+      "id": "D20",
+      "cat": "D",
+      "q": "适合出差的笔记本，1.2kg以内、续航12小时以上",
+      "constraints": {
+        "weight_max": 1.2,
+        "battery_min": 12
+      },
+      "facts": []
+    },
+    {
+      "id": "E01",
+      "cat": "E",
+      "q": "来酷Air 14 和 Air 16 哪个续航更长",
+      "rel": [
+        "Air14",
+        "Air16"
+      ],
+      "facts": [],
+      "pair": true,
+      "needs": [
+        {
+          "id": "air14",
+          "answer": "Air14日常应用仿真续航10小时29分",
+          "evidence": [
+            {
+              "ref": "Air14",
+              "quote": "续航方面，日常应用仿真脚本的测试成绩为10小时29分。"
+            }
+          ]
+        },
+        {
+          "id": "air16",
+          "answer": "Air16同类测试9小时56分",
+          "evidence": [
+            {
+              "ref": "Air16",
+              "quote": "续航方面，它的日常应用仿真脚本的测试成绩为9小时56分。"
+            }
+          ]
+        },
+        {
+          "id": "comparison",
+          "answer": "按两篇测试成绩Air14更长，不能保证所有实际负载都如此",
+          "evidence": [
+            {
+              "ref": "Air14",
+              "quote": "续航方面，日常应用仿真脚本的测试成绩为10小时29分。"
+            }
+          ]
+        }
+      ],
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      },
+      "group": "E01",
+      "split": "dev"
+    },
+    {
+      "id": "E02",
+      "cat": "E",
+      "q": "ThinkBook 14+ 酷睿版和锐龙版内存有什么区别",
+      "rel": [
+        "TB酷睿",
+        "TB锐龙"
+      ],
+      "facts": [],
+      "pair": true,
+      "needs": [
+        {
+          "id": "intel",
+          "answer": "酷睿版采用可更换的LPDDR5x 8533MT/s LPCAMM2内存",
+          "evidence": [
+            {
+              "ref": "TB酷睿",
+              "quote": "32GB LPDDR5x 8533MT/s LPCAMM2 内存"
+            }
+          ]
+        },
+        {
+          "id": "amd",
+          "answer": "2026锐龙版内存板载不可更换",
+          "evidence": [
+            {
+              "ref": "TB锐龙",
+              "quote": "双通道32GB DDR5 7500MT/s内存能满足大部分用途的需求，内存为板载不可更换。"
+            }
+          ]
+        }
+      ],
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      },
+      "group": "E02",
+      "split": "dev"
+    },
+    {
+      "id": "E03",
+      "cat": "E",
+      "q": "战7000P 和 战7000X 有什么区别",
+      "rel": [
+        "7000P",
+        "7000X"
+      ],
+      "facts": [],
+      "pair": true
+    },
+    {
+      "id": "E04",
+      "cat": "E",
+      "q": "荣耀 H7 和 H9 怎么选",
+      "rel": [
+        "H7",
+        "H9"
+      ],
+      "facts": [],
+      "pair": true
+    },
+    {
+      "id": "A07",
+      "cat": "A",
+      "q": "拯救者Y9000P 2026 散热怎么样",
+      "rel": [
+        "Y9000P"
+      ],
+      "facts": []
+    },
+    {
+      "id": "A08",
+      "cat": "A",
+      "q": "MacBook Air M4 续航多久",
+      "rel": [
+        "MBA13"
+      ],
+      "facts": [
+        "12小时50分"
+      ]
+    },
+    {
+      "id": "G03",
+      "cat": "G",
+      "q": "戴尔XPS 13 多少钱",
+      "rel": [],
+      "facts": [],
+      "needs": [
+        {
+          "id": "missing",
+          "answer": "说明知识库没有戴尔XPS13的可靠售价，不给出臆测价格",
+          "evidence": []
+        }
+      ],
+      "agent": {
+        "mode": "no_answer",
+        "critical_errors": []
+      },
+      "group": "G03",
+      "split": "dev"
+    },
+    {
+      "id": "F01",
+      "cat": "F",
+      "q": "机械革命 星耀14 PTL酷睿版 续航多久",
+      "rel": [
+        "星耀14PTL"
+      ],
+      "facts": [
+        "13小时50分"
+      ],
+      "needs": [
+        {
+          "id": "battery",
+          "answer": "PTL酷睿版的日常应用仿真测试成绩13小时50分",
+          "evidence": [
+            {
+              "ref": "星耀14PTL",
+              "quote": "续航方面，它的日常应用仿真脚本的测试成绩为13小时50分。"
+            }
+          ]
+        }
+      ],
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      },
+      "group": "F01",
+      "split": "dev"
+    },
+    {
+      "id": "F02",
+      "cat": "F",
+      "q": "耀世16 Ultra 5090 噪音大吗",
+      "rel": [
+        "耀世5090"
+      ],
+      "facts": [
+        "50.9dB"
+      ]
+    },
+    {
+      "id": "F03",
+      "cat": "F",
+      "q": "耀世16 Ultra RTX 5070 Ti 噪音多大",
+      "rel": [
+        "耀世5070Ti"
+      ],
+      "facts": [
+        "56.1dB"
+      ]
+    },
+    {
+      "id": "F04",
+      "cat": "F",
+      "q": "战7000P 锐龙版 噪音",
+      "rel": [
+        "7000P锐龙"
+      ],
+      "facts": [
+        "56.1dB"
+      ]
+    },
+    {
+      "id": "F05",
+      "cat": "F",
+      "q": "MacBook Air 15 续航",
+      "rel": [
+        "MBA15"
+      ],
+      "facts": [
+        "12小时39分"
+      ]
+    },
+    {
+      "id": "F06",
+      "cat": "F",
+      "q": "拯救者 Y7000X 续航多久",
+      "rel": [
+        "Y7000X"
+      ],
+      "facts": [
+        "5小时51分"
+      ]
+    },
+    {
+      "id": "F07",
+      "cat": "F",
+      "q": "蛟龙16 Pro 潮玩版 噪音",
+      "rel": [
+        "蛟龙潮玩"
+      ],
+      "facts": [
+        "54.7dB"
+      ]
+    },
+    {
+      "id": "F08",
+      "cat": "F",
+      "q": "无界15X Pro 暴风雪续航怎么样",
+      "rel": [
+        "无界暴风雪"
+      ],
+      "facts": [
+        "11小时14分"
+      ]
+    },
+    {
+      "id": "F09",
+      "cat": "F",
+      "q": "泰坦18 Pro 锐龙版 噪音",
+      "rel": [
+        "泰坦18锐龙"
+      ],
+      "facts": [
+        "54.7dB"
+      ]
+    },
+    {
+      "id": "F10",
+      "cat": "F",
+      "q": "苹果那台无风扇的13寸轻薄本续航怎么样",
+      "rel": [
+        "MBA13"
+      ],
+      "facts": [
+        "12小时50分"
+      ]
+    },
+    {
+      "id": "T01",
+      "cat": "T",
+      "q": "校园网怎么连接",
+      "rel": [
+        "语雀:校园网导读"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "T02",
+      "cat": "T",
+      "q": "Windows 激活失败怎么办",
+      "rel": [
+        "语雀:无脑激活",
+        "语雀:装机激活",
+        "语雀:验机激活",
+        "语雀:教材激活",
+        "语雀:激活详解"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "T03",
+      "cat": "T",
+      "q": "宿舍买的路由器怎么设置才能连上校园网",
+      "rel": [
+        "语雀:宿舍路由器"
+      ],
+      "facts": [
+        "DHCP"
+      ],
+      "origin": "manual"
+    },
+    {
+      "id": "T04",
+      "cat": "T",
+      "q": "C盘太小了，不重装系统能把D盘的空间分给C盘吗",
+      "rel": [
+        "语雀:分区调整"
+      ],
+      "facts": [
+        "调整分区大小"
+      ],
+      "origin": "manual"
+    },
+    {
+      "id": "T05",
+      "cat": "T",
+      "q": "Windows 用户名是中文，怎么改成英文",
+      "rel": [
+        "语雀:改用户名"
+      ],
+      "facts": [
+        "中文"
+      ],
+      "origin": "manual"
+    },
+    {
+      "id": "T06",
+      "cat": "T",
+      "q": "电脑老是弹广告，怎么找到是哪个软件并删掉",
+      "rel": [
+        "语雀:流氓软件",
+        "语雀:SoftCnKiller"
+      ],
+      "facts": [
+        "SoftCNKiller"
+      ],
+      "origin": "manual"
+    },
+    {
+      "id": "T07",
+      "cat": "T",
+      "q": "南大学生怎么免费安装正版 Office",
+      "rel": [
+        "语雀:南大Office",
+        "语雀:OTP装Office",
+        "语雀:OTP工具",
+        "语雀:OTP简介",
+        "语雀:社内装Office"
+      ],
+      "facts": [
+        "kms.nju.edu.cn"
+      ],
+      "origin": "manual"
+    },
+    {
+      "id": "T08",
+      "cat": "T",
+      "q": "新笔记本到手要检查哪些东西",
+      "rel": [
+        "语雀:新机验机"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "T09",
+      "cat": "T",
+      "q": "怎么用U盘重装 Win11",
+      "rel": [
+        "语雀:U盘装系统",
+        "语雀:装机准备分区",
+        "语雀:社内装系统"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "T10",
+      "cat": "T",
+      "q": "更新显卡驱动后出问题了，怎么回退到旧版本",
+      "rel": [
+        "语雀:驱动降级"
+      ],
+      "facts": [
+        "降级"
+      ],
+      "origin": "manual"
+    },
+    {
+      "id": "T11",
+      "cat": "T",
+      "q": "在寝室怎么远程控制实验室的电脑",
+      "rel": [
+        "语雀:远程连接",
+        "语雀:Moonlight",
+        "语雀:Parsec"
+      ],
+      "facts": [
+        "RDP"
+      ],
+      "origin": "manual"
+    },
+    {
+      "id": "T12",
+      "cat": "T",
+      "q": "Intel 芯片的 MacBook 怎么装 Windows 双系统",
+      "rel": [
+        "语雀:Mac装Win",
+        "语雀:Mac下载镜像",
+        "语雀:Mac驱动设置"
+      ],
+      "facts": [
+        "启动转换助理"
+      ],
+      "origin": "manual",
+      "needs": [
+        {
+          "id": "scope",
+          "answer": "此BootCamp教程仅适用于Intel处理器MacBook",
+          "evidence": [
+            {
+              "ref": "语雀:Mac装Win",
+              "quote": "+ **你的CPU必须要是Intel处理器，不是最新MacBook系列的M芯片。**否则，请关闭此文，截至2022年初此问题仍然无完美的解——无论是双系统还是虚拟机都没有——除非你能忍受小众的Arm版Windows10，但它不一定能顺利运行你的软件。"
+            }
+          ]
+        },
+        {
+          "id": "bootcamp",
+          "answer": "准备Windows镜像，使用启动转换助理安装Windows双系统",
+          "evidence": [
+            {
+              "ref": "语雀:Mac装Win",
+              "quote": "之前（在很久很久以前……）我们介绍了普通的笔记本如何安装Windows10的系列教程，但不少小伙伴的需求是在MacBook上安装Windows。本篇，我们就来补上这个大坑。在本篇中，你能学会的技能主要只有一个：**在Intel处理器的MacBook上使用BootCamp安装Windows10双系统。**据说，这个技能（甚至只是删掉Windows）在某些店里收费不亚于拆机；但你学完后就知道，这笔钱你完全可以省下去“疯狂星期四”。"
+            }
+          ]
+        },
+        {
+          "id": "drivers",
+          "answer": "安装完成后运行OSXRESERVED/BootCamp/Setup.exe安装驱动",
+          "evidence": [
+            {
+              "ref": "语雀:Mac驱动设置",
+              "quote": "打开**此电脑→OSXRESERVED（一般也是D盘）→BootCamp→Setup.exe**"
+            }
+          ]
+        }
+      ],
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      },
+      "group": "T12",
+      "split": "dev"
+    },
+    {
+      "id": "T13",
+      "cat": "T",
+      "q": "学校下载的 Adobe 软件需要激活吗",
+      "rel": [
+        "语雀:Adobe激活"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "T14",
+      "cat": "T",
+      "q": "用学校邮箱怎么领 1T 的 OneDrive",
+      "rel": [
+        "语雀:OneDrive1T",
+        "语雀:A1国际版"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "T15",
+      "cat": "T",
+      "q": "EndNote 怎么在 Word 里插入参考文献",
+      "rel": [
+        "语雀:EndNote写作"
+      ],
+      "facts": [
+        "Insert Citation"
+      ],
+      "origin": "manual"
+    },
+    {
+      "id": "T16",
+      "cat": "T",
+      "q": "宿舍校园网坏了找谁报修",
+      "rel": [
+        "语雀:校园网报修",
+        "语雀:网络常见问题"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "T17",
+      "cat": "T",
+      "q": "电脑坏了怎么找官方售后，避免遇到假售后",
+      "rel": [
+        "语雀:官方售后",
+        "语雀:售后信息"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "T18",
+      "cat": "T",
+      "q": "下载软件时怎么判断是不是真官网",
+      "rel": [
+        "语雀:真假官网",
+        "语雀:防患未然"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "T19",
+      "cat": "T",
+      "q": "怎么制作 PE 启动U盘",
+      "rel": [
+        "语雀:制作PE",
+        "语雀:微PE",
+        "语雀:常用微PE",
+        "语雀:装机盘与PE",
+        "语雀:Ventoy"
+      ],
+      "facts": [],
+      "origin": "manual",
+      "needs": [
+        {
+          "id": "pe",
+          "answer": "给出一种制作PE启动U盘的方法及操作入口，可选微PE安装到U盘或Ventoy配PE的ISO镜像",
+          "evidence": [
+            {
+              "ref": "语雀:微PE",
+              "quote": "作为便携性考虑，我们推荐**安装PE到U盘**，即点击图标。之后的界面如图："
+            },
+            {
+              "ref": "语雀:Ventoy",
+              "quote": "如果你有注意[WEPE](https://www.yuque.com/itxia/help/wepe)可以安装为iso镜像，加上Windows安装镜像、Linux安装镜像等等iso文件，以前多个U盘分用途的麻烦问题就迎刃而解了。一个U盘通吃，很好用。"
+            }
+          ]
+        },
+        {
+          "id": "backup",
+          "answer": "提醒先备份U盘数据，制作可能清空U盘",
+          "evidence": [
+            {
+              "ref": "语雀:微PE",
+              "quote": "确认完毕后，点击“立即安装进U盘”。随后U盘会自动清空并安装微PE。安装很快完成。"
+            }
+          ]
+        }
+      ],
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      },
+      "group": "T19",
+      "split": "dev"
+    },
+    {
+      "id": "T20",
+      "cat": "T",
+      "q": "C盘空间不够了怎么清理",
+      "rel": [
+        "语雀:系统清理",
+        "语雀:教材清理",
+        "语雀:磁盘占用分析",
+        "语雀:软件安装位置"
+      ],
+      "facts": [
+        "磁盘清理"
+      ],
+      "origin": "manual"
+    },
+    {
+      "id": "T21",
+      "cat": "T",
+      "q": "拆机时螺丝拧花了怎么办",
+      "rel": [
+        "语雀:螺丝技巧"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "X01",
+      "cat": "X",
+      "q": "来酷GT 16 能自己加内存吗，怎么装",
+      "rel": [
+        "GT16",
+        "语雀:硬件更换",
+        "语雀:更换前准备"
+      ],
+      "facts": [
+        "两个内存插槽"
+      ],
+      "pair": true,
+      "origin": "manual",
+      "needs": [
+        {
+          "id": "support",
+          "answer": "两个内存插槽，可自行加装内存",
+          "evidence": [
+            {
+              "ref": "GT16",
+              "quote": "单通道 16GB DDR4 3200MT/s内存能满足大部分用途的需求，机器有两个内存插槽，如有需求可自行加装内存。"
+            }
+          ]
+        },
+        {
+          "id": "power",
+          "answer": "操作前断开电源和电池",
+          "evidence": [
+            {
+              "ref": "语雀:更换前准备",
+              "quote": "1. **断电**：断开电源，尽可能卸下所有电池。个别老旧机型存在双内置电池的情况，但绝大多数电脑都是一块内置（需要拆机）或外置（可直接拔插）的电池。"
+            }
+          ]
+        },
+        {
+          "id": "install",
+          "answer": "内存条对准缺口斜插，再下压至两侧卡扣锁定",
+          "evidence": [
+            {
+              "ref": "语雀:硬件更换",
+              "quote": "内存：内存加装，斜插进去（能插进去就能用，它有防呆口） ，下压，两边卡扣卡塔一声后即可。更换的话，两边卡扣同时向外扣去，让原内存弹起来就好。"
+            }
+          ]
+        }
+      ],
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      },
+      "group": "X01",
+      "split": "dev"
+    },
+    {
+      "id": "X02",
+      "cat": "X",
+      "q": "战7000X 想加一块固态硬盘，怎么装",
+      "rel": [
+        "7000X",
+        "语雀:硬件更换",
+        "语雀:更换前准备"
+      ],
+      "facts": [
+        "2280规格的空盘位"
+      ],
+      "pair": true,
+      "origin": "manual",
+      "needs": [
+        {
+          "id": "support",
+          "answer": "有额外2280规格空盘位，可加装固态",
+          "evidence": [
+            {
+              "ref": "7000X",
+              "quote": "固态硬盘容量1TB，型号群联 ESR01TBYCCA4-EDJ-2，支持PCIe 4.0×4和NVMe，机器还有一个2280规格的空盘位，如有需要可自行加装固态硬盘。"
+            }
+          ]
+        },
+        {
+          "id": "power",
+          "answer": "操作前断开电源和电池",
+          "evidence": [
+            {
+              "ref": "语雀:更换前准备",
+              "quote": "1. **断电**：断开电源，尽可能卸下所有电池。个别老旧机型存在双内置电池的情况，但绝大多数电脑都是一块内置（需要拆机）或外置（可直接拔插）的电池。"
+            }
+          ]
+        },
+        {
+          "id": "install",
+          "answer": "M.2固态斜插接口，再下压并拧螺丝固定",
+          "evidence": [
+            {
+              "ref": "语雀:硬件更换",
+              "quote": "现在的电脑都是 m.2 接口，看不到 SATA 接口了。m.2 接口斜插进去，然后下压拧螺丝即可，如果更换的话，将螺丝拧掉，硬盘一般就会上弹一定角度，不上弹也无所谓，直接拔出来就好。SATA 接口的不会上弹，直接拔掉就可以。"
+            }
+          ]
+        }
+      ],
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      },
+      "group": "X02",
+      "split": "dev"
+    },
+    {
+      "id": "X03",
+      "cat": "X",
+      "q": "刚买的荣耀 MagicBook 14 到手怎么验机",
+      "rel": [
+        "语雀:新机验机"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "X04",
+      "cat": "X",
+      "q": "拯救者 Y7000X 用了两年温度高风扇响，怎么清灰",
+      "rel": [
+        "语雀:清灰"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "X05",
+      "cat": "X",
+      "q": "ThinkBook 14+ 重装系统怎么从U盘启动",
+      "rel": [
+        "语雀:进入装机盘",
+        "语雀:微PE",
+        "语雀:装机准备分区"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K01",
+      "cat": "K",
+      "q": "南大校园网怎么收费，在哪里看自己的套餐",
+      "rel": [
+        "语雀:校园网收费",
+        "语雀:校园网资费参考"
+      ],
+      "facts": [
+        "修改服务"
+      ],
+      "origin": "manual",
+      "needs": [
+        {
+          "id": "portal",
+          "answer": "登录p.nju.edu.cn，右上角修改服务",
+          "evidence": [
+            {
+              "ref": "语雀:校园网收费",
+              "quote": "首先，登录 `p.nju.edu.cn` ，在界面右上角找到**“修改服务”。**"
+            }
+          ]
+        },
+        {
+          "id": "current",
+          "answer": "本月所用服务代表当前服务及计费方式，以门户所示为准；可以提供资料中四设备每月20元封顶的历史参考，不编造其他资费",
+          "evidence": [
+            {
+              "ref": "语雀:校园网收费",
+              "quote": "+ **本月所用服务**：当前你所使用的服务和计费方式"
+            },
+            {
+              "ref": "语雀:校园网资费参考",
+              "quote": "学校网络现在四设备同时在线20块钱每个月就封顶了，之后不限流量不限速"
+            }
+          ]
+        }
+      ],
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      },
+      "group": "K01",
+      "split": "dev"
+    },
+    {
+      "id": "K02",
+      "cat": "K",
+      "q": "Windows 家庭版和专业版有什么区别，自己装系统选哪个",
+      "rel": [
+        "语雀:版本选择",
+        "语雀:社内选版本",
+        "语雀:开始安装"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K03",
+      "cat": "K",
+      "q": "MSDN我告诉你 和微软官网下载的 Windows 镜像有什么区别",
+      "rel": [
+        "语雀:镜像下载途径"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K04",
+      "cat": "K",
+      "q": "C盘里的 AppData 文件夹是干什么的",
+      "rel": [
+        "语雀:用户文件夹"
+      ],
+      "facts": [
+        "AppData"
+      ],
+      "origin": "manual"
+    },
+    {
+      "id": "K05",
+      "cat": "K",
+      "q": "学校有正版 Office 了，还有必要用 WPS 吗",
+      "rel": [
+        "语雀:Office选择"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K06",
+      "cat": "K",
+      "q": "笔记本一直插着电源用会伤电池吗",
+      "rel": [
+        "语雀:电池充电"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K07",
+      "cat": "K",
+      "q": "开机要输入 BitLocker 恢复密钥，去哪里找",
+      "rel": [
+        "语雀:BitLocker密钥",
+        "语雀:验机BitLocker",
+        "语雀:BitLocker概述"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K08",
+      "cat": "K",
+      "q": "连上了校园网 WiFi，但是打不开校外网站",
+      "rel": [
+        "语雀:网络常见问题",
+        "语雀:访问校外网络",
+        "语雀:校园网会不会用",
+        "语雀:分步排查"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K09",
+      "cat": "K",
+      "q": "运行窗口输入什么命令可以打开设备管理器",
+      "rel": [
+        "语雀:快速查阅表"
+      ],
+      "facts": [
+        "devmgmt.msc"
+      ],
+      "origin": "manual"
+    },
+    {
+      "id": "K10",
+      "cat": "K",
+      "q": "笔记本内存 8G 够用吗，要不要买 16G",
+      "rel": [
+        "语雀:内存科普"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K11",
+      "cat": "K",
+      "q": "文件名后面的 .docx、.exe 是什么意思",
+      "rel": [
+        "语雀:文件后缀"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K12",
+      "cat": "K",
+      "q": "怎么查看自己电脑 Windows 的产品密钥",
+      "rel": [
+        "语雀:查看密钥",
+        "语雀:VAMT"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K13",
+      "cat": "K",
+      "q": "轻薄本的低压 CPU 和游戏本的标压 CPU 有什么区别",
+      "rel": [
+        "语雀:黑话CPU",
+        "语雀:CPU科普"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K14",
+      "cat": "K",
+      "q": "C盘里的 Windows.old 文件夹占了好多空间，能删吗",
+      "rel": [
+        "语雀:Windows.old",
+        "语雀:清除旧系统",
+        "语雀:系统清理"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K15",
+      "cat": "K",
+      "q": "Office 2021 和 Office 365 有什么区别",
+      "rel": [
+        "语雀:Office365",
+        "语雀:O365订阅区别",
+        "语雀:A1与桌面版",
+        "语雀:预装Office"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K16",
+      "cat": "K",
+      "q": "电脑的睡眠和休眠有什么区别",
+      "rel": [
+        "语雀:睡眠休眠"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K17",
+      "cat": "K",
+      "q": "手机连电脑传文件时弹出 MTP 和 PTP，选哪个",
+      "rel": [
+        "语雀:手机传文件",
+        "语雀:MTP协议"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K18",
+      "cat": "K",
+      "q": "装软件的时候怎么避免被捆绑装一堆全家桶",
+      "rel": [
+        "语雀:安装注意事项",
+        "语雀:防患未然"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K19",
+      "cat": "K",
+      "q": "怎么查一个网站的域名解析到了哪个 IP",
+      "rel": [
+        "语雀:DNS"
+      ],
+      "facts": [
+        "nslookup"
+      ],
+      "origin": "manual"
+    },
+    {
+      "id": "K20",
+      "cat": "K",
+      "q": "笔记本屏幕写的 72% NTSC、100% sRGB 是什么意思，做设计选哪种",
+      "rel": [
+        "语雀:屏幕科普"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K21",
+      "cat": "K",
+      "q": "固态硬盘和机械硬盘有什么区别",
+      "rel": [
+        "语雀:硬盘科普",
+        "语雀:黑话硬盘"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K22",
+      "cat": "K",
+      "q": "独显和核显有什么区别，不玩游戏需要独显吗",
+      "rel": [
+        "语雀:显卡科普",
+        "语雀:黑话显卡"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K23",
+      "cat": "K",
+      "q": "BitLocker 挂起和解密有什么区别",
+      "rel": [
+        "语雀:挂起BitLocker",
+        "语雀:解密BitLocker",
+        "语雀:BitLocker维修"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K24",
+      "cat": "K",
+      "q": "Windows 家庭版能用 BitLocker 吗",
+      "rel": [
+        "语雀:BitLocker概述",
+        "语雀:分区BitLocker"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K25",
+      "cat": "K",
+      "q": "Windows 镜像文件名里的 business editions 和 consumer editions 是什么意思",
+      "rel": [
+        "语雀:镜像渠道版本",
+        "语雀:镜像黑话"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K26",
+      "cat": "K",
+      "q": "网上搜到一个 400 开头的电脑维修电话，怎么判断是不是官方售后",
+      "rel": [
+        "语雀:识别假售后",
+        "语雀:售后注意事项",
+        "语雀:售后信息",
+        "语雀:假冒售后"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K27",
+      "cat": "K",
+      "q": "电脑的序列号在哪里能找到",
+      "rel": [
+        "语雀:序列号位置",
+        "语雀:线上售后"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K28",
+      "cat": "K",
+      "q": "Chrome 断网时的小恐龙游戏怎么打开",
+      "rel": [
+        "语雀:Chrome彩蛋"
+      ],
+      "facts": [
+        "chrome://dino"
+      ],
+      "origin": "manual"
+    },
+    {
+      "id": "K29",
+      "cat": "K",
+      "q": "惠普笔记本拆机换电池前要先做什么设置",
+      "rel": [
+        "语雀:惠普电池保护",
+        "语雀:拆机必须操作"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "K30",
+      "cat": "K",
+      "q": "电脑卡死了点什么都没反应，怎么强制关机",
+      "rel": [
+        "语雀:强制关机"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U01",
+      "cat": "U",
+      "q": "电脑上哪个文件夹最占空间，用什么软件能看出来",
+      "rel": [
+        "语雀:TreeSize",
+        "语雀:WizTree",
+        "语雀:SpaceSniffer",
+        "语雀:常用空间分析",
+        "语雀:磁盘占用分析"
+      ],
+      "facts": [],
+      "origin": "manual",
+      "needs": [
+        {
+          "id": "tool",
+          "answer": "推荐至少一种能查看文件或文件夹磁盘占用的工具，如WizTree、SpaceSniffer、TreeSize，并说明用途",
+          "evidence": [
+            {
+              "ref": "语雀:常用空间分析",
+              "quote": "二者都可以直观的查看硬盘里的文件占据了多大的存储空间。SpaceSniffer 相对来说稳定性好一点不容易崩溃，而且能实时显示文件大小变化，但是扫描速度慢；而 WizTree 的特点是快，非常快，缺点就是在文件夹很多的时候只要右键想打开就会卡死。"
+            }
+          ]
+        }
+      ],
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      },
+      "group": "U01",
+      "split": "dev"
+    },
+    {
+      "id": "U02",
+      "cat": "U",
+      "q": "Adobe 卸载后重新安装失败怎么办",
+      "rel": [
+        "语雀:Adobe卸载",
+        "语雀:Adobe安装失败"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U03",
+      "cat": "U",
+      "q": "硬盘用了好几年，怎么检查健康状况",
+      "rel": [
+        "语雀:CrystalDisk",
+        "语雀:常用CrystalDisk"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U04",
+      "cat": "U",
+      "q": "买的 U 盘怀疑是扩容盘，用什么软件能查",
+      "rel": [
+        "语雀:ChipGenius"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U05",
+      "cat": "U",
+      "q": "右键菜单里多了一堆没用的选项，怎么清理",
+      "rel": [
+        "语雀:右键菜单"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U06",
+      "cat": "U",
+      "q": "打开游戏提示缺少 dll 文件怎么办",
+      "rel": [
+        "语雀:运行库"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U07",
+      "cat": "U",
+      "q": "能不能在一个 U 盘里同时放 PE 和好几个系统镜像",
+      "rel": [
+        "语雀:Ventoy",
+        "语雀:常用Ventoy",
+        "语雀:多镜像PE"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U08",
+      "cat": "U",
+      "q": "误删的文件还能恢复吗，用什么软件",
+      "rel": [
+        "语雀:Recuva"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U09",
+      "cat": "U",
+      "q": "流氓软件卸载了又自己装回来，怎么根治",
+      "rel": [
+        "语雀:SoftCnKiller",
+        "语雀:流氓软件卸载"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U10",
+      "cat": "U",
+      "q": "有没有比任务管理器更详细的进程查看工具",
+      "rel": [
+        "语雀:procexp",
+        "语雀:顺藤摸瓜"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U11",
+      "cat": "U",
+      "q": "Dism++ 能用来做什么",
+      "rel": [
+        "语雀:Dism++",
+        "语雀:常用Dism++"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U12",
+      "cat": "U",
+      "q": "笔记本有几个键好像失灵了，用什么软件测试",
+      "rel": [
+        "语雀:键盘测试"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U13",
+      "cat": "U",
+      "q": "显卡驱动装坏了，怎么彻底卸干净再重装",
+      "rel": [
+        "语雀:常用DDU"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U14",
+      "cat": "U",
+      "q": "重装系统后没有网卡驱动上不了网，怎么装驱动",
+      "rel": [
+        "语雀:SDI",
+        "语雀:常用SDI",
+        "语雀:装机安装驱动"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U15",
+      "cat": "U",
+      "q": "清灰后想烤机看看 CPU 温度，用什么软件",
+      "rel": [
+        "语雀:常用Aida64"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U16",
+      "cat": "U",
+      "q": "怎么测试显卡满载时的温度和稳定性",
+      "rel": [
+        "语雀:常用Furmark"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U17",
+      "cat": "U",
+      "q": "怎么用微软官方工具做 Windows 安装U盘",
+      "rel": [
+        "语雀:MediaCreationTool",
+        "语雀:重装准备篇"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U18",
+      "cat": "U",
+      "q": "有一个 Windows ISO 镜像，用什么软件写进 U 盘做启动盘",
+      "rel": [
+        "语雀:rufus",
+        "语雀:UltraISO",
+        "语雀:常用Rufus",
+        "语雀:Ventoy",
+        "语雀:常用Ventoy",
+        "语雀:多镜像PE"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U19",
+      "cat": "U",
+      "q": "软件卸载后残留文件和注册表清不干净怎么办",
+      "rel": [
+        "语雀:GeekUninstaller",
+        "语雀:常用Geek"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U20",
+      "cat": "U",
+      "q": "旧版 Office 没卸载干净，装学校正版 Office 一直失败",
+      "rel": [
+        "语雀:Office移除",
+        "语雀:OTP工具",
+        "语雀:Office安装问题",
+        "语雀:OTP卸载",
+        "语雀:Office混乱"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U21",
+      "cat": "U",
+      "q": "有没有把各种硬件检测软件打包在一起的合集",
+      "rel": [
+        "语雀:图吧工具箱"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U22",
+      "cat": "U",
+      "q": "微软有没有官方的 Windows 效率增强工具",
+      "rel": [
+        "语雀:PowerToys"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U23",
+      "cat": "U",
+      "q": "不想在电脑上装软件，有没有能放在 U 盘里直接用的免安装软件合集",
+      "rel": [
+        "语雀:PortableApps"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U24",
+      "cat": "U",
+      "q": "想看电脑的详细硬件信息和实时温度，用什么软件",
+      "rel": [
+        "语雀:常用HWiNFO",
+        "语雀:常用Aida64",
+        "语雀:AIDA64"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U25",
+      "cat": "U",
+      "q": "在浏览器里给 PDF 课件做笔记批注，用什么插件",
+      "rel": [
+        "语雀:Kami"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U26",
+      "cat": "U",
+      "q": "想用 Markdown 写邮件，有没有插件能直接渲染成排版好的格式",
+      "rel": [
+        "语雀:MarkdownHere"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "U27",
+      "cat": "U",
+      "q": "想把硬盘分区整个克隆到新的固态硬盘上，用什么软件",
+      "rel": [
+        "语雀:常用DiskGenius"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "G07",
+      "cat": "G",
+      "q": "拯救者 Y9000P 2025款续航多久",
+      "rel": [],
+      "facts": [],
+      "origin": "manual",
+      "needs": [
+        {
+          "id": "version",
+          "answer": "说明未查到对应2025款Y9000P的实测续航；不把2026至尊版数据当作该机型答案，不要求主动提到2026款",
+          "evidence": []
+        }
+      ],
+      "agent": {
+        "mode": "no_answer",
+        "critical_errors": []
+      },
+      "group": "G07",
+      "split": "dev"
+    },
+    {
+      "id": "G08",
+      "cat": "G",
+      "q": "机械革命蛟龙15K多少钱",
+      "rel": [],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "G09",
+      "cat": "G",
+      "q": "笔记本键盘进水了怎么办",
+      "rel": [],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "G10",
+      "cat": "G",
+      "q": "台式机装机配置推荐",
+      "rel": [],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "G11",
+      "cat": "G",
+      "q": "笔记本外接投影仪没反应怎么办",
+      "rel": [],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R01",
+      "cat": "R",
+      "q": "电脑经常死机蓝屏，应该按什么顺序排查",
+      "rel": [
+        "语雀:蓝屏排查顺序"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R02",
+      "cat": "R",
+      "q": "系统文件损坏了怎么用命令扫描修复",
+      "rel": [
+        "语雀:系统文件修复"
+      ],
+      "facts": [],
+      "origin": "manual",
+      "needs": [
+        {
+          "id": "admin",
+          "answer": "以管理员身份运行CMD或PowerShell",
+          "evidence": [
+            {
+              "ref": "语雀:系统文件修复",
+              "quote": "点击“开始”菜单，**输入 CMD 并以管理员身份运行**，或者直接快捷键 `Win+X` ，再按一次 `A` ，也就是使用**PowerShell（管理员）**；"
+            }
+          ]
+        },
+        {
+          "id": "dism",
+          "answer": "先运行DISM.exe /Online /Cleanup-image /Restorehealth",
+          "evidence": [
+            {
+              "ref": "语雀:系统文件修复",
+              "quote": "DISM.exe /Online /Cleanup-image /Restorehealth"
+            }
+          ]
+        },
+        {
+          "id": "sfc",
+          "answer": "随后运行sfc /scannow，注意命令需要空格",
+          "evidence": [
+            {
+              "ref": "语雀:系统文件修复",
+              "quote": "sfc/scannow"
+            }
+          ]
+        }
+      ],
+      "agent": {
+        "mode": "answer",
+        "critical_errors": []
+      },
+      "group": "R02",
+      "split": "dev"
+    },
+    {
+      "id": "R03",
+      "cat": "R",
+      "q": "怎么进入 Windows 安全模式",
+      "rel": [
+        "语雀:安全模式"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R04",
+      "cat": "R",
+      "q": "蓝屏之后怎么查是哪个驱动引起的",
+      "rel": [
+        "语雀:WinDbg",
+        "语雀:事件查看器"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R05",
+      "cat": "R",
+      "q": "Windows 出了问题实在修不好，重置和重装怎么选",
+      "rel": [
+        "语雀:重置重装"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R06",
+      "cat": "R",
+      "q": "浏览器打不开网页，但是微信QQ都能正常用",
+      "rel": [
+        "语雀:校园网查设备",
+        "语雀:登录排查",
+        "语雀:网络常见问题"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R07",
+      "cat": "R",
+      "q": "连上 NJU-WLAN 之后弹不出登录页面",
+      "rel": [
+        "语雀:校园网会不会用",
+        "语雀:登录排查"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R08",
+      "cat": "R",
+      "q": "校园网用着用着突然被强制下线",
+      "rel": [
+        "语雀:校园网BUG"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R09",
+      "cat": "R",
+      "q": "宿舍上不了网，怎么判断是网线、路由器还是电脑的问题",
+      "rel": [
+        "语雀:判断问题位置"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R10",
+      "cat": "R",
+      "q": "在宿舍搜不到 NJU-WLAN 信号",
+      "rel": [
+        "语雀:校园网会不会用",
+        "语雀:分步排查"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R11",
+      "cat": "R",
+      "q": "电脑网卡坏了，有什么办法先临时上网",
+      "rel": [
+        "语雀:应急上网",
+        "语雀:网络常见问题"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R12",
+      "cat": "R",
+      "q": "腾讯会议里别人听不到我说话",
+      "rel": [
+        "语雀:麦克风权限",
+        "语雀:会议软件",
+        "语雀:麦克风硬件"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R13",
+      "cat": "R",
+      "q": "Mac 上开视频会议摄像头没有画面",
+      "rel": [
+        "语雀:Mac摄像头"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R14",
+      "cat": "R",
+      "q": "南大的世纪互联版 Office 365 怎么登录",
+      "rel": [
+        "语雀:世纪互联网页登录"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R15",
+      "cat": "R",
+      "q": "国际版 OneDrive 和学校的 OneDrive 在一台电脑上冲突",
+      "rel": [
+        "语雀:OneDrive冲突",
+        "语雀:OneDrive共存"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R16",
+      "cat": "R",
+      "q": "Mac 上的 Word 经常卡死",
+      "rel": [
+        "语雀:Mac Office卡死"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R17",
+      "cat": "R",
+      "q": "已经装了 Office，再装 Visio 要注意什么",
+      "rel": [
+        "语雀:装Visio"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R18",
+      "cat": "R",
+      "q": "旧打印机的驱动在新版 Windows 上装不上",
+      "rel": [
+        "语雀:旧设备驱动",
+        "语雀:驱动安装注意"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R19",
+      "cat": "R",
+      "q": "设备上看不出牌子，怎么查是哪家厂商、去哪找驱动",
+      "rel": [
+        "语雀:查找厂商"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R20",
+      "cat": "R",
+      "q": "开机出现 EARLY EXIT ON FAILURE 怎么办",
+      "rel": [
+        "语雀:EARLY EXIT"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R21",
+      "cat": "R",
+      "q": "装系统时提示找不到所需的介质驱动程序",
+      "rel": [
+        "语雀:介质驱动"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R22",
+      "cat": "R",
+      "q": "打开 Windows 设置提示 ms-settings 没有与之关联的应用",
+      "rel": [
+        "语雀:ms-settings"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R23",
+      "cat": "R",
+      "q": "Anaconda 里 import 包报 WinError 193",
+      "rel": [
+        "语雀:WinError193"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R24",
+      "cat": "R",
+      "q": "U盘插上后文件全变成了快捷方式",
+      "rel": [
+        "语雀:U盘病毒"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R25",
+      "cat": "R",
+      "q": "戴尔笔记本插耳机后识别不到麦克风",
+      "rel": [
+        "语雀:Dell麦克风"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R26",
+      "cat": "R",
+      "q": "蓝牙键盘连电脑后间歇性疯狂重复按键",
+      "rel": [
+        "语雀:蓝牙驱动"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R27",
+      "cat": "R",
+      "q": "电脑进水后送官方售后，需要注意什么",
+      "rel": [
+        "语雀:官方维修点",
+        "语雀:售后注意事项"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R28",
+      "cat": "R",
+      "q": "电脑上浏览器和网易云音乐突然都没有声音",
+      "rel": [
+        "语雀:UWP"
+      ],
+      "facts": [],
+      "origin": "manual"
+    },
+    {
+      "id": "R29",
+      "cat": "R",
+      "q": "打印机驱动怎么装",
+      "rel": [
+        "语雀:旧设备驱动",
+        "语雀:驱动安装注意"
+      ],
+      "facts": [],
+      "origin": "manual"
+    }
   ],
-  "all": [
-   "product_review",
-   "tutorial",
-   "knowledge",
-   "tool_card",
-   "troubleshooting",
-   "experience_case"
-  ]
- },
- "aliases": {
-  "GT16": "联想 来酷GT 16 酷睿版",
-  "Air16": "联想 来酷Air 16",
-  "Air14": "联想 来酷Air 14",
-  "TB锐龙": "联想 ThinkBook 14+ 锐龙版 2026",
-  "TB酷睿": "联想 ThinkBook 14+ 酷睿版",
-  "7000P": "联想 来酷 斗战者 战7000P",
-  "7000X": "联想 来酷 斗战者 战7000X",
-  "H7": "荣耀 WIN游戏本 H7",
-  "H9": "荣耀 WIN游戏本 H9",
-  "星耀14PTL": "机械革命 星耀14 PTL酷睿版",
-  "耀世5090": "机械革命 耀世16 Ultra RTX 5090版",
-  "耀世5070Ti": "机械革命 耀世16 Ultra RTX 5070 Ti版",
-  "7000P锐龙": "联想 来酷 斗战者 战7000P 锐龙版",
-  "MBA15": "苹果 MacBook Air 15",
-  "MBA13": "苹果 MacBook Air 13",
-  "Y7000X": "联想 拯救者 Y7000X",
-  "Y9000P": "联想 拯救者 Y9000P 至尊版 2026",
-  "蛟龙潮玩": "机械革命 蛟龙16 Pro 潮玩版",
-  "无界暴风雪": "机械革命 无界15X Pro 暴风雪",
-  "泰坦18锐龙": "微星 泰坦18 Pro 锐龙版",
-  "TB16+": "联想 ThinkBook 16+ 酷睿独显版",
-  "a豆14": "华硕 a豆14 Air 2026",
-  "YOGA14": "联想 YOGA Air 14 Ultra Aura",
-  "MateS": "华为 MateBook Pro S",
-  "语雀:校园网导读": {
-   "doc": "help/nju_network_guide",
-   "titles": [
-    "1 校园网使用简单导读",
-    "2 使用无线连接",
-    "3 使用有线连接 > 3.1 怎么物理接入网络",
-    "3 使用有线连接 > 3.2 采用网线直连的方式连接"
-   ]
-  },
-  "语雀:宿舍路由器": {
-   "doc": "help/nju_network_guide",
-   "titles": [
-    "3 使用有线连接 > 3.3 采用路由器连接 > 3.3.3 连接路由器",
-    "3 使用有线连接 > 3.3 采用路由器连接 > 3.3.4 配置路由器"
-   ]
-  },
-  "语雀:无脑激活": {
-   "doc": "help/win10_activation_short",
-   "titles": [
-    "Windows 10/11 无脑激活与版本转换指南",
-    "无脑参照表"
-   ]
-  },
-  "语雀:装机激活": {
-   "doc": "help/install_win10",
-   "titles": [
-    "激活设置篇 > 三、激活吧！我的Windows！"
-   ]
-  },
-  "语雀:验机激活": {
-   "doc": "help/hello_my_pc",
-   "titles": [
-    "六、系统初步设置 > 6.3、激活Windows并登入微软账户绑定"
-   ]
-  },
-  "语雀:教材激活": {
-   "doc": "textbook/yo04izg5or2hurpo",
-   "titles": [
-    "激活"
-   ]
-  },
-  "语雀:分区调整": {
-   "doc": "help/partition-resize",
-   "titles": [
-    "一、序言与准备工作",
-    "三、进行调整"
-   ]
-  },
-  "语雀:改用户名": {
-   "doc": "help/change_win_account_name"
-  },
-  "语雀:流氓软件": {
-   "doc": "help/sweep_out_malware",
-   "titles": [
-    "〇、神秘图标",
-    "二、顺藤摸瓜",
-    "三、不行就分"
-   ]
-  },
-  "语雀:南大Office": {
-   "doc": "help/setup_office",
-   "titles": [
-    "二、安装南大正版 MS Office 相关问题"
-   ]
-  },
-  "语雀:OTP装Office": {
-   "doc": "article/otp_intro",
-   "titles": [
-    "操作流程"
-   ]
-  },
-  "语雀:新机验机": {
-   "doc": "help/hello_my_pc",
-   "titles": [
-    "面向南京大学师生的新笔记本电脑验机/设置指南",
-    "二、开箱检查",
-    "三、开机检查并进入审核模式（OOBE）",
-    "四、检查电脑配置"
-   ]
-  },
-  "语雀:U盘装系统": {
-   "doc": "help/install_win10",
-   "titles": [
-    "准备篇",
-    "安装篇 > 二、进入装机盘",
-    "安装篇 > 三、开始安装"
-   ]
-  },
-  "语雀:进入装机盘": {
-   "doc": "help/install_win10",
-   "titles": [
-    "安装篇 > 二、进入装机盘"
-   ]
-  },
-  "语雀:驱动降级": {
-   "doc": "help/win_drivers",
-   "titles": [
-    "2、驱动重装（或降级）"
-   ]
-  },
-  "语雀:远程连接": {
-   "doc": "help/remote_access",
-   "titles": [
-    "如何远程连接到宿舍/实验室的电脑（文档建设中）",
-    "本地直连的远程服务 > RDP",
-    "本地直连的远程服务 > VNC",
-    "具有云服务的远程服务",
-    "使用校内接入服务"
-   ]
-  },
-  "语雀:Mac装Win": {
-   "doc": "help/win10_on_intel_mac",
-   "titles": [
-    "面向小白的Intel处理器MacBook上Win10安装傻瓜教程",
-    "本篇概览",
-    "写在前头",
-    "第二步：使用启动转换助理"
-   ]
-  },
-  "语雀:Adobe激活": {
-   "doc": "article/nju_adobe_tips",
-   "titles": [
-    "Q7：学校的Adobe到底要不要激活？"
-   ]
-  },
-  "语雀:OneDrive1T": {
-   "doc": "article/hlkpwa",
-   "titles": [
-    "免费1T的OneDrive怎么薅？",
-    "如何获取Office教育版的OneDrive"
-   ]
-  },
-  "语雀:A1国际版": {
-   "doc": "help/get_o365",
-   "titles": [
-    "四、如何获取 Office365 A1 国际版"
-   ]
-  },
-  "语雀:EndNote写作": {
-   "doc": "help/vhqnnk",
-   "titles": [
-    "三、EndNote怎么用？ > 论文写作"
-   ]
-  },
-  "语雀:校园网报修": {
-   "doc": "help/nju_itsc_warranty",
-   "titles": [
-    "一、搞清楚负责单位",
-    "三、信息化中心报修"
-   ]
-  },
-  "语雀:官方售后": {
-   "doc": "help/find_your_support",
-   "titles": [
-    "线上寻找售后支持",
-    "线下寻找售后支持 > 假冒官方售后的危害",
-    "线下寻找售后支持 > 寻找售后的注意事项"
-   ]
-  },
-  "语雀:真假官网": {
-   "doc": "help/find_official_website",
-   "titles": [
-    "准确的搜索",
-    "检查网址",
-    "检查网页内容"
-   ]
-  },
-  "语雀:防患未然": {
-   "doc": "help/sweep_out_malware",
-   "titles": [
-    "一、防患未然"
-   ]
-  },
-  "语雀:制作PE": {
-   "doc": "textbook/make_pe"
-  },
-  "语雀:系统清理": {
-   "doc": "help/clean_and_backup",
-   "titles": [
-    "一、系统功能：深藏不露"
-   ]
-  },
-  "语雀:教材清理": {
-   "doc": "textbook/manage_data",
-   "titles": [
-    "系统清理"
-   ]
-  },
-  "语雀:螺丝技巧": {
-   "doc": "textbook/au70ga5onvxr2vqa",
-   "titles": [
-    "一些小技巧"
-   ]
-  },
-  "语雀:硬件更换": {
-   "doc": "textbook/hardware_maintenance",
-   "titles": [
-    "常见的硬件更换"
-   ]
-  },
-  "语雀:清灰": {
-   "doc": "textbook/physical_cleaning"
-  },
-  "语雀:激活详解": {
-   "doc": "help/win10_activation",
-   "titles": [
-    "2、数字权利激活问题",
-    "3、学校KMS激活问题"
-   ]
-  },
-  "语雀:版本选择": {
-   "doc": "help/win10_activation",
-   "titles": [
-    "1、自行安装Windows 10时版本的选择"
-   ]
-  },
-  "语雀:查看密钥": {
-   "doc": "help/win10_activation",
-   "titles": [
-    "5、查看本机密钥"
-   ]
-  },
-  "语雀:网络常见问题": {
-   "doc": "textbook/fix_network",
-   "titles": [
-    "常见问题"
-   ]
-  },
-  "语雀:访问校外网络": {
-   "doc": "help/nju_network_guide",
-   "titles": [
-    "4 访问校外网络"
-   ]
-  },
-  "语雀:校园网收费": {
-   "doc": "help/nju_network_cost"
-  },
-  "语雀:镜像下载途径": {
-   "doc": "help/download_win10",
-   "titles": [
-    "下载途径"
-   ]
-  },
-  "语雀:用户文件夹": {
-   "doc": "help/sys_volume",
-   "titles": [
-    "Users 用户们的文件夹"
-   ]
-  },
-  "语雀:Office选择": {
-   "doc": "help/to_office_or_not_to_office",
-   "titles": [
-    "一、世上不仅有 MS Office",
-    "二、但你可能还是需要选 MS Office"
-   ]
-  },
-  "语雀:电池充电": {
-   "doc": "basic-computer/vrash83101eeivsm",
-   "titles": [
-    "三层次：有一定电脑使用经验，但不完全了解基础操作 > 第二章：电源与睡眠"
-   ]
-  },
-  "语雀:文件后缀": {
-   "doc": "basic-computer/vrash83101eeivsm",
-   "titles": [
-    "三层次：有一定电脑使用经验，但不完全了解基础操作 > 第五章：（基础）文件浏览"
-   ]
-  },
-  "语雀:BitLocker密钥": {
-   "doc": "textbook/bitlocker",
-   "titles": [
-    "维修实践中的 Bitlocker > 获取 Bitlocker 恢复密钥"
-   ]
-  },
-  "语雀:验机BitLocker": {
-   "doc": "help/hello_my_pc",
-   "titles": [
-    "六、系统初步设置 > 6.1、检查BitLocker"
-   ]
-  },
-  "语雀:快速查阅表": {
-   "doc": "help/windows_short_commands"
-  },
-  "语雀:内存科普": {
-   "doc": "article/vg6cg1",
-   "titles": [
-    "二、内存"
-   ]
-  },
-  "语雀:黑话CPU": {
-   "doc": "textbook/slang",
-   "titles": [
-    "1. 电脑的主要部件 > （1）CPU（中央处理器）"
-   ]
-  },
-  "语雀:CPU科普": {
-   "doc": "article/got2cs",
-   "titles": [
-    "一、CPU"
-   ]
-  },
-  "语雀:微PE": {
-   "doc": "help/wepe"
-  },
-  "语雀:常用微PE": {
-   "doc": "textbook/recommended_tools",
-   "titles": [
-    "工具盘维护 > 微PE（WePE）"
-   ]
-  },
-  "语雀:OTP工具": {
-   "doc": "help/ymi3h6"
-  },
-  "语雀:VAMT": {
-   "doc": "help/eur4p0"
-  },
-  "语雀:TreeSize": {
-   "doc": "help/amz72w"
-  },
-  "语雀:WizTree": {
-   "doc": "help/giq7z502ohos1d3u"
-  },
-  "语雀:SpaceSniffer": {
-   "doc": "help/kziy70"
-  },
-  "语雀:常用空间分析": {
-   "doc": "textbook/recommended_tools",
-   "titles": [
-    "软件工具 > SpaceSniffer 和 WizTree"
-   ]
-  },
-  "语雀:Adobe卸载": {
-   "doc": "help/cos7wm"
-  },
-  "语雀:Adobe安装失败": {
-   "doc": "article/nju_adobe_tips",
-   "titles": [
-    "Q5：安装完成打开提示注册（许可证失效）、无法安装等"
-   ]
-  },
-  "语雀:CrystalDisk": {
-   "doc": "help/mkav0u"
-  },
-  "语雀:常用CrystalDisk": {
-   "doc": "textbook/recommended_tools",
-   "titles": [
-    "硬件检查和测试 > CrystalDisk Info/CrystalDisk Mark"
-   ]
-  },
-  "语雀:ChipGenius": {
-   "doc": "help/qknggf"
-  },
-  "语雀:右键菜单": {
-   "doc": "help/qnliv6"
-  },
-  "语雀:运行库": {
-   "doc": "help/ru5847"
-  },
-  "语雀:Ventoy": {
-   "doc": "help/wf2odk"
-  },
-  "语雀:常用Ventoy": {
-   "doc": "textbook/recommended_tools",
-   "titles": [
-    "工具盘维护 > Ventoy"
-   ]
-  },
-  "语雀:多镜像PE": {
-   "doc": "textbook/make_pe",
-   "titles": [
-    "二、镜像多多，U盘少少！"
-   ]
-  },
-  "语雀:Recuva": {
-   "doc": "help/ycyhqk"
-  },
-  "语雀:SoftCnKiller": {
-   "doc": "help/krtn2e"
-  },
-  "语雀:流氓软件卸载": {
-   "doc": "help/sweep_out_malware",
-   "titles": [
-    "三、不行就分"
-   ]
-  },
-  "语雀:procexp": {
-   "doc": "help/kbmi1w"
-  },
-  "语雀:顺藤摸瓜": {
-   "doc": "help/sweep_out_malware",
-   "titles": [
-    "二、顺藤摸瓜"
-   ]
-  },
-  "语雀:Dism++": {
-   "doc": "help/ge5sbt"
-  },
-  "语雀:常用Dism++": {
-   "doc": "textbook/recommended_tools",
-   "titles": [
-    "软件工具 > Dism++（进阶）"
-   ]
-  },
-  "语雀:键盘测试": {
-   "doc": "help/rcin7u"
-  },
-  "语雀:磁盘占用分析": {
-   "doc": "help/clean_and_backup",
-   "titles": [
-    "二、第三方软件：乾坤大挪移 > 1、使用其他工具分析磁盘占用情况"
-   ]
-  },
-  "语雀:社内选版本": {
-   "doc": "textbook/yo04izg5or2hurpo",
-   "titles": [
-    "选择系统版本"
-   ]
-  },
-  "语雀:Windows.old": {
-   "doc": "help/sys_volume",
-   "titles": [
-    "Windows.old 旧系统文件"
-   ]
-  },
-  "语雀:清除旧系统": {
-   "doc": "help/install_win10",
-   "titles": [
-    "激活设置篇 > 四、调教Windows10：基础"
-   ]
-  },
-  "语雀:Office365": {
-   "doc": "help/to_office_or_not_to_office",
-   "titles": [
-    "三、Office和Office365，傻傻分不清楚？"
-   ]
-  },
-  "语雀:睡眠休眠": {
-   "doc": "basic-computer/vrash83101eeivsm",
-   "titles": [
-    "三层次：有一定电脑使用经验，但不完全了解基础操作 > 二层次：日常使用无障碍，但无法解决基本的小问题"
-   ]
-  },
-  "语雀:手机传文件": {
-   "doc": "basic-computer/vrash83101eeivsm",
-   "titles": [
-    "三层次：有一定电脑使用经验，但不完全了解基础操作 > 第七章：使用U盘和其他移动存储"
-   ]
-  },
-  "语雀:安装注意事项": {
-   "doc": "basic-computer/vrash83101eeivsm",
-   "titles": [
-    "三层次：有一定电脑使用经验，但不完全了解基础操作 > 第九章：下载、安装与卸载"
-   ]
-  },
-  "语雀:强制关机": {
-   "doc": "basic-computer/vrash83101eeivsm",
-   "titles": [
-    "简明：面向无使用经验的电脑用户 > 第二章：电源与睡眠"
-   ]
-  },
-  "语雀:DNS": {
-   "doc": "textbook/fix_network",
-   "titles": [
-    "基础知识 > 域名和 DNS"
-   ]
-  },
-  "语雀:屏幕科普": {
-   "doc": "article/vg6cg1",
-   "titles": [
-    "三、屏幕"
-   ]
-  },
-  "语雀:硬盘科普": {
-   "doc": "article/vg6cg1",
-   "titles": [
-    "一、硬盘"
-   ]
-  },
-  "语雀:黑话硬盘": {
-   "doc": "textbook/slang",
-   "titles": [
-    "1. 电脑的主要部件 > （4）硬盘"
-   ]
-  },
-  "语雀:显卡科普": {
-   "doc": "article/got2cs",
-   "titles": [
-    "二、显卡"
-   ]
-  },
-  "语雀:黑话显卡": {
-   "doc": "textbook/slang",
-   "titles": [
-    "1. 电脑的主要部件 > （2）GPU（显卡）"
-   ]
-  },
-  "语雀:挂起BitLocker": {
-   "doc": "textbook/bitlocker",
-   "titles": [
-    "维修实践中的 Bitlocker > 挂起/恢复 Bitlocker"
-   ]
-  },
-  "语雀:解密BitLocker": {
-   "doc": "textbook/bitlocker",
-   "titles": [
-    "维修实践中的 Bitlocker > 解密 Bitlocker"
-   ]
-  },
-  "语雀:BitLocker概述": {
-   "doc": "textbook/bitlocker",
-   "titles": [
-    "Bitlocker 和设备加密"
-   ]
-  },
-  "语雀:镜像渠道版本": {
-   "doc": "help/win10_activation",
-   "titles": [
-    "0、什么是Business/Consumer Editions？"
-   ]
-  },
-  "语雀:识别假售后": {
-   "doc": "article/ezh9iz",
-   "titles": [
-    "PART II 如何识别“渣男渣女”"
-   ]
-  },
-  "语雀:售后注意事项": {
-   "doc": "help/find_your_support",
-   "titles": [
-    "线下寻找售后支持 > 寻找售后的注意事项"
-   ]
-  },
-  "语雀:序列号位置": {
-   "doc": "article/ezh9iz",
-   "titles": [
-    "PART I 好好享受作为小公举的优待"
-   ]
-  },
-  "语雀:线上售后": {
-   "doc": "help/find_your_support",
-   "titles": [
-    "线上寻找售后支持"
-   ]
-  },
-  "语雀:Chrome彩蛋": {
-   "doc": "article/fayvxs",
-   "titles": [
-    "1、Chrome（谷歌浏览器）"
-   ]
-  },
-  "语雀:惠普电池保护": {
-   "doc": "dygh8t/mwsgeb"
-  },
-  "语雀:拆机必须操作": {
-   "doc": "textbook/hardware_maintenance",
-   "titles": [
-    "必须操作"
-   ]
-  },
-  "语雀:常用DDU": {
-   "doc": "textbook/recommended_tools",
-   "titles": [
-    "驱动相关 > Display Driver Uninstaller（DDU）"
-   ]
-  },
-  "语雀:SDI": {
-   "doc": "help/sdi-driver"
-  },
-  "语雀:常用SDI": {
-   "doc": "textbook/recommended_tools",
-   "titles": [
-    "驱动相关 > Snappy Driver Installer（SDI）"
-   ]
-  },
-  "语雀:装机安装驱动": {
-   "doc": "textbook/yo04izg5or2hurpo",
-   "titles": [
-    "安装驱动"
-   ]
-  },
-  "语雀:常用Aida64": {
-   "doc": "textbook/recommended_tools",
-   "titles": [
-    "硬件检查和测试 > Aida64"
-   ]
-  },
-  "语雀:常用Furmark": {
-   "doc": "textbook/recommended_tools",
-   "titles": [
-    "硬件检查和测试 > Furmark"
-   ]
-  },
-  "语雀:常用HWiNFO": {
-   "doc": "textbook/recommended_tools",
-   "titles": [
-    "硬件检查和测试 > HWiNFO"
-   ]
-  },
-  "语雀:AIDA64": {
-   "doc": "help/ukrb0b"
-  },
-  "语雀:MediaCreationTool": {
-   "doc": "help/fnu0it"
-  },
-  "语雀:重装准备篇": {
-   "doc": "help/install_win10",
-   "titles": [
-    "准备篇"
-   ]
-  },
-  "语雀:rufus": {
-   "doc": "help/ngunw1"
-  },
-  "语雀:UltraISO": {
-   "doc": "help/zghuoa"
-  },
-  "语雀:常用Rufus": {
-   "doc": "textbook/recommended_tools",
-   "titles": [
-    "工具盘维护 > Rufus"
-   ]
-  },
-  "语雀:GeekUninstaller": {
-   "doc": "help/cy1hkp"
-  },
-  "语雀:常用Geek": {
-   "doc": "textbook/recommended_tools",
-   "titles": [
-    "软件工具 > Geek Uninstaller"
-   ]
-  },
-  "语雀:Office移除": {
-   "doc": "help/ieh8qr"
-  },
-  "语雀:Office安装问题": {
-   "doc": "help/setup_office",
-   "titles": [
-    "二、安装南大正版 MS Office 相关问题"
-   ]
-  },
-  "语雀:图吧工具箱": {
-   "doc": "help/st73ly"
-  },
-  "语雀:PowerToys": {
-   "doc": "help/dp21w7"
-  },
-  "语雀:PortableApps": {
-   "doc": "help/vmepfr"
-  },
-  "语雀:常用DiskGenius": {
-   "doc": "textbook/recommended_tools",
-   "titles": [
-    "软件工具 > DiskGenius"
-   ]
-  },
-  "语雀:Kami": {
-   "doc": "article/rholvp"
-  },
-  "语雀:MarkdownHere": {
-   "doc": "article/eup0ky"
-  },
-  "语雀:分区BitLocker": {
-   "doc": "help/partition-resize",
-   "titles": [
-    "一、序言与准备工作"
-   ]
-  },
-  "语雀:OTP卸载": {
-   "doc": "article/otp_intro",
-   "titles": [
-    "利用OTP处理其他问题"
-   ]
-  },
-  "语雀:蓝屏排查顺序": {
-   "doc": "help/windows_problem_cheatsheet",
-   "titles": [
-    "Windows 系统异常（显示错误/蓝屏/死机）的常见解决方案",
-    "0、重启试试、升级看看、原位修复"
-   ]
-  },
-  "语雀:系统文件修复": {
-   "doc": "help/windows_problem_cheatsheet",
-   "titles": [
-    "2、系统文件修复"
-   ]
-  },
-  "语雀:安全模式": {
-   "doc": "help/windows_problem_cheatsheet",
-   "titles": [
-    "1、进入安全模式检查"
-   ]
-  },
-  "语雀:事件查看器": {
-   "doc": "help/windows_problem_cheatsheet",
-   "titles": [
-    "3、利用事件查看器定位问题"
-   ]
-  },
-  "语雀:WinDbg": {
-   "doc": "help/windows_problem_cheatsheet",
-   "titles": [
-    "4、WinDbg定位蓝屏问题"
-   ]
-  },
-  "语雀:重置重装": {
-   "doc": "help/windows_problem_cheatsheet",
-   "titles": [
-    "5、重置、重装与原位修复（仅限Windows10与以后版本）"
-   ]
-  },
-  "语雀:校园网会不会用": {
-   "doc": "help/nju_wlan_qa_pro_plus_max_ultra",
-   "titles": [
-    "零、想一想自己到底会不会上校园网"
-   ]
-  },
-  "语雀:校园网查设备": {
-   "doc": "help/nju_wlan_qa_pro_plus_max_ultra",
-   "titles": [
-    "一、查一查自己设备的问题"
-   ]
-  },
-  "语雀:校园网BUG": {
-   "doc": "help/nju_wlan_qa_pro_plus_max_ultra",
-   "titles": [
-    "二、赌一赌是校园网的BUG"
-   ]
-  },
-  "语雀:登录排查": {
-   "doc": "help/nju_network",
-   "titles": [
-    "2、一般方法：无法登录校园网问题排查"
-   ]
-  },
-  "语雀:判断问题位置": {
-   "doc": "help/network_problem",
-   "titles": [
-    "1、当你在宿舍上网时数据是怎么走的",
-    "2、判断你的问题出在哪一步"
-   ]
-  },
-  "语雀:分步排查": {
-   "doc": "help/network_problem",
-   "titles": [
-    "2、判断你的问题出在哪一步"
-   ]
-  },
-  "语雀:应急上网": {
-   "doc": "help/network_alter"
-  },
-  "语雀:麦克风权限": {
-   "doc": "help/cam_mic_not_work",
-   "titles": [
-    "一、针对Windows系统 > 2、系统应用检查"
-   ]
-  },
-  "语雀:会议软件": {
-   "doc": "help/cam_mic_not_work",
-   "titles": [
-    "一、针对Windows系统 > 3、浏览器/会议软件/通讯软件等检查"
-   ]
-  },
-  "语雀:Mac摄像头": {
-   "doc": "help/cam_mic_not_work",
-   "titles": [
-    "二、针对MacOS"
-   ]
-  },
-  "语雀:OneDrive冲突": {
-   "doc": "help/o365_qa",
-   "titles": [
-    "一、Office365 A1国际版与高校世纪互联版 OneDrive 冲突问题"
-   ]
-  },
-  "语雀:Mac Office卡死": {
-   "doc": "help/ms_office_problems",
-   "titles": [
-    "1、MacOS 运行 MS Office 经常卡死"
-   ]
-  },
-  "语雀:装Visio": {
-   "doc": "help/ms_office_problems",
-   "titles": [
-    "3、我想安装 Visio/已经有 Office 想要再安装 Visio"
-   ]
-  },
-  "语雀:旧设备驱动": {
-   "doc": "article/kbg5vc"
-  },
-  "语雀:查找厂商": {
-   "doc": "article/find_vendor",
-   "titles": [
-    "一、观察包装",
-    "三、查看属性里的信息",
-    "四、寻找可查询的数据库"
-   ]
-  },
-  "语雀:EARLY EXIT": {
-   "doc": "article/ghrq7ikst4cce451"
-  },
-  "语雀:介质驱动": {
-   "doc": "article/vegchy"
-  },
-  "语雀:ms-settings": {
-   "doc": "article/yhsqeg"
-  },
-  "语雀:WinError193": {
-   "doc": "article/rzqnsh"
-  },
-  "语雀:U盘病毒": {
-   "doc": "article/ggwbb1"
-  },
-  "语雀:Dell麦克风": {
-   "doc": "article/mogtov"
-  },
-  "语雀:蓝牙驱动": {
-   "doc": "article/syr9fw"
-  },
-  "语雀:官方维修点": {
-   "doc": "article/geve3g"
-  },
-  "语雀:UWP": {
-   "doc": "article/fqhg6o"
-  },
-  "语雀:世纪互联网页登录": {
-   "doc": "help/double_o365",
-   "titles": [
-    "一、网页端"
-   ]
-  },
-  "语雀:OneDrive共存": {
-   "doc": "help/double_o365",
-   "titles": [
-    "二、OneDrive 客户端冲突问题"
-   ]
-  },
-  "语雀:麦克风硬件": {
-   "doc": "help/cam_mic_not_work",
-   "titles": [
-    "一、针对Windows系统 > 1、电脑硬件检查"
-   ]
-  },
-  "语雀:驱动安装注意": {
-   "doc": "article/find_vendor",
-   "titles": [
-    "六、驱动的选择与安装的注意事项"
-   ]
-  },
-  "小新Air14": "联想 小新Air 14 2026",
-  "星BookProAir14": "惠普 星Book Pro Air 14",
-  "语雀:装机准备分区": {
-   "doc": "textbook/yo04izg5or2hurpo",
-   "titles": [
-    "准备分区"
-   ]
-  },
-  "语雀:社内装系统": {
-   "doc": "textbook/yo04izg5or2hurpo",
-   "titles": [
-    "安装系统"
-   ]
-  },
-  "语雀:社内装Office": {
-   "doc": "textbook/yo04izg5or2hurpo",
-   "titles": [
-    "安装 Office"
-   ]
-  },
-  "语雀:OTP简介": {
-   "doc": "article/otp_intro",
-   "titles": [
-    "换一种更快的姿势装Office"
-   ]
-  },
-  "语雀:Moonlight": {
-   "doc": "help/remote_access",
-   "titles": [
-    "本地直连的远程服务 > Moonlight"
-   ]
-  },
-  "语雀:Parsec": {
-   "doc": "help/remote_access",
-   "titles": [
-    "本地直连的远程服务 > Parsec"
-   ]
-  },
-  "语雀:Mac下载镜像": {
-   "doc": "help/win10_on_intel_mac",
-   "titles": [
-    "第一步：下载一份Windows10镜像"
-   ]
-  },
-  "语雀:Mac驱动设置": {
-   "doc": "help/win10_on_intel_mac",
-   "titles": [
-    "第四步：驱动与设置"
-   ]
-  },
-  "语雀:售后信息": {
-   "doc": "help/find_your_support",
-   "titles": [
-    "线下寻找售后支持 > 售后信息"
-   ]
-  },
-  "语雀:假冒售后": {
-   "doc": "help/find_your_support",
-   "titles": [
-    "线下寻找售后支持 > 假冒官方售后的危害"
-   ]
-  },
-  "语雀:装机盘与PE": {
-   "doc": "help/kbfygn"
-  },
-  "语雀:软件安装位置": {
-   "doc": "help/clean_and_backup",
-   "titles": [
-    "二、第三方软件：乾坤大挪移 > 2、软件的安装、缓存与文档设置"
-   ]
-  },
-  "语雀:开始安装": {
-   "doc": "help/install_win10",
-   "titles": [
-    "安装篇 > 三、开始安装"
-   ]
-  },
-  "语雀:O365订阅区别": {
-   "doc": "article/hlkpwa",
-   "titles": [
-    "什么是Office365教育版"
-   ]
-  },
-  "语雀:A1与桌面版": {
-   "doc": "help/get_o365",
-   "titles": [
-    "一、比较 Office365 A1 与 Office 桌面版"
-   ]
-  },
-  "语雀:预装Office": {
-   "doc": "help/setup_office",
-   "titles": [
-    "一、预装 MS Office"
-   ]
-  },
-  "语雀:MTP协议": {
-   "doc": "basic-computer/vrash83101eeivsm",
-   "titles": [
-    "三层次：有一定电脑使用经验，但不完全了解基础操作 > 一层次：有能力或者能够上网查找解决，并希望了解计算机系统知识"
-   ]
-  },
-  "语雀:BitLocker维修": {
-   "doc": "textbook/bitlocker",
-   "titles": [
-    "维修实践中的 Bitlocker"
-   ]
-  },
-  "语雀:镜像黑话": {
-   "doc": "help/download_win10",
-   "titles": [
-    "Windows 纯净镜像下载途径比较"
-   ]
-  },
-  "语雀:Office混乱": {
-   "doc": "help/ms_office_problems",
-   "titles": [
-    "2、我的 Office 版本很混乱/安装失败"
-   ]
-  }
- },
- "specs": "../products/specs/bibar.json",
- "queries": [
-  {
-   "id": "A01",
-   "cat": "A",
-   "q": "联想来酷GT 16 酷睿版的噪音有多大",
-   "rel": [
-    "GT16"
-   ],
-   "facts": [
-    "55.4dB"
-   ]
-  },
-  {
-   "id": "A02",
-   "cat": "A",
-   "q": "来酷Air 16 续航多久",
-   "rel": [
-    "Air16"
-   ],
-   "facts": [
-    "9小时56分"
-   ]
-  },
-  {
-   "id": "A03",
-   "cat": "A",
-   "q": "ThinkBook 14+ 锐龙版 2026 多少钱",
-   "rel": [
-    "TB锐龙"
-   ],
-   "facts": [
-    "5099.15"
-   ]
-  },
-  {
-   "id": "A04",
-   "cat": "A",
-   "q": "战7000X 用的是什么固态硬盘",
-   "rel": [
-    "7000X"
-   ],
-   "facts": [
-    "群联"
-   ]
-  },
-  {
-   "id": "A05",
-   "cat": "A",
-   "q": "荣耀WIN游戏本H7 的屏幕亮度",
-   "rel": [
-    "H7"
-   ],
-   "facts": [
-    "528nits"
-   ]
-  },
-  {
-   "id": "A06",
-   "cat": "A",
-   "q": "荣耀WIN游戏本 H9 的散热模组是什么结构",
-   "rel": [
-    "H9"
-   ],
-   "facts": [
-    "5热管"
-   ]
-  },
-  {
-   "id": "B01",
-   "cat": "B",
-   "q": "7000P 噪音",
-   "rel": [
-    "7000P",
-    "7000P锐龙"
-   ],
-   "facts": [
-    "55.0dB"
-   ]
-  },
-  {
-   "id": "B02",
-   "cat": "B",
-   "q": "TB14+ 酷睿 内存能换吗",
-   "rel": [
-    "TB酷睿"
-   ],
-   "facts": [
-    "LPCAMM2"
-   ]
-  },
-  {
-   "id": "B03",
-   "cat": "B",
-   "q": "H9 有几个风扇",
-   "rel": [
-    "H9"
-   ],
-   "facts": [
-    "六个风扇"
-   ]
-  },
-  {
-   "id": "B04",
-   "cat": "B",
-   "q": "air14 多重",
-   "rel": [
-    "Air14",
-    "YOGA14",
-    "小新Air14",
-    "星BookProAir14"
-   ],
-   "facts": [
-    "984g"
-   ]
-  },
-  {
-   "id": "B05",
-   "cat": "B",
-   "q": "GT16 能加内存吗",
-   "rel": [
-    "GT16"
-   ],
-   "facts": [
-    "内存插槽"
-   ]
-  },
-  {
-   "id": "B06",
-   "cat": "B",
-   "q": "7000X 适配器多重",
-   "rel": [
-    "7000X",
-    "Y7000X"
-   ],
-   "facts": [
-    "438g"
-   ]
-  },
-  {
-   "id": "C01",
-   "cat": "C",
-   "q": "来酷air16的内存可以自己升级吗",
-   "rel": [
-    "Air16"
-   ],
-   "facts": [
-    "板载"
-   ]
-  },
-  {
-   "id": "C02",
-   "cat": "C",
-   "q": "荣耀那台六个风扇的游戏本烤机CPU多少度",
-   "rel": [
-    "H9"
-   ],
-   "facts": [
-    "100℃"
-   ]
-  },
-  {
-   "id": "C03",
-   "cat": "C",
-   "q": "thinkbook锐龙版续航咋样，能撑一天吗",
-   "rel": [
-    "TB锐龙"
-   ],
-   "facts": [
-    "12小时40分"
-   ]
-  },
-  {
-   "id": "C04",
-   "cat": "C",
-   "q": "战7000P双烤为啥要从电池取电",
-   "rel": [
-    "7000P"
-   ],
-   "facts": [
-    "电池"
-   ]
-  },
-  {
-   "id": "C05",
-   "cat": "C",
-   "q": "H7的硬盘是不是QLC的",
-   "rel": [
-    "H7"
-   ],
-   "facts": [
-    "QLC"
-   ]
-  },
-  {
-   "id": "D01",
-   "cat": "D",
-   "q": "一万五以内、机身轻薄、性能释放强的游戏本",
-   "constraints": {
-    "gaming": true,
-    "price": [
-     null,
-     15000
-    ],
-    "weight_max": 2.0
-   },
-   "facts": []
-  },
-  {
-   "id": "D03",
-   "cat": "D",
-   "q": "带OCuLink接口的笔记本",
-   "constraints": {
-    "ports": [
-     "oculink"
-    ]
-   },
-   "facts": []
-  },
-  {
-   "id": "D04",
-   "cat": "D",
-   "q": "用石墨烯导热的游戏本",
-   "rel": [
-    "H9"
-   ],
-   "facts": [
-    "石墨烯"
-   ]
-  },
-  {
-   "id": "D05",
-   "cat": "D",
-   "q": "1kg以下的轻薄本推荐",
-   "constraints": {
-    "thin_light": true,
-    "weight_max": 1.0
-   },
-   "facts": []
-  },
-  {
-   "id": "D06",
-   "cat": "D",
-   "q": "支持TGX接口外接显卡的笔记本",
-   "constraints": {
-    "ports": [
-     "oculink"
-    ]
-   },
-   "facts": []
-  },
-  {
-   "id": "D07",
-   "cat": "D",
-   "q": "5000多块钱的入门游戏本，RTX 3050",
-   "constraints": {
-    "gaming": true,
-    "price": [
-     5000,
-     5999
-    ],
-    "gpu": [
-     "RTX 3050"
-    ]
-   },
-   "facts": []
-  },
-  {
-   "id": "D08",
-   "cat": "D",
-   "q": "预算8000元，推荐一台轻薄本",
-   "constraints": {
-    "price": [
-     6000.0,
-     8800.0
-    ],
-    "thin_light": true
-   },
-   "facts": []
-  },
-  {
-   "id": "D09",
-   "cat": "D",
-   "q": "预算8000元，推荐一台接口丰富的笔记本",
-   "constraints": {
-    "price": [
-     6000.0,
-     8800.0
-    ],
-    "ports_rich": true
-   },
-   "facts": []
-  },
-  {
-   "id": "D10",
-   "cat": "D",
-   "q": "5000元以内的轻薄本",
-   "constraints": {
-    "price": [
-     null,
-     5000
-    ],
-    "thin_light": true
-   },
-   "facts": []
-  },
-  {
-   "id": "D11",
-   "cat": "D",
-   "q": "8000左右的RTX 5060游戏本",
-   "constraints": {
-    "price": [
-     7200.0,
-     8800.0
-    ],
-    "gaming": true,
-    "gpu": [
-     "RTX 5060"
-    ]
-   },
-   "facts": []
-  },
-  {
-   "id": "D12",
-   "cat": "D",
-   "q": "预算一万左右，显卡要5070以上的游戏本",
-   "constraints": {
-    "price": [
-     9000.0,
-     11000.0
-    ],
-    "gaming": true,
-    "gpu": [
-     "RTX 5070",
-     "RTX 5070Ti",
-     "RTX 5080",
-     "RTX 5090"
-    ]
-   },
-   "facts": []
-  },
-  {
-   "id": "D13",
-   "cat": "D",
-   "q": "两万以上的顶级游戏本",
-   "constraints": {
-    "price": [
-     20000,
-     null
-    ],
-    "gaming": true
-   },
-   "facts": []
-  },
-  {
-   "id": "D14",
-   "cat": "D",
-   "q": "带网口的轻薄本",
-   "constraints": {
-    "thin_light": true,
-    "ports": [
-     "rj45"
-    ]
-   },
-   "facts": []
-  },
-  {
-   "id": "D15",
-   "cat": "D",
-   "q": "预算7000，想要OLED屏的笔记本",
-   "constraints": {
-    "price": [
-     5250.0,
-     7700.000000000001
-    ],
-    "oled": true
-   },
-   "facts": []
-  },
-  {
-   "id": "D16",
-   "cat": "D",
-   "q": "16寸的大屏轻薄本",
-   "constraints": {
-    "thin_light": true,
-    "screen_min": 16
-   },
-   "facts": []
-  },
-  {
-   "id": "D17",
-   "cat": "D",
-   "q": "续航10小时以上、6000元以内的笔记本",
-   "constraints": {
-    "battery_min": 10,
-    "price": [
-     null,
-     6000
-    ]
-   },
-   "facts": []
-  },
-  {
-   "id": "D18",
-   "cat": "D",
-   "q": "4000多的笔记本推荐",
-   "constraints": {
-    "price": [
-     4000,
-     4999
-    ]
-   },
-   "facts": []
-  },
-  {
-   "id": "D19",
-   "cat": "D",
-   "q": "带雷电接口、5000元以内的轻薄本",
-   "constraints": {
-    "thin_light": true,
-    "price": [
-     null,
-     5000
-    ],
-    "ports": [
-     "thunderbolt"
-    ]
-   },
-   "facts": []
-  },
-  {
-   "id": "D20",
-   "cat": "D",
-   "q": "适合出差的笔记本，1.2kg以内、续航12小时以上",
-   "constraints": {
-    "weight_max": 1.2,
-    "battery_min": 12
-   },
-   "facts": []
-  },
-  {
-   "id": "E01",
-   "cat": "E",
-   "q": "来酷Air 14 和 Air 16 哪个续航更长",
-   "rel": [
-    "Air14",
-    "Air16"
-   ],
-   "facts": [],
-   "pair": true
-  },
-  {
-   "id": "E02",
-   "cat": "E",
-   "q": "ThinkBook 14+ 酷睿版和锐龙版内存有什么区别",
-   "rel": [
-    "TB酷睿",
-    "TB锐龙"
-   ],
-   "facts": [],
-   "pair": true
-  },
-  {
-   "id": "E03",
-   "cat": "E",
-   "q": "战7000P 和 战7000X 有什么区别",
-   "rel": [
-    "7000P",
-    "7000X"
-   ],
-   "facts": [],
-   "pair": true
-  },
-  {
-   "id": "E04",
-   "cat": "E",
-   "q": "荣耀 H7 和 H9 怎么选",
-   "rel": [
-    "H7",
-    "H9"
-   ],
-   "facts": [],
-   "pair": true
-  },
-  {
-   "id": "A07",
-   "cat": "A",
-   "q": "拯救者Y9000P 2026 散热怎么样",
-   "rel": [
-    "Y9000P"
-   ],
-   "facts": []
-  },
-  {
-   "id": "A08",
-   "cat": "A",
-   "q": "MacBook Air M4 续航多久",
-   "rel": [
-    "MBA13"
-   ],
-   "facts": [
-    "12小时50分"
-   ]
-  },
-  {
-   "id": "G03",
-   "cat": "G",
-   "q": "戴尔XPS 13 多少钱",
-   "rel": [],
-   "facts": []
-  },
-  {
-   "id": "F01",
-   "cat": "F",
-   "q": "机械革命 星耀14 PTL酷睿版 续航多久",
-   "rel": [
-    "星耀14PTL"
-   ],
-   "facts": [
-    "13小时50分"
-   ]
-  },
-  {
-   "id": "F02",
-   "cat": "F",
-   "q": "耀世16 Ultra 5090 噪音大吗",
-   "rel": [
-    "耀世5090"
-   ],
-   "facts": [
-    "50.9dB"
-   ]
-  },
-  {
-   "id": "F03",
-   "cat": "F",
-   "q": "耀世16 Ultra RTX 5070 Ti 噪音多大",
-   "rel": [
-    "耀世5070Ti"
-   ],
-   "facts": [
-    "56.1dB"
-   ]
-  },
-  {
-   "id": "F04",
-   "cat": "F",
-   "q": "战7000P 锐龙版 噪音",
-   "rel": [
-    "7000P锐龙"
-   ],
-   "facts": [
-    "56.1dB"
-   ]
-  },
-  {
-   "id": "F05",
-   "cat": "F",
-   "q": "MacBook Air 15 续航",
-   "rel": [
-    "MBA15"
-   ],
-   "facts": [
-    "12小时39分"
-   ]
-  },
-  {
-   "id": "F06",
-   "cat": "F",
-   "q": "拯救者 Y7000X 续航多久",
-   "rel": [
-    "Y7000X"
-   ],
-   "facts": [
-    "5小时51分"
-   ]
-  },
-  {
-   "id": "F07",
-   "cat": "F",
-   "q": "蛟龙16 Pro 潮玩版 噪音",
-   "rel": [
-    "蛟龙潮玩"
-   ],
-   "facts": [
-    "54.7dB"
-   ]
-  },
-  {
-   "id": "F08",
-   "cat": "F",
-   "q": "无界15X Pro 暴风雪续航怎么样",
-   "rel": [
-    "无界暴风雪"
-   ],
-   "facts": [
-    "11小时14分"
-   ]
-  },
-  {
-   "id": "F09",
-   "cat": "F",
-   "q": "泰坦18 Pro 锐龙版 噪音",
-   "rel": [
-    "泰坦18锐龙"
-   ],
-   "facts": [
-    "54.7dB"
-   ]
-  },
-  {
-   "id": "F10",
-   "cat": "F",
-   "q": "苹果那台无风扇的13寸轻薄本续航怎么样",
-   "rel": [
-    "MBA13"
-   ],
-   "facts": [
-    "12小时50分"
-   ]
-  },
-  {
-   "id": "T01",
-   "cat": "T",
-   "q": "校园网怎么连接",
-   "rel": [
-    "语雀:校园网导读"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "T02",
-   "cat": "T",
-   "q": "Windows 激活失败怎么办",
-   "rel": [
-    "语雀:无脑激活",
-    "语雀:装机激活",
-    "语雀:验机激活",
-    "语雀:教材激活",
-    "语雀:激活详解"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "T03",
-   "cat": "T",
-   "q": "宿舍买的路由器怎么设置才能连上校园网",
-   "rel": [
-    "语雀:宿舍路由器"
-   ],
-   "facts": [
-    "DHCP"
-   ],
-   "origin": "manual"
-  },
-  {
-   "id": "T04",
-   "cat": "T",
-   "q": "C盘太小了，不重装系统能把D盘的空间分给C盘吗",
-   "rel": [
-    "语雀:分区调整"
-   ],
-   "facts": [
-    "调整分区大小"
-   ],
-   "origin": "manual"
-  },
-  {
-   "id": "T05",
-   "cat": "T",
-   "q": "Windows 用户名是中文，怎么改成英文",
-   "rel": [
-    "语雀:改用户名"
-   ],
-   "facts": [
-    "中文"
-   ],
-   "origin": "manual"
-  },
-  {
-   "id": "T06",
-   "cat": "T",
-   "q": "电脑老是弹广告，怎么找到是哪个软件并删掉",
-   "rel": [
-    "语雀:流氓软件",
-    "语雀:SoftCnKiller"
-   ],
-   "facts": [
-    "SoftCNKiller"
-   ],
-   "origin": "manual"
-  },
-  {
-   "id": "T07",
-   "cat": "T",
-   "q": "南大学生怎么免费安装正版 Office",
-   "rel": [
-    "语雀:南大Office",
-    "语雀:OTP装Office",
-    "语雀:OTP工具",
-    "语雀:OTP简介",
-    "语雀:社内装Office"
-   ],
-   "facts": [
-    "kms.nju.edu.cn"
-   ],
-   "origin": "manual"
-  },
-  {
-   "id": "T08",
-   "cat": "T",
-   "q": "新笔记本到手要检查哪些东西",
-   "rel": [
-    "语雀:新机验机"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "T09",
-   "cat": "T",
-   "q": "怎么用U盘重装 Win11",
-   "rel": [
-    "语雀:U盘装系统",
-    "语雀:装机准备分区",
-    "语雀:社内装系统"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "T10",
-   "cat": "T",
-   "q": "更新显卡驱动后出问题了，怎么回退到旧版本",
-   "rel": [
-    "语雀:驱动降级"
-   ],
-   "facts": [
-    "降级"
-   ],
-   "origin": "manual"
-  },
-  {
-   "id": "T11",
-   "cat": "T",
-   "q": "在寝室怎么远程控制实验室的电脑",
-   "rel": [
-    "语雀:远程连接",
-    "语雀:Moonlight",
-    "语雀:Parsec"
-   ],
-   "facts": [
-    "RDP"
-   ],
-   "origin": "manual"
-  },
-  {
-   "id": "T12",
-   "cat": "T",
-   "q": "Intel 芯片的 MacBook 怎么装 Windows 双系统",
-   "rel": [
-    "语雀:Mac装Win",
-    "语雀:Mac下载镜像",
-    "语雀:Mac驱动设置"
-   ],
-   "facts": [
-    "启动转换助理"
-   ],
-   "origin": "manual"
-  },
-  {
-   "id": "T13",
-   "cat": "T",
-   "q": "学校下载的 Adobe 软件需要激活吗",
-   "rel": [
-    "语雀:Adobe激活"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "T14",
-   "cat": "T",
-   "q": "用学校邮箱怎么领 1T 的 OneDrive",
-   "rel": [
-    "语雀:OneDrive1T",
-    "语雀:A1国际版"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "T15",
-   "cat": "T",
-   "q": "EndNote 怎么在 Word 里插入参考文献",
-   "rel": [
-    "语雀:EndNote写作"
-   ],
-   "facts": [
-    "Insert Citation"
-   ],
-   "origin": "manual"
-  },
-  {
-   "id": "T16",
-   "cat": "T",
-   "q": "宿舍校园网坏了找谁报修",
-   "rel": [
-    "语雀:校园网报修",
-    "语雀:网络常见问题"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "T17",
-   "cat": "T",
-   "q": "电脑坏了怎么找官方售后，避免遇到假售后",
-   "rel": [
-    "语雀:官方售后",
-    "语雀:售后信息"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "T18",
-   "cat": "T",
-   "q": "下载软件时怎么判断是不是真官网",
-   "rel": [
-    "语雀:真假官网",
-    "语雀:防患未然"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "T19",
-   "cat": "T",
-   "q": "怎么制作 PE 启动U盘",
-   "rel": [
-    "语雀:制作PE",
-    "语雀:微PE",
-    "语雀:常用微PE",
-    "语雀:装机盘与PE",
-    "语雀:Ventoy"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "T20",
-   "cat": "T",
-   "q": "C盘空间不够了怎么清理",
-   "rel": [
-    "语雀:系统清理",
-    "语雀:教材清理",
-    "语雀:磁盘占用分析",
-    "语雀:软件安装位置"
-   ],
-   "facts": [
-    "磁盘清理"
-   ],
-   "origin": "manual"
-  },
-  {
-   "id": "T21",
-   "cat": "T",
-   "q": "拆机时螺丝拧花了怎么办",
-   "rel": [
-    "语雀:螺丝技巧"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "X01",
-   "cat": "X",
-   "q": "来酷GT 16 能自己加内存吗，怎么装",
-   "rel": [
-    "GT16",
-    "语雀:硬件更换"
-   ],
-   "facts": [
-    "两个内存插槽"
-   ],
-   "pair": true,
-   "origin": "manual"
-  },
-  {
-   "id": "X02",
-   "cat": "X",
-   "q": "战7000X 想加一块固态硬盘，怎么装",
-   "rel": [
-    "7000X",
-    "语雀:硬件更换"
-   ],
-   "facts": [
-    "2280规格的空盘位"
-   ],
-   "pair": true,
-   "origin": "manual"
-  },
-  {
-   "id": "X03",
-   "cat": "X",
-   "q": "刚买的荣耀 MagicBook 14 到手怎么验机",
-   "rel": [
-    "语雀:新机验机"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "X04",
-   "cat": "X",
-   "q": "拯救者 Y7000X 用了两年温度高风扇响，怎么清灰",
-   "rel": [
-    "语雀:清灰"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "X05",
-   "cat": "X",
-   "q": "ThinkBook 14+ 重装系统怎么从U盘启动",
-   "rel": [
-    "语雀:进入装机盘",
-    "语雀:微PE",
-    "语雀:装机准备分区"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K01",
-   "cat": "K",
-   "q": "南大校园网怎么收费，在哪里看自己的套餐",
-   "rel": [
-    "语雀:校园网收费"
-   ],
-   "facts": [
-    "修改服务"
-   ],
-   "origin": "manual"
-  },
-  {
-   "id": "K02",
-   "cat": "K",
-   "q": "Windows 家庭版和专业版有什么区别，自己装系统选哪个",
-   "rel": [
-    "语雀:版本选择",
-    "语雀:社内选版本",
-    "语雀:开始安装"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K03",
-   "cat": "K",
-   "q": "MSDN我告诉你 和微软官网下载的 Windows 镜像有什么区别",
-   "rel": [
-    "语雀:镜像下载途径"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K04",
-   "cat": "K",
-   "q": "C盘里的 AppData 文件夹是干什么的",
-   "rel": [
-    "语雀:用户文件夹"
-   ],
-   "facts": [
-    "AppData"
-   ],
-   "origin": "manual"
-  },
-  {
-   "id": "K05",
-   "cat": "K",
-   "q": "学校有正版 Office 了，还有必要用 WPS 吗",
-   "rel": [
-    "语雀:Office选择"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K06",
-   "cat": "K",
-   "q": "笔记本一直插着电源用会伤电池吗",
-   "rel": [
-    "语雀:电池充电"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K07",
-   "cat": "K",
-   "q": "开机要输入 BitLocker 恢复密钥，去哪里找",
-   "rel": [
-    "语雀:BitLocker密钥",
-    "语雀:验机BitLocker",
-    "语雀:BitLocker概述"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K08",
-   "cat": "K",
-   "q": "连上了校园网 WiFi，但是打不开校外网站",
-   "rel": [
-    "语雀:网络常见问题",
-    "语雀:访问校外网络",
-    "语雀:校园网会不会用",
-    "语雀:分步排查"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K09",
-   "cat": "K",
-   "q": "运行窗口输入什么命令可以打开设备管理器",
-   "rel": [
-    "语雀:快速查阅表"
-   ],
-   "facts": [
-    "devmgmt.msc"
-   ],
-   "origin": "manual"
-  },
-  {
-   "id": "K10",
-   "cat": "K",
-   "q": "笔记本内存 8G 够用吗，要不要买 16G",
-   "rel": [
-    "语雀:内存科普"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K11",
-   "cat": "K",
-   "q": "文件名后面的 .docx、.exe 是什么意思",
-   "rel": [
-    "语雀:文件后缀"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K12",
-   "cat": "K",
-   "q": "怎么查看自己电脑 Windows 的产品密钥",
-   "rel": [
-    "语雀:查看密钥",
-    "语雀:VAMT"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K13",
-   "cat": "K",
-   "q": "轻薄本的低压 CPU 和游戏本的标压 CPU 有什么区别",
-   "rel": [
-    "语雀:黑话CPU",
-    "语雀:CPU科普"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K14",
-   "cat": "K",
-   "q": "C盘里的 Windows.old 文件夹占了好多空间，能删吗",
-   "rel": [
-    "语雀:Windows.old",
-    "语雀:清除旧系统",
-    "语雀:系统清理"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K15",
-   "cat": "K",
-   "q": "Office 2021 和 Office 365 有什么区别",
-   "rel": [
-    "语雀:Office365",
-    "语雀:O365订阅区别",
-    "语雀:A1与桌面版",
-    "语雀:预装Office"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K16",
-   "cat": "K",
-   "q": "电脑的睡眠和休眠有什么区别",
-   "rel": [
-    "语雀:睡眠休眠"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K17",
-   "cat": "K",
-   "q": "手机连电脑传文件时弹出 MTP 和 PTP，选哪个",
-   "rel": [
-    "语雀:手机传文件",
-    "语雀:MTP协议"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K18",
-   "cat": "K",
-   "q": "装软件的时候怎么避免被捆绑装一堆全家桶",
-   "rel": [
-    "语雀:安装注意事项",
-    "语雀:防患未然"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K19",
-   "cat": "K",
-   "q": "怎么查一个网站的域名解析到了哪个 IP",
-   "rel": [
-    "语雀:DNS"
-   ],
-   "facts": [
-    "nslookup"
-   ],
-   "origin": "manual"
-  },
-  {
-   "id": "K20",
-   "cat": "K",
-   "q": "笔记本屏幕写的 72% NTSC、100% sRGB 是什么意思，做设计选哪种",
-   "rel": [
-    "语雀:屏幕科普"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K21",
-   "cat": "K",
-   "q": "固态硬盘和机械硬盘有什么区别",
-   "rel": [
-    "语雀:硬盘科普",
-    "语雀:黑话硬盘"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K22",
-   "cat": "K",
-   "q": "独显和核显有什么区别，不玩游戏需要独显吗",
-   "rel": [
-    "语雀:显卡科普",
-    "语雀:黑话显卡"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K23",
-   "cat": "K",
-   "q": "BitLocker 挂起和解密有什么区别",
-   "rel": [
-    "语雀:挂起BitLocker",
-    "语雀:解密BitLocker",
-    "语雀:BitLocker维修"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K24",
-   "cat": "K",
-   "q": "Windows 家庭版能用 BitLocker 吗",
-   "rel": [
-    "语雀:BitLocker概述",
-    "语雀:分区BitLocker"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K25",
-   "cat": "K",
-   "q": "Windows 镜像文件名里的 business editions 和 consumer editions 是什么意思",
-   "rel": [
-    "语雀:镜像渠道版本",
-    "语雀:镜像黑话"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K26",
-   "cat": "K",
-   "q": "网上搜到一个 400 开头的电脑维修电话，怎么判断是不是官方售后",
-   "rel": [
-    "语雀:识别假售后",
-    "语雀:售后注意事项",
-    "语雀:售后信息",
-    "语雀:假冒售后"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K27",
-   "cat": "K",
-   "q": "电脑的序列号在哪里能找到",
-   "rel": [
-    "语雀:序列号位置",
-    "语雀:线上售后"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K28",
-   "cat": "K",
-   "q": "Chrome 断网时的小恐龙游戏怎么打开",
-   "rel": [
-    "语雀:Chrome彩蛋"
-   ],
-   "facts": [
-    "chrome://dino"
-   ],
-   "origin": "manual"
-  },
-  {
-   "id": "K29",
-   "cat": "K",
-   "q": "惠普笔记本拆机换电池前要先做什么设置",
-   "rel": [
-    "语雀:惠普电池保护",
-    "语雀:拆机必须操作"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "K30",
-   "cat": "K",
-   "q": "电脑卡死了点什么都没反应，怎么强制关机",
-   "rel": [
-    "语雀:强制关机"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U01",
-   "cat": "U",
-   "q": "电脑上哪个文件夹最占空间，用什么软件能看出来",
-   "rel": [
-    "语雀:TreeSize",
-    "语雀:WizTree",
-    "语雀:SpaceSniffer",
-    "语雀:常用空间分析",
-    "语雀:磁盘占用分析"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U02",
-   "cat": "U",
-   "q": "Adobe 卸载后重新安装失败怎么办",
-   "rel": [
-    "语雀:Adobe卸载",
-    "语雀:Adobe安装失败"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U03",
-   "cat": "U",
-   "q": "硬盘用了好几年，怎么检查健康状况",
-   "rel": [
-    "语雀:CrystalDisk",
-    "语雀:常用CrystalDisk"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U04",
-   "cat": "U",
-   "q": "买的 U 盘怀疑是扩容盘，用什么软件能查",
-   "rel": [
-    "语雀:ChipGenius"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U05",
-   "cat": "U",
-   "q": "右键菜单里多了一堆没用的选项，怎么清理",
-   "rel": [
-    "语雀:右键菜单"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U06",
-   "cat": "U",
-   "q": "打开游戏提示缺少 dll 文件怎么办",
-   "rel": [
-    "语雀:运行库"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U07",
-   "cat": "U",
-   "q": "能不能在一个 U 盘里同时放 PE 和好几个系统镜像",
-   "rel": [
-    "语雀:Ventoy",
-    "语雀:常用Ventoy",
-    "语雀:多镜像PE"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U08",
-   "cat": "U",
-   "q": "误删的文件还能恢复吗，用什么软件",
-   "rel": [
-    "语雀:Recuva"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U09",
-   "cat": "U",
-   "q": "流氓软件卸载了又自己装回来，怎么根治",
-   "rel": [
-    "语雀:SoftCnKiller",
-    "语雀:流氓软件卸载"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U10",
-   "cat": "U",
-   "q": "有没有比任务管理器更详细的进程查看工具",
-   "rel": [
-    "语雀:procexp",
-    "语雀:顺藤摸瓜"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U11",
-   "cat": "U",
-   "q": "Dism++ 能用来做什么",
-   "rel": [
-    "语雀:Dism++",
-    "语雀:常用Dism++"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U12",
-   "cat": "U",
-   "q": "笔记本有几个键好像失灵了，用什么软件测试",
-   "rel": [
-    "语雀:键盘测试"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U13",
-   "cat": "U",
-   "q": "显卡驱动装坏了，怎么彻底卸干净再重装",
-   "rel": [
-    "语雀:常用DDU"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U14",
-   "cat": "U",
-   "q": "重装系统后没有网卡驱动上不了网，怎么装驱动",
-   "rel": [
-    "语雀:SDI",
-    "语雀:常用SDI",
-    "语雀:装机安装驱动"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U15",
-   "cat": "U",
-   "q": "清灰后想烤机看看 CPU 温度，用什么软件",
-   "rel": [
-    "语雀:常用Aida64"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U16",
-   "cat": "U",
-   "q": "怎么测试显卡满载时的温度和稳定性",
-   "rel": [
-    "语雀:常用Furmark"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U17",
-   "cat": "U",
-   "q": "怎么用微软官方工具做 Windows 安装U盘",
-   "rel": [
-    "语雀:MediaCreationTool",
-    "语雀:重装准备篇"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U18",
-   "cat": "U",
-   "q": "有一个 Windows ISO 镜像，用什么软件写进 U 盘做启动盘",
-   "rel": [
-    "语雀:rufus",
-    "语雀:UltraISO",
-    "语雀:常用Rufus",
-    "语雀:Ventoy",
-    "语雀:常用Ventoy",
-    "语雀:多镜像PE"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U19",
-   "cat": "U",
-   "q": "软件卸载后残留文件和注册表清不干净怎么办",
-   "rel": [
-    "语雀:GeekUninstaller",
-    "语雀:常用Geek"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U20",
-   "cat": "U",
-   "q": "旧版 Office 没卸载干净，装学校正版 Office 一直失败",
-   "rel": [
-    "语雀:Office移除",
-    "语雀:OTP工具",
-    "语雀:Office安装问题",
-    "语雀:OTP卸载",
-    "语雀:Office混乱"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U21",
-   "cat": "U",
-   "q": "有没有把各种硬件检测软件打包在一起的合集",
-   "rel": [
-    "语雀:图吧工具箱"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U22",
-   "cat": "U",
-   "q": "微软有没有官方的 Windows 效率增强工具",
-   "rel": [
-    "语雀:PowerToys"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U23",
-   "cat": "U",
-   "q": "不想在电脑上装软件，有没有能放在 U 盘里直接用的免安装软件合集",
-   "rel": [
-    "语雀:PortableApps"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U24",
-   "cat": "U",
-   "q": "想看电脑的详细硬件信息和实时温度，用什么软件",
-   "rel": [
-    "语雀:常用HWiNFO",
-    "语雀:常用Aida64",
-    "语雀:AIDA64"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U25",
-   "cat": "U",
-   "q": "在浏览器里给 PDF 课件做笔记批注，用什么插件",
-   "rel": [
-    "语雀:Kami"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U26",
-   "cat": "U",
-   "q": "想用 Markdown 写邮件，有没有插件能直接渲染成排版好的格式",
-   "rel": [
-    "语雀:MarkdownHere"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "U27",
-   "cat": "U",
-   "q": "想把硬盘分区整个克隆到新的固态硬盘上，用什么软件",
-   "rel": [
-    "语雀:常用DiskGenius"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "G07",
-   "cat": "G",
-   "q": "拯救者 Y9000P 2025款续航多久",
-   "rel": [],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "G08",
-   "cat": "G",
-   "q": "机械革命蛟龙15K多少钱",
-   "rel": [],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "G09",
-   "cat": "G",
-   "q": "笔记本键盘进水了怎么办",
-   "rel": [],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "G10",
-   "cat": "G",
-   "q": "台式机装机配置推荐",
-   "rel": [],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "G11",
-   "cat": "G",
-   "q": "笔记本外接投影仪没反应怎么办",
-   "rel": [],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R01",
-   "cat": "R",
-   "q": "电脑经常死机蓝屏，应该按什么顺序排查",
-   "rel": [
-    "语雀:蓝屏排查顺序"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R02",
-   "cat": "R",
-   "q": "系统文件损坏了怎么用命令扫描修复",
-   "rel": [
-    "语雀:系统文件修复"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R03",
-   "cat": "R",
-   "q": "怎么进入 Windows 安全模式",
-   "rel": [
-    "语雀:安全模式"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R04",
-   "cat": "R",
-   "q": "蓝屏之后怎么查是哪个驱动引起的",
-   "rel": [
-    "语雀:WinDbg",
-    "语雀:事件查看器"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R05",
-   "cat": "R",
-   "q": "Windows 出了问题实在修不好，重置和重装怎么选",
-   "rel": [
-    "语雀:重置重装"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R06",
-   "cat": "R",
-   "q": "浏览器打不开网页，但是微信QQ都能正常用",
-   "rel": [
-    "语雀:校园网查设备",
-    "语雀:登录排查",
-    "语雀:网络常见问题"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R07",
-   "cat": "R",
-   "q": "连上 NJU-WLAN 之后弹不出登录页面",
-   "rel": [
-    "语雀:校园网会不会用",
-    "语雀:登录排查"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R08",
-   "cat": "R",
-   "q": "校园网用着用着突然被强制下线",
-   "rel": [
-    "语雀:校园网BUG"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R09",
-   "cat": "R",
-   "q": "宿舍上不了网，怎么判断是网线、路由器还是电脑的问题",
-   "rel": [
-    "语雀:判断问题位置"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R10",
-   "cat": "R",
-   "q": "在宿舍搜不到 NJU-WLAN 信号",
-   "rel": [
-    "语雀:校园网会不会用",
-    "语雀:分步排查"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R11",
-   "cat": "R",
-   "q": "电脑网卡坏了，有什么办法先临时上网",
-   "rel": [
-    "语雀:应急上网",
-    "语雀:网络常见问题"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R12",
-   "cat": "R",
-   "q": "腾讯会议里别人听不到我说话",
-   "rel": [
-    "语雀:麦克风权限",
-    "语雀:会议软件",
-    "语雀:麦克风硬件"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R13",
-   "cat": "R",
-   "q": "Mac 上开视频会议摄像头没有画面",
-   "rel": [
-    "语雀:Mac摄像头"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R14",
-   "cat": "R",
-   "q": "南大的世纪互联版 Office 365 怎么登录",
-   "rel": [
-    "语雀:世纪互联网页登录"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R15",
-   "cat": "R",
-   "q": "国际版 OneDrive 和学校的 OneDrive 在一台电脑上冲突",
-   "rel": [
-    "语雀:OneDrive冲突",
-    "语雀:OneDrive共存"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R16",
-   "cat": "R",
-   "q": "Mac 上的 Word 经常卡死",
-   "rel": [
-    "语雀:Mac Office卡死"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R17",
-   "cat": "R",
-   "q": "已经装了 Office，再装 Visio 要注意什么",
-   "rel": [
-    "语雀:装Visio"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R18",
-   "cat": "R",
-   "q": "旧打印机的驱动在新版 Windows 上装不上",
-   "rel": [
-    "语雀:旧设备驱动",
-    "语雀:驱动安装注意"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R19",
-   "cat": "R",
-   "q": "设备上看不出牌子，怎么查是哪家厂商、去哪找驱动",
-   "rel": [
-    "语雀:查找厂商"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R20",
-   "cat": "R",
-   "q": "开机出现 EARLY EXIT ON FAILURE 怎么办",
-   "rel": [
-    "语雀:EARLY EXIT"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R21",
-   "cat": "R",
-   "q": "装系统时提示找不到所需的介质驱动程序",
-   "rel": [
-    "语雀:介质驱动"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R22",
-   "cat": "R",
-   "q": "打开 Windows 设置提示 ms-settings 没有与之关联的应用",
-   "rel": [
-    "语雀:ms-settings"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R23",
-   "cat": "R",
-   "q": "Anaconda 里 import 包报 WinError 193",
-   "rel": [
-    "语雀:WinError193"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R24",
-   "cat": "R",
-   "q": "U盘插上后文件全变成了快捷方式",
-   "rel": [
-    "语雀:U盘病毒"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R25",
-   "cat": "R",
-   "q": "戴尔笔记本插耳机后识别不到麦克风",
-   "rel": [
-    "语雀:Dell麦克风"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R26",
-   "cat": "R",
-   "q": "蓝牙键盘连电脑后间歇性疯狂重复按键",
-   "rel": [
-    "语雀:蓝牙驱动"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R27",
-   "cat": "R",
-   "q": "电脑进水后送官方售后，需要注意什么",
-   "rel": [
-    "语雀:官方维修点",
-    "语雀:售后注意事项"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R28",
-   "cat": "R",
-   "q": "电脑上浏览器和网易云音乐突然都没有声音",
-   "rel": [
-    "语雀:UWP"
-   ],
-   "facts": [],
-   "origin": "manual"
-  },
-  {
-   "id": "R29",
-   "cat": "R",
-   "q": "打印机驱动怎么装",
-   "rel": [
-    "语雀:旧设备驱动",
-    "语雀:驱动安装注意"
-   ],
-   "facts": [],
-   "origin": "manual"
-  }
- ]
+  "version": "expanded-v1-pilot"
 }

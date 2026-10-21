@@ -38,3 +38,19 @@ def test_comparison_marks_loss_of_first_place_and_top_five(comparison, rows):
     title, changes = comparison.changes(rows, after)
     assert title == "变差 1 条，变好 0 条"
     assert "跌出前5" in changes[0] and "丢失第1名" in changes[0]
+
+
+def test_comparison_rejects_old_metric_contract(comparison, rows):
+    after = deepcopy(rows)
+    rows['T01']['metric_version'] = 'capacity-v1'
+    after['T01']['metric_version'] = 'strict-v2'
+    with pytest.raises(AssertionError, match='指标口径不同'):
+        comparison.validate_queries(rows, after)
+
+
+def test_loader_rejects_legacy_capacity_metrics(comparison, tmp_path):
+    import json
+    path = tmp_path / 'old.json'
+    path.write_text(json.dumps([{'scope': 'all', 'id': 'A01'}]))
+    with pytest.raises(AssertionError, match='指标口径不是'):
+        comparison.load(path, 'all')

@@ -35,7 +35,7 @@ def resolve(target, contexts):
     return rows
 
 
-def validate(spec, contexts=None, full=False):
+def validate(spec, contexts=None, full=False, recall_full=False):
     queries, aliases = spec["queries"], spec["aliases"]
     ids, questions, groups = set(), set(), {}
     resolved = {a: resolve(t, contexts) for a, t in aliases.items()} if contexts is not None else None
@@ -67,13 +67,24 @@ def validate(spec, contexts=None, full=False):
             assert needs, f"Agent 缺要点: {tag}"
             assert item["agent"].get("mode", "answer") in ("answer", "no_answer", "recommend", "clarify"), tag
             assert all(isinstance(t, str) and t.strip() for t in item["agent"].get("turns", [])), tag
-        if full:
+        if full or recall_full:
             assert "group" in item and "split" in item, tag
             assert needs, f"缺少必要需求: {tag}"
+    by_id = {q["id"]: q for q in queries}
+    for item in queries:
+        if item.get("variant_of"):
+            parent = by_id[item["variant_of"]]
+            assert item.get("group") == parent.get("group"), f"变体未同组: {item['id']}"
     counts = Counter(q["cat"] for q in queries)
     agents = [q for q in queries if q.get("agent")]
+    if full or recall_full:
+        assert counts == TARGETS
+        assert Counter(q["split"] for q in queries) == dict(dev=300, test=60)
+        added = [q for q in queries if q.get("origin") == "expanded"]
+        assert len(added) == 190
+        assert sum(q.get("construction") == "new_fact" for q in added) >= 140
+        assert sum(q.get("construction") == "paraphrase" for q in added) <= 50
     if full:
-        assert counts == TARGETS, counts
         assert Counter(q["cat"] for q in agents) == AGENT_TARGETS
         assert Counter(q["split"] for q in queries) == dict(dev=300, test=60)
         assert Counter(q["split"] for q in agents) == dict(dev=40, test=20)
@@ -86,11 +97,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("spec", type=Path)
     parser.add_argument("--corpus", type=Path, help="只读导出的父段 JSON（包含 title/body/source）")
+    parser.add_argument("--recall-full", action="store_true", help="核验 360 题主集配额和数据划分")
     parser.add_argument("--full", action="store_true", help="核验 360/60 配额与数据划分")
     args = parser.parse_args()
     spec = json.loads(args.spec.read_text())
     contexts = json.loads(args.corpus.read_text()) if args.corpus else None
-    print(json.dumps(validate(spec, contexts, args.full), ensure_ascii=False, indent=2))
+    print(json.dumps(validate(spec, contexts, args.full, args.recall_full), ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

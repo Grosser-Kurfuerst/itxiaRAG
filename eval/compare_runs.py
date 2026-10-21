@@ -5,17 +5,16 @@
 
 输出两部分：
 1. 汇总表：全部、A～F、D（含集合指标）及 T／X／K／U／R 类的混合指标，召回失败与排序失败条数，
-   以及按查询编号奇偶分半的 MRR@10 相对基线变化（两半都提升才视为稳定的改进）；
+   以及按固定 dev/test 分层的 MRR@10 相对基线变化；
 2. 逐条变化：每个实验组相对基线混合名次变化的查询，标出进入／跌出前 5，
    并列出新进入前 5、但不在本条答案中的父段，供增量补标核对。
 """
 import argparse
 import json
-import re
 from pathlib import Path
 from statistics import mean
 
-from metrics import failures, hit_metrics
+from metrics import failures, hit_metrics, METRIC_VERSION
 
 ORIGINAL_CATS = set("ABCDEF")
 CAT_COLUMNS = ("T", "X", "K", "U", "R")
@@ -24,6 +23,7 @@ CAT_COLUMNS = ("T", "X", "K", "U", "R")
 def load(path, scope):
     rows = [r for r in json.loads(Path(path).read_text(encoding="utf-8")) if r["scope"] == scope]
     assert rows, f"{path} 中没有范围 {scope}"
+    assert all(r.get("metric_version") == METRIC_VERSION for r in rows), "指标口径不是 strict-v2，需重跑"
     assert len({r["id"] for r in rows}) == len(rows), f"{path} 中存在重复查询编号"
     return {r["id"]: r for r in rows}
 
@@ -38,16 +38,16 @@ def hybrid(rows):
 
 def summarize(rows):
     positives = [r for r in rows.values() if r["rel"]]
-    d_rows = [r for r in positives if "set" in r]
-    halves = [[r for r in positives if int(re.sub(r"\D", "", r["id"]) or 0) % 2 == parity] for parity in (1, 0)]
-    fails = failures(positives)
+    d_rows = [r for r in positives if r["cat"] == "D" and "set" in r]
+    halves = [[r for r in positives if r.get("split") == split] for split in ("dev", "test")]
+    fails = failures([r for r in positives if not r.get("source_gap")])
     return {
         "ALL": hybrid(positives),
         "A~F": hybrid([r for r in positives if r["cat"] in ORIGINAL_CATS]),
         "D": hybrid([r for r in positives if r["cat"] == "D"]),
-        "D_set": {k: mean(r["set"]["hybrid"][k] for r in d_rows) for k in ("p@5", "ndcg@5")} if d_rows else None,
+        "D_set": {k: mean(r["set"]["hybrid"][k] for r in d_rows) for k in ("precision", "ndcg@5")} if d_rows else None,
         **{cat: hybrid([r for r in positives if r["cat"] == cat]) for cat in CAT_COLUMNS},
-        "halves": [hybrid(half)["MRR@10"] for half in halves],
+        "halves": [hybrid(half)["MRR@10"] if half else None for half in halves],
         "recall_fail": fails["recall"],
         "ranking_fail": fails["ranking"],
     }
@@ -55,7 +55,7 @@ def summarize(rows):
 
 COLUMNS = [("全部 H@1", "ALL", "H@1"), ("全部 H@5", "ALL", "H@5"), ("全部 MRR", "ALL", "MRR@10"),
            ("A~F H@5", "A~F", "H@5"), ("A~F MRR", "A~F", "MRR@10"),
-           ("D H@5", "D", "H@5"), ("D MRR", "D", "MRR@10"), ("D P@5", "D_set", "p@5"), ("D nDCG@5", "D_set", "ndcg@5"),
+           ("D H@5", "D", "H@5"), ("D MRR", "D", "MRR@10"), ("D Precision", "D_set", "precision"), ("D nDCG@5", "D_set", "ndcg@5"),
            *((f"{cat} MRR", cat, "MRR@10") for cat in CAT_COLUMNS)]
 
 
@@ -65,13 +65,13 @@ def cell(summary, group, key):
 
 
 def summary_table(names, summaries):
-    header = ["运行", *(title for title, _, _ in COLUMNS), "召回失败", "排序失败", "奇半ΔMRR", "偶半ΔMRR"]
+    header = ["运行", *(title for title, _, _ in COLUMNS), "召回失败", "排序失败", "dev ΔMRR", "test ΔMRR"]
     base = summaries[0]
     lines = ["| " + " | ".join(header) + " |", "|" + " --- |" * len(header)]
     for name, s in zip(names, summaries):
         cells = [name, *(cell(s, group, key) for _, group, key in COLUMNS),
                  str(len(s["recall_fail"])), str(len(s["ranking_fail"])),
-                 *(f"{now - before:+.3f}" for now, before in zip(s["halves"], base["halves"]))]
+                 *(f"{now - before:+.3f}" if now is not None and before is not None else "-" for now, before in zip(s["halves"], base["halves"]))]
         lines.append("| " + " | ".join(cells) + " |")
     return "\n".join(lines)
 
@@ -117,7 +117,8 @@ def new_unlabeled(base, run):
 def validate_queries(base, run):
     assert run.keys() == base.keys(), "各结果的查询集不一致"
     for qid, before in base.items():
-        for key in ("q", "cat", "rel", "facts", "constraints", "pair"):
+        assert before.get("metric_version") == run[qid].get("metric_version"), "指标口径不同，需重跑"
+        for key in ("q", "cat", "rel", "facts", "constraints", "pair", "needs", "split", "group", "qrels_complete", "source_gap", "metric_version"):
             assert before.get(key) == run[qid].get(key), f"{qid} 的 {key} 不一致，需按同一标注重跑"
 
 

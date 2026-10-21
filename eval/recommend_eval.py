@@ -1,7 +1,7 @@
 """推荐接口评测（机型规格库方案 8.2 节 P1）：
 
-1. 链路：D 类标准条件换算成原子条件后调用推荐服务，核对推荐集合与标注答案集合完全相同（不同说明过滤有错），并报 P@5、nDCG@5。
-   nDCG@5 的理想排序含“只差一条条件”的 1 级机型，推荐结果不含这些机型，所以答案少于 5 台时 nDCG@5 小于 1。
+1. 链路：D 类标准条件换算成原子条件后调用推荐服务，核对推荐集合与标注答案集合完全相同（不同说明过滤有错），并报 Precision、nDCG@5。
+   硬条件不满足的机型为 0 级，不给部分相关奖励。
 2. 软条件排序：recommend-queries.json 中“硬条件 + 软条件”的查询，比较按 preference 排序与只按日期排序的 nDCG@5。
 3. 结论附带率：全部可见机型中，结论子块取自结论栏目的比例，以及没有结论栏目、取最后一个子块兜底的篇数。
 
@@ -16,7 +16,10 @@ import json
 from pathlib import Path
 from statistics import mean
 
-from recall_eval import RICH_PORTS, THIN_LIGHT_MAX_KG, grades_of, load_corpus, set_metrics  # 导入时完成 django.setup()
+from recall_eval import RICH_PORTS, THIN_LIGHT_MAX_KG, grades_of, load_corpus  # 导入时完成 django.setup()
+
+from metrics import set_metrics, METRIC_VERSION
+from cases import digest
 
 from django.conf import settings  # noqa: E402
 
@@ -121,9 +124,9 @@ def conclusion_stats():
 def print_report(chain, soft, conclusions):
     print("== 链路：D 类标准条件 → 原子条件 → 推荐（按日期排序）")
     for r in chain:
-        print(f"{r['id']} 答案{r['n_rel']}台 集合{'相同' if r['same_set'] else '不同'} P@5={r['p@5']:.2f} nDCG@5={r['ndcg@5']:.2f} | {r['q']} "
+        print(f"{r['id']} 答案{r['n_rel']}台 集合{'相同' if r['same_set'] else '不同'} Precision={r['precision']:.2f} nDCG@5={r['ndcg@5']:.2f} | {r['q']} "
               f"{json.dumps(r['conditions'], ensure_ascii=False)} -> {r['top5']}")
-    print(f"-- 集合相同 {sum(r['same_set'] for r in chain)}/{len(chain)} 条；平均 P@5={mean(r['p@5'] for r in chain):.3f} "
+    print(f"-- 集合相同 {sum(r['same_set'] for r in chain)}/{len(chain)} 条；平均 Precision={mean(r['precision'] for r in chain):.3f} "
           f"nDCG@5={mean(r['ndcg@5'] for r in chain):.3f}")
 
     print("\n== 软条件排序：按日期 vs 按 preference（nDCG@5）")
@@ -148,11 +151,12 @@ def main():
     soft = json.loads(args.soft.read_text(encoding="utf-8"))
     corpus = load_corpus(spec, args.spec.parent)
     recommender = Recommender()
-    result = {"chain": chain_rows(spec["queries"], corpus, recommender),
+    result = {"metric_version": METRIC_VERSION, "cases_sha256": digest(spec),
+              "specs_sha256": digest(corpus.specs), "chain": chain_rows(spec["queries"], corpus, recommender),
               "soft": soft_rows(soft["queries"], corpus, recommender),
               "conclusions": conclusion_stats()}
     args.out.write_text(json.dumps(result, ensure_ascii=False, indent=1), encoding="utf-8")
-    print_report(**result)
+    print_report(result["chain"], result["soft"], result["conclusions"])
 
 
 if __name__ == "__main__":

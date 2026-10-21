@@ -1,5 +1,5 @@
 """初步召回评测：父段级 Hit/MRR、分路排名、事实子块排名、负例分数；
-D 类按机型规格文件中的条件生成分级标注，另报 P@5、nDCG@5、R@10。
+D 类严格满足全部条件才相关；另报实际返回精确率、完整 Recall@10 和必要需求覆盖。
 
 答案按来源类别分别报三路名次，区分召回失败（两路候选中都没有）与排序失败（已召回但未进入混合前 5）。
 查询集的 scopes 定义若干检索范围（范围名 -> document_schema 列表），每个范围各跑一遍；
@@ -21,7 +21,6 @@ D 类按机型规格文件中的条件生成分级标注，另报 P@5、nDCG@5�
 """
 import argparse
 import json
-import math
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -37,7 +36,9 @@ from django.conf import settings  # noqa: E402
 from catalog.models import ContextUnit, EvidenceUnit, KnowledgeSource  # noqa: E402
 from config import components  # noqa: E402
 from contracts.types import SearchRequest, SearchScope  # noqa: E402
-from metrics import METHODS, SCHEMA_NAMES, SET_METRICS, failures, hit_metrics  # noqa: E402
+from cases import digest
+from metrics import (METHODS, SCHEMA_NAMES, METRIC_VERSION, average_sets, failures, hit_metrics,
+                     need_coverage, set_metrics)  # noqa: E402
 
 CANDIDATES_PER_ROUTE = 100
 TOP_PARENTS = 20
@@ -137,7 +138,7 @@ CONSTRAINTS = {
 
 
 def grades_of(item, corpus):
-    """返回 {父段 id: 等级}：满足全部条件为 2，多条件时只差一条为 1；手工标注一律为 2。"""
+    """返回 {父段 id: 等级}：满足全部硬条件为 2，不满足为 0；手工标注为 2。"""
     if "constraints" not in item:
         return {cid: 2 for a in item["rel"] for cid in corpus.alias_ctx[a]}
     grades = {}
@@ -145,23 +146,10 @@ def grades_of(item, corpus):
         passed = [CONSTRAINTS[key](spec, value) for key, value in item["constraints"].items()]
         if all(passed):
             grades[corpus.title_ctx[title]] = 2
-        elif len(passed) > 1 and sum(passed) == len(passed) - 1:
-            grades[corpus.title_ctx[title]] = 1
     return grades
 
 
 # ---- 指标 ----
-
-def set_metrics(order, grades):
-    relevant = {cid for cid, g in grades.items() if g == 2}
-    top5, top10 = order[:5], order[:10]
-    dcg = sum((2 ** grades.get(cid, 0) - 1) / math.log2(i + 2) for i, cid in enumerate(top5))
-    ideal = sorted(grades.values(), reverse=True)[:5]
-    idcg = sum((2 ** g - 1) / math.log2(i + 2) for i, g in enumerate(ideal))
-    return {"p@5": sum(cid in relevant for cid in top5) / min(len(relevant), 5),  # 按 min(5, 答案数) 归一，满分为 1
-            "ndcg@5": dcg / idcg if idcg else 0.0,
-            "r@10": sum(cid in relevant for cid in top10) / min(len(relevant), 10)}
-
 
 def parent_order(candidates):
     return list(dict.fromkeys(c.context_id for c in candidates))
@@ -194,7 +182,7 @@ def evaluate_query(item, scope, schemas, corpus, collector, pipeline):
     else:
         item = {**item, "rel": [a for a in item["rel"] if set(corpus.alias_ctx[a]) & rel_ids]}
 
-    row = {**item,
+    row = {**item, "metric_version": METRIC_VERSION,
            "top5": [corpus.label(cid) for cid in orders["hybrid"][:5]],
            "ranks": {m: first_rank(o, rel_ids) for m, o in orders.items()},
            "top1_cos": vector[0].score if vector else None,
@@ -205,9 +193,14 @@ def evaluate_query(item, scope, schemas, corpus, collector, pipeline):
         by_schema.setdefault(corpus.schema_of(cid), set()).add(cid)
     row["source_ranks"] = {schema: {m: first_rank(o, ids) for m, o in orders.items()}
                            for schema, ids in sorted(by_schema.items())}
-    if item["cat"] == "D":
-        row["set"] = {m: set_metrics(o, grades) for m, o in orders.items()}
-        row["n_rel"] = len(rel_ids)
+    row["set"] = {m: set_metrics(o[:TOP_PARENTS], grades) for m, o in orders.items()}
+    if not item.get("qrels_complete", item["cat"] == "D"):
+        for scores in row["set"].values():
+            scores["recall@10"] = None
+    row["n_rel"] = len(rel_ids)
+    if item.get("needs") and item["cat"] not in ("D", "G") and not item.get("source_gap"):
+        bodies = {cid: c.body for cid, c in corpus.contexts.items()}
+        row["needs_at5"] = {m: need_coverage(item["needs"], o, bodies, corpus.alias_ctx) for m, o in orders.items()}
     if item.get("pair") and len(item["rel"]) > 1:
         top5 = set(orders["hybrid"][:5])
         row["pair_both_top5"] = all(set(corpus.alias_ctx[a]) & top5 for a in item["rel"])
@@ -224,7 +217,7 @@ def evaluate_query(item, scope, schemas, corpus, collector, pipeline):
 
 def score_stats(rows, key):
     values = [r[key] or 0 for r in rows]
-    return {"min": min(values), "max": max(values), "mean": mean(values)}
+    return {"min": min(values), "max": max(values), "mean": mean(values)} if values else None
 
 
 def summarize(rows):
@@ -234,9 +227,18 @@ def summarize(rows):
     for cat in sorted({r["cat"] for r in pos}) + ["ALL"]:
         sub = [r for r in pos if cat in ("ALL", r["cat"])]
         by_cat[cat] = {"n": len(sub), **{m: hit_metrics([r["ranks"][m] for r in sub]) for m in METHODS}}
-    d_rows = [r for r in rows if "set" in r]
-    d_set = {m: {k: mean(r["set"][m][k] for r in d_rows) for k in SET_METRICS} for m in METHODS} if d_rows else None
-    return {"by_cat": by_cat, "d_n": len(d_rows), "d_set": d_set, "failures": failures(pos),
+    d_rows = [r for r in rows if r["cat"] == "D"]
+    d_set = {m: average_sets(d_rows, m) for m in METHODS} if d_rows else None
+    closed = [r for r in pos if r.get("qrels_complete") and not r.get("source_gap")]
+    partial = [r for r in pos if not r.get("qrels_complete") and not r.get("source_gap")]
+    need_rows = [r for r in rows if "needs_at5" in r]
+    pairs = [r for r in rows if "pair_both_top5" in r]
+    return {"metric_version": METRIC_VERSION, "closed_set": {m: average_sets(closed, m) for m in METHODS},
+            "known_label_precision_lower_bound": {m: {"n": len(partial), "precision": mean(r["set"][m]["precision"] for r in partial) if partial else None} for m in METHODS},
+            "needs_at5": {m: {"n": len(need_rows), "all": mean(r["needs_at5"][m]["all"] for r in need_rows) if need_rows else None} for m in METHODS},
+            "pair_both_top5": {"n": len(pairs), "passed": sum(r["pair_both_top5"] for r in pairs)},
+            "source_gaps": [r["id"] for r in rows if r.get("source_gap")],
+            "by_cat": by_cat, "d_n": len(d_rows), "d_set": d_set, "failures": failures([r for r in pos if not r.get("source_gap")]),
             "cos": {"pos": score_stats(pos, "top1_cos"), "neg": score_stats(neg, "top1_cos")},
             "bm25": {"pos": score_stats(pos, "top1_bm25"), "neg": score_stats(neg, "top1_bm25")}}
 
@@ -249,7 +251,7 @@ def detail_line(r):
         extra += f" 双命中@5={r['pair_both_top5']}"
     if "set" in r:
         h = r["set"]["hybrid"]
-        extra += f" 答案{r['n_rel']}台 P@5={h['p@5']:.2f} nDCG@5={h['ndcg@5']:.2f} R@10={h['r@10']:.2f}"
+        extra += f" 相关{r['n_rel']}项 precision={h['precision']:.2f} Recall@10={h['recall@10']}"
     ranks = "/".join(str(r["ranks"][m]) for m in METHODS)
     if len(r.get("source_ranks", {})) > 1:
         extra += " 分来源 " + " ".join(
@@ -269,14 +271,12 @@ def print_report(scope_name, rows, summary):
             f"{m}: H@1={s[m]['H@1']:.2f} H@5={s[m]['H@5']:.2f} MRR@10={s[m]['MRR@10']:.3f}" for m in METHODS]))
     if summary["d_set"]:
         print("  ".join([f"D 集合指标(n={summary['d_n']})"] + [
-            f"{m}: " + " ".join(f"{k}={v:.3f}" for k, v in summary["d_set"][m].items()) for m in METHODS]))
+            f"{m}: " + str(summary["d_set"][m]) for m in METHODS]))
     fails = summary["failures"]
     print(f"-- 召回失败（两路前 {CANDIDATES_PER_ROUTE} 个子块均无答案）{len(fails['recall'])} 项：{' '.join(fails['recall'])}")
     print(f"-- 排序失败（已召回，未进入混合前 5）{len(fails['ranking'])} 项：{' '.join(fails['ranking'])}")
-    cos, bm25 = summary["cos"], summary["bm25"]
-    print(f"-- top1 余弦：正例 min={cos['pos']['min']:.3f} mean={cos['pos']['mean']:.3f}"
-          f"；负例 max={cos['neg']['max']:.3f} mean={cos['neg']['mean']:.3f}")
-    print(f"-- top1 BM25：正例 min={bm25['pos']['min']:.2f}；负例 max={bm25['neg']['max']:.2f}")
+    for key in ("closed_set", "known_label_precision_lower_bound", "needs_at5", "pair_both_top5", "source_gaps"):
+        print(f"-- {key}: {summary[key]}")
 
 
 def parse_args():
@@ -284,6 +284,7 @@ def parse_args():
     parser.add_argument("spec", type=Path, help="查询集 JSON")
     parser.add_argument("out", type=Path, help="结果 JSON 输出路径")
     parser.add_argument("--scope", action="append", help="只跑指定范围，可重复；默认跑查询集中的全部范围")
+    parser.add_argument("--ids", nargs="+", help="只跑指定题号，用于复现和互不重叠的分批评测")
     parser.add_argument("--rrf-k", type=int)
     parser.add_argument("--vector-weight", type=float, help="向量路 RRF 权重，关键词路保持 settings 中的值")
     parser.add_argument("--search-mode", choices=("off", "document", "both"), help="关键词路 jieba 搜索模式的使用范围")
@@ -320,15 +321,27 @@ def main(args):
           f"{len(spec['queries'])} 条；语料 {KnowledgeSource.objects.count()} 个来源、"
           f"{len(corpus.contexts)} 个父段、{len(corpus.evidence)} 个子块")
 
+    manifest = {"cases_sha256": digest(spec), "specs_sha256": digest(corpus.specs), "config": config,
+                "corpus_sha256": digest(sorted((str(c.id), c.body, c.source.document_schema) for c in corpus.contexts.values()))}
+    queries = spec["queries"]
+    if args.ids:
+        assert set(args.ids) <= {q["id"] for q in queries}, "存在未知题号"
+        queries = [q for q in queries if q["id"] in args.ids]
     rows = []
     for name, schemas in scope_schemas.items():
         scope = build_scope(schemas, embedder.space_id)
-        rows += [{"scope": name, **evaluate_query(item, scope, schemas, corpus, collector, pipeline)}
-                 for item in spec["queries"]]
+        for i, item in enumerate(queries, 1):
+            rows.append({"scope": name, "run_meta": manifest,
+                         **evaluate_query(item, scope, schemas, corpus, collector, pipeline)})
+            if i % 20 == 0:
+                print(f"{name}: 已评测 {i}/{len(queries)}", flush=True)
     args.out.write_text(json.dumps(rows, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
     for name in scope_schemas:
         scope_rows = [r for r in rows if r["scope"] == name]
         print_report(name, scope_rows, summarize(scope_rows))
+    args.out.with_suffix(".summary.json").write_text(json.dumps(
+        {name: summarize([r for r in rows if r["scope"] == name]) for name in scope_schemas},
+        ensure_ascii=False, indent=2), encoding="utf-8")
     print_scope_changes(rows, list(scope_schemas))
 
 

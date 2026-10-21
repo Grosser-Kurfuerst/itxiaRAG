@@ -2,7 +2,7 @@
 
 1. 工具选择：全部查询中选对工具的比例；D 类应选机型推荐，其余应选知识检索。
 2. 条件换算：D 类有标准条件的查询，逐条列出 LLM 给出的原子条件与标准条件的差异。
-3. 端到端：按 LLM 给出的参数调用推荐服务，D 类 P@5、nDCG@5 与链路结果（标准条件）对比。
+3. 端到端：按 LLM 给出的参数调用推荐服务，D 类 Precision、nDCG@5 与链路结果（标准条件）对比。
 4. 补充样例：口语化选购与多轮追问，答案为满足标准条件的全部机型。
 
 只看 LLM 第一轮回复的工具调用，不执行多步对话；参数不合法时记为错误，不重试。
@@ -26,7 +26,8 @@ from statistics import mean
 from urllib.request import Request, urlopen
 
 from recommend_eval import VISIBILITIES, Recommender, chain_rows, to_conditions  # 导入时完成 django.setup()
-from recall_eval import grades_of, load_corpus, set_metrics
+from recall_eval import grades_of, load_corpus
+from metrics import set_metrics, METRIC_VERSION
 
 from rest_framework.exceptions import ValidationError  # noqa: E402
 
@@ -163,7 +164,7 @@ def extra_rows(queries, recommender, model):
 
 
 def _print_metrics(label, rows):
-    print(f"-- {label}（n={len(rows)}）P@5={mean(r['p@5'] for r in rows):.3f} nDCG@5={mean(r['ndcg@5'] for r in rows):.3f}")
+    print(f"-- {label}（n={len(rows)}）Precision={mean(r['precision'] for r in rows):.3f} nDCG@5={mean(r['ndcg@5'] for r in rows):.3f}")
 
 
 def _print_conditions(rows):
@@ -196,7 +197,7 @@ def print_report(meta, spec, extra, chain):
     print("\n== 端到端：D 类按 LLM 参数推荐")
     for r in spec:
         if r["cat"] == "D":
-            print(f"{r['id']} P@5={r['p@5']:.2f} nDCG@5={r['ndcg@5']:.2f} | {r['q']} -> {r['top5']}")
+            print(f"{r['id']} Precision={r['precision']:.2f} nDCG@5={r['ndcg@5']:.2f} | {r['q']} -> {r['top5']}")
     _print_metrics("LLM，D 类全部（与 v17 对比）", [r for r in spec if r["cat"] == "D"])
     _print_metrics("LLM，有标准条件的查询（与链路对比）", [r for r in spec if "diff" in r])
     _print_metrics("链路", chain)
@@ -222,7 +223,7 @@ def main():
     recommender = Recommender()
     prompt, tools = load_tools()
     model = ChatModel(prompt, tools)
-    result = {"meta": {"model": model.model, "extra_version": extra["version"],
+    result = {"meta": {"metric_version": METRIC_VERSION, "model": model.model, "extra_version": extra["version"],
                        # 保留旧字段名，兼容历史结果；它只覆盖提示词文档。
                        "tools_sha256": hashlib.sha256(TOOL_FILE.read_bytes()).hexdigest(),
                        "schema_sha256": schema_digest(tools)},

@@ -4,7 +4,7 @@
 
 这是一个 Django + PostgreSQL 的最小混合检索知识库。`api/` 提供标准导入、原文导入、查询和机型推荐入口；`contracts/` 定义 DTO、协议、导入 Serializer 和检索／推荐 pydantic 模型；`mcp_server/` 通过 MCP 提供检索与推荐工具；`ingestion/` 编排原文预处理与标准化文档导入；`catalog/` 保存来源、父段和子块；`embeddings/` 适配模型服务；`retrieval/` 实现关键词、向量和 RRF；`products/` 保存机型规格并按条件推荐；`config/` 是组合根。测试在 `tests/unit/` 与 `tests/integration/`，召回评测脚本在 `eval/`，样本在 `fixtures/iteration1/`，设计文档在 `docs/phase1/`。
 
-API 接收已标准化的 `ProcessedDocument`，也支持将 HTML、Markdown 或纯文本经可编排预处理后导入；机型推荐接口按原子条件过滤规格表，条件换算由上层 LLM 完成。已实现评测、购机指南和经验文档的父子分段策略；当前不实现文章抓取、OCR、审核发布、任务队列、回答生成和知识图谱。文档入口见 [README](README.md#文档导航)，预处理契约与扩展方式见 [文档预处理](docs/phase1/preprocessing.md)。
+API 接收已标准化的 `ProcessedDocument`，也支持将 HTML、Markdown 或纯文本经可编排预处理后导入；机型推荐接口按原子条件过滤规格表，条件换算由上层 LLM 完成。已实现评测、购机指南和经验文档的父子分段策略；当前不实现文章抓取、OCR、审核发布、任务队列、回答生成和知识图谱。文档入口见 [README](README.md#文档导航)，预处理契约与扩展方式见 [文档预处理](docs/phase1/preprocessing.md)，检索、推荐与 Agent 优化的文档导航和进展见 [优化文档汇总](docs/optimization-overview.md)。
 
 ## 开发与验证
 
@@ -22,7 +22,7 @@ make test
 
 Python 使用 4 空格缩进，函数和变量用 `snake_case`，类用 `PascalCase`。保持模块依赖方向：业务编排依赖 `contracts` 协议，不直接拼模型厂商请求；外部模型、保存、召回和排序通过适配器注入。不要为低概率场景增加复杂状态机或通用 Repository。
 
-Markdown 文件名使用小写连字符。代码修改必须同步受影响的 `docs/phase1/` 契约和样例。
+Markdown 文件名使用小写连字符。代码修改必须同步受影响的 `docs/phase1/` 契约和样例。检索、推荐、评测或 Agent 输出的优化有进展时（新方案、实验结论、基线变化、待办状态变化、新增相关文档），同步更新 [优化文档汇总](docs/optimization-overview.md) 的对应条目；汇总只写状态和链接，数值与口径仍维护在源文档。
 
 ## 测试要求
 

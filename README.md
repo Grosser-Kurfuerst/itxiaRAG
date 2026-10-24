@@ -27,6 +27,7 @@
 
 **迭代计划与记录**
 
+- [优化文档汇总](docs/optimization-overview.md)：检索、推荐与 Agent 优化相关文档的导航、已完成与未完成项、基线演变
 - [第二阶段需求](docs/phase2/requirements.md)：检索质量与维修类内容
 - [召回改进方案](docs/phase2/retrieval-improvement-plan.md)与[改进记录](docs/phase2/retrieval-improvement-log.md)：改进项、实验结果与取舍
 - [第三阶段需求](docs/phase3/requirements.md)：计划接入大模型后实现的功能（草案）

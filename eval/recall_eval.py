@@ -1,5 +1,6 @@
 """初步召回评测：父段级 Hit/MRR、分路排名、事实子块排名、负例分数；
-D 类严格满足全部条件才相关；另报实际返回精确率、完整 Recall@10 和必要需求覆盖。
+D 类严格满足全部条件才相关，只报集合指标，不计入 ALL、宏平均、闭集和失败清单；
+另报实际返回精确率、完整 Recall@10、必要需求覆盖（分单需求与复合需求）和按问法风格的分组指标。
 
 答案按来源类别分别报三路名次，区分召回失败（两路候选中都没有）与排序失败（已召回但未进入混合前 5）。
 查询集的 scopes 定义若干检索范围（范围名 -> document_schema 列表），每个范围各跑一遍；
@@ -36,7 +37,7 @@ from django.conf import settings  # noqa: E402
 from catalog.models import ContextUnit, EvidenceUnit, KnowledgeSource  # noqa: E402
 from config import components  # noqa: E402
 from contracts.types import SearchRequest, SearchScope  # noqa: E402
-from cases import digest
+from cases import digest, style_of
 from metrics import (METHODS, SCHEMA_NAMES, METRIC_VERSION, average_sets, failures, hit_metrics,
                      need_coverage, set_metrics)  # noqa: E402
 
@@ -220,25 +221,43 @@ def score_stats(rows, key):
     return {"min": min(values), "max": max(values), "mean": mean(values)} if values else None
 
 
+def grouped_hits(rows, key):
+    groups = {}
+    for r in rows:
+        groups.setdefault(key(r), []).append(r)
+    return {name: {"n": len(sub), **{m: hit_metrics([r["ranks"][m] for r in sub]) for m in METHODS}}
+            for name, sub in sorted(groups.items())}
+
+
+def need_summary(rows):
+    return {m: {"n": len(rows), "all": mean(r["needs_at5"][m]["all"] for r in rows) if rows else None} for m in METHODS}
+
+
 def summarize(rows):
     pos = [r for r in rows if r["rel"]]
     neg = [r for r in rows if not r["rel"]]
-    by_cat = {}
-    for cat in sorted({r["cat"] for r in pos}) + ["ALL"]:
-        sub = [r for r in pos if cat in ("ALL", r["cat"])]
-        by_cat[cat] = {"n": len(sub), **{m: hit_metrics([r["ranks"][m] for r in sub]) for m in METHODS}}
+    # D 类由推荐接口按集合指标评测，不进入召回主指标（ALL、宏平均、闭集、失败清单）
+    recall = [r for r in pos if r["cat"] != "D"]
+    by_cat = grouped_hits(pos, lambda r: r["cat"])
+    by_cat["ALL"] = grouped_hits(recall, lambda r: "ALL").get("ALL")
+    cats = [c for c in by_cat if c not in ("D", "ALL")]
+    by_cat["MACRO"] = {"n": len(cats), **{m: {k: mean(by_cat[c][m][k] for c in cats) for k in ("H@1", "H@5", "MRR@10")}
+                                          for m in METHODS}} if cats else None
     d_rows = [r for r in rows if r["cat"] == "D"]
     d_set = {m: average_sets(d_rows, m) for m in METHODS} if d_rows else None
-    closed = [r for r in pos if r.get("qrels_complete") and not r.get("source_gap")]
-    partial = [r for r in pos if not r.get("qrels_complete") and not r.get("source_gap")]
+    closed = [r for r in recall if r.get("qrels_complete") and not r.get("source_gap")]
+    partial = [r for r in recall if not r.get("qrels_complete") and not r.get("source_gap")]
     need_rows = [r for r in rows if "needs_at5" in r]
     pairs = [r for r in rows if "pair_both_top5" in r]
     return {"metric_version": METRIC_VERSION, "closed_set": {m: average_sets(closed, m) for m in METHODS},
             "known_label_precision_lower_bound": {m: {"n": len(partial), "precision": mean(r["set"][m]["precision"] for r in partial) if partial else None} for m in METHODS},
-            "needs_at5": {m: {"n": len(need_rows), "all": mean(r["needs_at5"][m]["all"] for r in need_rows) if need_rows else None} for m in METHODS},
+            "needs_at5": need_summary(need_rows),
+            "needs_at5_single": need_summary([r for r in need_rows if len(r["needs"]) == 1]),
+            "needs_at5_multi": need_summary([r for r in need_rows if len(r["needs"]) > 1]),
             "pair_both_top5": {"n": len(pairs), "passed": sum(r["pair_both_top5"] for r in pairs)},
             "source_gaps": [r["id"] for r in rows if r.get("source_gap")],
-            "by_cat": by_cat, "d_n": len(d_rows), "d_set": d_set, "failures": failures([r for r in pos if not r.get("source_gap")]),
+            "by_cat": by_cat, "by_style": grouped_hits(recall, style_of),
+            "d_n": len(d_rows), "d_set": d_set, "failures": failures([r for r in recall if not r.get("source_gap")]),
             "cos": {"pos": score_stats(pos, "top1_cos"), "neg": score_stats(neg, "top1_cos")},
             "bm25": {"pos": score_stats(pos, "top1_bm25"), "neg": score_stats(neg, "top1_bm25")}}
 
@@ -265,17 +284,20 @@ def print_report(scope_name, rows, summary):
     print(f"\n===== scope={scope_name} =====")
     for r in rows:
         print(detail_line(r))
-    print("-- 汇总（正例）")
-    for cat, s in summary["by_cat"].items():
-        print("  ".join([f"{cat}(n={s['n']})"] + [
-            f"{m}: H@1={s[m]['H@1']:.2f} H@5={s[m]['H@5']:.2f} MRR@10={s[m]['MRR@10']:.3f}" for m in METHODS]))
+    print("-- 汇总（正例；ALL 与 MACRO 不含 D，MACRO 为各类等权平均）")
+    for title, groups in (("类别", summary["by_cat"]), ("问法风格", summary["by_style"])):
+        for name, s in groups.items():
+            if s:
+                print("  ".join([f"{title} {name}(n={s['n']})"] + [
+                    f"{m}: H@1={s[m]['H@1']:.2f} H@5={s[m]['H@5']:.2f} MRR@10={s[m]['MRR@10']:.3f}" for m in METHODS]))
     if summary["d_set"]:
         print("  ".join([f"D 集合指标(n={summary['d_n']})"] + [
             f"{m}: " + str(summary["d_set"][m]) for m in METHODS]))
     fails = summary["failures"]
     print(f"-- 召回失败（两路前 {CANDIDATES_PER_ROUTE} 个子块均无答案）{len(fails['recall'])} 项：{' '.join(fails['recall'])}")
     print(f"-- 排序失败（已召回，未进入混合前 5）{len(fails['ranking'])} 项：{' '.join(fails['ranking'])}")
-    for key in ("closed_set", "known_label_precision_lower_bound", "needs_at5", "pair_both_top5", "source_gaps"):
+    for key in ("closed_set", "known_label_precision_lower_bound", "needs_at5", "needs_at5_single", "needs_at5_multi",
+                "pair_both_top5", "source_gaps"):
         print(f"-- {key}: {summary[key]}")
 
 

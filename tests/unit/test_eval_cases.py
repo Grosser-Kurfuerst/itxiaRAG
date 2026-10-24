@@ -38,3 +38,34 @@ def test_case_ids_and_need_ids_are_unique(cases, spec):
     spec["queries"][0]["needs"].append(spec["queries"][0]["needs"][0])
     with pytest.raises(AssertionError, match="重复需求"):
         cases.validate(spec)
+
+
+def test_g_type_is_required_only_for_unanswerable_cases(cases, spec):
+    spec["queries"].append({"id": "G01", "cat": "G", "q": "不存在的机型多重", "rel": [],
+                            "needs": [{"id": "boundary", "answer": "说明没有资料", "evidence": []}]})
+    with pytest.raises(AssertionError, match="g_type"):
+        cases.validate(spec)
+    spec["queries"][1]["g_type"] = "near_model"
+    assert cases.validate(spec)["queries"] == 2
+    spec["queries"][0]["g_type"] = "near_model"
+    with pytest.raises(AssertionError, match="g_type"):
+        cases.validate(spec)
+
+
+def test_expanded_questions_reject_source_jargon(cases, spec):
+    spec["queries"][0].update(origin="expanded", q="满载人位噪音多少")
+    with pytest.raises(AssertionError, match="原文术语"):
+        cases.validate(spec, recall_full=True)
+
+
+def test_expanded_x_cases_must_combine_documents_and_vary_tutorials(cases, spec):
+    spec["aliases"]["教程"] = {"doc": "help/guide"}
+    x = {"id": "X01", "cat": "X", "q": "怎么加内存", "rel": ["型号", "教程"], "group": "X01", "split": "dev",
+         "origin": "expanded", "needs": [deepcopy(spec["queries"][0]["needs"][0])]}
+    spec["queries"] = [x]
+    with pytest.raises(AssertionError, match="跨文档"):
+        cases.validate(spec, recall_full=True)
+    x["needs"].append({"id": "install", "answer": "斜插下压", "evidence": [{"ref": "教程", "quote": "斜插下压"}]})
+    spec["queries"] = [deepcopy(x) | {"id": f"X0{i}", "q": f"怎么加内存{i}", "group": f"X0{i}"} for i in range(1, 6)]
+    with pytest.raises(AssertionError, match="教程复用过多"):
+        cases.validate(spec, recall_full=True)

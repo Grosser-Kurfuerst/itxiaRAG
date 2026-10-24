@@ -9,6 +9,17 @@ from pathlib import Path
 
 TARGETS = dict(A=30, B=25, C=25, D=30, E=20, F=25, T=35, X=20, K=40, U=40, R=45, G=25)
 AGENT_TARGETS = dict(A=3, B=3, C=3, D=10, E=6, F=4, T=5, X=8, K=4, U=4, R=4, G=6)
+# D 只经推荐接口评测，不计入召回主指标
+RECALL_CATS = [c for c in TARGETS if c != "D"]
+STYLES = ("standard", "abbrev", "colloquial")
+G_TYPES = ("near_model", "missing_model", "missing_attr", "missing_topic", "out_of_scope")
+# 资料原文术语和模板套话，不应出现在新增题面中
+JARGON = ("日常应用仿真", "人位", "实测", "资料", "想确认一下", "能帮我看看不", "请说明测试环境")
+X_ALIAS_LIMIT = 4
+
+
+def style_of(item):
+    return item.get("style") or {"B": "abbrev", "C": "colloquial"}.get(item["cat"], "standard")
 
 
 def normalized(text):
@@ -66,6 +77,9 @@ def validate(spec, contexts=None, full=False, recall_full=False):
                         assert any(contains(c["body"], e["quote"]) for c in resolved[e["ref"]]), \
                             f"原文不存在: {tag}/{need['id']}/{e['ref']}: {e['quote']}"
         needs = item.get("needs", [])
+        assert style_of(item) in STYLES, f"未知问法风格: {tag}"
+        assert (item["cat"] == "G") == ("g_type" in item), f"g_type 只用于且必须用于 G 类: {tag}"
+        assert item.get("g_type", G_TYPES[0]) in G_TYPES, f"未知无答案类型: {tag}"
         if item.get("agent"):
             assert needs, f"Agent 缺要点: {tag}"
             assert item["agent"].get("mode", "answer") in ("answer", "no_answer", "recommend", "clarify"), tag
@@ -76,6 +90,15 @@ def validate(spec, contexts=None, full=False, recall_full=False):
         if full or recall_full:
             assert "group" in item and "split" in item, tag
             assert needs, f"缺少必要需求: {tag}"
+            if item.get("origin") == "expanded":
+                assert not [w for w in JARGON if w in item["q"]], f"题面含原文术语或套话: {tag}"
+                if item["cat"] == "X":
+                    assert len({n["evidence"][0]["ref"] for n in needs}) >= 2, f"X 类需跨文档复合: {tag}"
+    if full or recall_full:
+        usage = Counter(ref for q in queries if q["cat"] == "X" for ref in q.get("rel", [])
+                        if isinstance(aliases[ref], dict))
+        overused = {ref: n for ref, n in usage.items() if n > X_ALIAS_LIMIT}
+        assert not overused, f"X 类教程复用过多: {overused}"
     by_id = {q["id"]: q for q in queries}
     for item in queries:
         if item.get("variant_of"):

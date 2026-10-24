@@ -54,3 +54,11 @@ def test_loader_rejects_legacy_capacity_metrics(comparison, tmp_path):
     path.write_text(json.dumps([{'scope': 'all', 'id': 'A01'}]))
     with pytest.raises(AssertionError, match='指标口径不是'):
         comparison.load(path, 'all')
+
+
+def test_recommendation_cases_are_excluded_from_recall_totals(comparison, rows):
+    rows["D01"] = {"q": "8000元以内游戏本", "cat": "D", "rel": ["型号"], "facts": [], "top5": [],
+                   "ranks": {"hybrid": None}, "set": {"hybrid": {"precision": 0.5, "ndcg@5": 0.5}}}
+    summary = comparison.summarize(rows)
+    assert summary["ALL"]["H@1"] == 1
+    assert summary["D"]["H@5"] == 0 and summary["D_set"]["precision"] == 0.5

@@ -17,7 +17,7 @@ from statistics import mean
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from cases import contains, digest, resolve, validate
+from cases import contains, digest, resolve, style_of, validate
 
 JUDGE_FILE = Path(__file__).with_name("agent-judge.md")
 
@@ -264,9 +264,9 @@ def assess_turns(item, result, spec, contexts, products, config):
 
 def summarize(rows):
     groups = {"ALL": rows}
-    for key in ("cat", "split", "origin"):
-        for value in sorted({r[key] for r in rows}):
-            groups[f"{key}:{value}"] = [r for r in rows if r[key] == value]
+    for key in ("cat", "split", "origin", "style", "g_type"):
+        for value in sorted({r[key] for r in rows if r.get(key)}):
+            groups[f"{key}:{value}"] = [r for r in rows if r.get(key) == value]
     for label, multiple in (("single", False), ("multi", True)):
         groups[label] = [r for r in rows if (r.get("turn_count", 1) > 1) == multiple]
     summary = {}
@@ -368,6 +368,7 @@ def main():
         for item in queries:
             row = {"id": item["id"], "cat": item["cat"], "split": item.get("split", "dev"),
                    "origin": "expanded" if item.get("origin") == "expanded" else "legacy",
+                   "style": style_of(item), "g_type": item.get("g_type"),
                    "turn_count": 1 + len(item["agent"].get("turns", []))}
             if stopped:
                 row.update(status="not_run", error="先前执行失败；为避免宿主晚到请求污染轨迹，停止本批生成")

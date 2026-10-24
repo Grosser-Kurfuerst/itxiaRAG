@@ -4,7 +4,7 @@
       .runtime/eval/corpus-v3/rrf/results-k*.json --scope all
 
 输出两部分：
-1. 汇总表：全部、A～F、D（含集合指标）及 T／X／K／U／R 类的混合指标，召回失败与排序失败条数，
+1. 汇总表：全部（不含 D）、A～F（不含 D）、D（含集合指标）及 T／X／K／U／R 类的混合指标，召回失败与排序失败条数，
    以及按固定 dev/test 分层的 MRR@10 相对基线变化；
 2. 逐条变化：每个实验组相对基线混合名次变化的查询，标出进入／跌出前 5，
    并列出新进入前 5、但不在本条答案中的父段，供增量补标核对。
@@ -16,7 +16,8 @@ from statistics import mean
 
 from metrics import failures, hit_metrics, METRIC_VERSION
 
-ORIGINAL_CATS = set("ABCDEF")
+# D 类只经推荐接口按集合指标评测，不计入全部、A～F、分层和失败清单
+ORIGINAL_CATS = set("ABCEF")
 CAT_COLUMNS = ("T", "X", "K", "U", "R")
 
 
@@ -38,11 +39,12 @@ def hybrid(rows):
 
 def summarize(rows):
     positives = [r for r in rows.values() if r["rel"]]
+    recall = [r for r in positives if r["cat"] != "D"]
     d_rows = [r for r in positives if r["cat"] == "D" and "set" in r]
-    halves = [[r for r in positives if r.get("split") == split] for split in ("dev", "test")]
-    fails = failures([r for r in positives if not r.get("source_gap")])
+    halves = [[r for r in recall if r.get("split") == split] for split in ("dev", "test")]
+    fails = failures([r for r in recall if not r.get("source_gap")])
     return {
-        "ALL": hybrid(positives),
+        "ALL": hybrid(recall),
         "A~F": hybrid([r for r in positives if r["cat"] in ORIGINAL_CATS]),
         "D": hybrid([r for r in positives if r["cat"] == "D"]),
         "D_set": {k: mean(r["set"]["hybrid"][k] for r in d_rows) for k in ("precision", "ndcg@5")} if d_rows else None,

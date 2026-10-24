@@ -2737,7 +2737,8 @@
       "group": "G03",
       "split": "dev",
       "origin": "legacy",
-      "qrels_complete": false
+      "qrels_complete": false,
+      "g_type": "missing_model"
     },
     {
       "id": "F01",
@@ -5668,7 +5669,8 @@
       },
       "group": "G07",
       "split": "dev",
-      "qrels_complete": false
+      "qrels_complete": false,
+      "g_type": "near_model"
     },
     {
       "id": "G08",
@@ -5686,7 +5688,8 @@
           "evidence": []
         }
       ],
-      "split": "test"
+      "split": "test",
+      "g_type": "missing_model"
     },
     {
       "id": "G09",
@@ -5704,7 +5707,8 @@
           "evidence": []
         }
       ],
-      "split": "test"
+      "split": "test",
+      "g_type": "missing_topic"
     },
     {
       "id": "G10",
@@ -5722,7 +5726,8 @@
           "evidence": []
         }
       ],
-      "split": "test"
+      "split": "test",
+      "g_type": "missing_topic"
     },
     {
       "id": "G11",
@@ -5740,7 +5745,8 @@
           "evidence": []
         }
       ],
-      "split": "dev"
+      "split": "dev",
+      "g_type": "missing_topic"
     },
     {
       "id": "R01",
@@ -6618,7 +6624,7 @@
     {
       "id": "A09",
       "cat": "A",
-      "q": "苹果 MacBook Pro 16的机身重量是多少？",
+      "q": "MacBook Pro 16 带出门重不重？机器和充电器分别多重",
       "rel": [
         "苹果 MacBook Pro 16"
       ],
@@ -6631,6 +6637,16 @@
             {
               "ref": "苹果 MacBook Pro 16",
               "quote": "重量 2.15kg"
+            }
+          ]
+        },
+        {
+          "id": "adapter",
+          "answer": "适配器重量338g",
+          "evidence": [
+            {
+              "ref": "苹果 MacBook Pro 16",
+              "quote": "适配器重量 338g"
             }
           ]
         }
@@ -6648,7 +6664,7 @@
     {
       "id": "A10",
       "cat": "A",
-      "q": "联想 ThinkPad X14的日常应用仿真续航测试成绩是多少？",
+      "q": "ThinkPad X14 充满电能用多久？",
       "rel": [
         "联想 ThinkPad X14"
       ],
@@ -6674,7 +6690,7 @@
     {
       "id": "A11",
       "cat": "A",
-      "q": "惠普 HyperX 暗影精灵 PRO 16的内存能否自行升级？",
+      "q": "暗影精灵 Pro 16 内存能自己加吗，还有没有空的硬盘位？",
       "rel": [
         "惠普 HyperX 暗影精灵 PRO 16"
       ],
@@ -6689,6 +6705,16 @@
               "quote": "单通道16GB DDR5 5600MT/s内存能满足大部分用途的需求，机器有两个内存插槽，如有需求可自行加装内存。"
             }
           ]
+        },
+        {
+          "id": "ssd",
+          "answer": "原装1TB忆联AM6C1，另有一个2280 M.2空位可加装",
+          "evidence": [
+            {
+              "ref": "惠普 HyperX 暗影精灵 PRO 16",
+              "quote": "固态硬盘容量1TB，型号忆联 AM6C1，支持PCIe 4.0×4和NVMe，主硬盘位支持PCIe5.0，机器还有一个2280规格的M.2插槽，有预装散热片，如有需要可自行加装或更换固态硬盘。"
+            }
+          ]
         }
       ],
       "origin": "expanded",
@@ -6700,7 +6726,7 @@
     {
       "id": "A12",
       "cat": "A",
-      "q": "ROG 魔霸新锐 酷睿版满载时的人位噪音有多大，请说明测试环境？",
+      "q": "ROG 魔霸新锐酷睿版打游戏的时候风扇声音大不大，键盘会不会烫手？",
       "rel": [
         "ROG 魔霸新锐 酷睿版"
       ],
@@ -6708,11 +6734,21 @@
       "needs": [
         {
           "id": "noise",
-          "answer": "噪音方面，它的日常环境增强模式满载人位分贝值为59.0dB、手动模式为61.8dB；",
+          "answer": "满载噪音约59dB（增强模式），手动模式约61.8dB，偏吵",
           "evidence": [
             {
               "ref": "ROG 魔霸新锐 酷睿版",
               "quote": "噪音方面，它的日常环境增强模式满载人位分贝值为59.0dB、手动模式为61.8dB；"
+            }
+          ]
+        },
+        {
+          "id": "keyboard",
+          "answer": "满载键帽最高约37.3℃，WASD附近约33℃，不算烫手",
+          "evidence": [
+            {
+              "ref": "ROG 魔霸新锐 酷睿版",
+              "quote": "表面温度如上图所示，键盘键帽最高温37.3℃出现在“F5”键上，WASD键附近约为33.0℃，方向键32.7℃，左腕托温度为29.2℃。"
             }
           ]
         }
@@ -6726,7 +6762,7 @@
     {
       "id": "A13",
       "cat": "A",
-      "q": "苹果 MacBook Pro 14的屏幕实测最大亮度是多少？",
+      "q": "MacBook Pro 14 屏幕在太阳底下够亮吗？最高能有多亮",
       "rel": [
         "苹果 MacBook Pro 14"
       ],
@@ -6752,7 +6788,7 @@
     {
       "id": "A14",
       "cat": "A",
-      "q": "ThinkPad P1 2026的原装固态硬盘是什么型号？",
+      "q": "ThinkPad P1 2026 自带的是什么硬盘？以后能自己扩容吗",
       "rel": [
         "ThinkPad P1 2026"
       ],
@@ -6778,7 +6814,7 @@
     {
       "id": "A15",
       "cat": "A",
-      "q": "苹果 MacBook Neo的机身重量是多少？",
+      "q": "MacBook Neo 多重？它用的充电器多重",
       "rel": [
         "苹果 MacBook Neo"
       ],
@@ -6793,6 +6829,16 @@
               "quote": "重量 1.23kg"
             }
           ]
+        },
+        {
+          "id": "adapter",
+          "answer": "适配器重量84g",
+          "evidence": [
+            {
+              "ref": "苹果 MacBook Neo",
+              "quote": "适配器重量 84g"
+            }
+          ]
         }
       ],
       "origin": "expanded",
@@ -6804,7 +6850,7 @@
     {
       "id": "A16",
       "cat": "A",
-      "q": "小米 Xiaomi Book Pro 14的日常应用仿真续航测试成绩是多少？",
+      "q": "Xiaomi Book Pro 14 不插电大概能用几个小时",
       "rel": [
         "小米 Xiaomi Book Pro 14"
       ],
@@ -6830,7 +6876,7 @@
     {
       "id": "A17",
       "cat": "A",
-      "q": "联想 小新Pro 16 GT的内存能否自行升级？",
+      "q": "小新Pro 16 GT 内存以后还能加吗？硬盘能扩吗",
       "rel": [
         "联想 小新Pro 16 GT"
       ],
@@ -6845,6 +6891,16 @@
               "quote": "双通道 32GB LPDDR5x 9600MT/s内存能满足大部分用途的需求，内存为板载不可更换。"
             }
           ]
+        },
+        {
+          "id": "ssd",
+          "answer": "原装1TB忆联AM6D1，另有1个2280 M.2插槽可加装",
+          "evidence": [
+            {
+              "ref": "联想 小新Pro 16 GT",
+              "quote": "测试机的固态硬盘容量为1TB，型号为忆联 AM6D1，支持PCIe 5.0和NVMe，机器还有1个2280的M.2插槽，如有需要可以自行加装固态硬盘。"
+            }
+          ]
         }
       ],
       "origin": "expanded",
@@ -6856,7 +6912,7 @@
     {
       "id": "A18",
       "cat": "A",
-      "q": "机械革命 苍龙16X Pro满载时的人位噪音有多大，请说明测试环境？",
+      "q": "苍龙16X Pro 满载时有多吵",
       "rel": [
         "机械革命 苍龙16X Pro"
       ],
@@ -6882,7 +6938,7 @@
     {
       "id": "A19",
       "cat": "A",
-      "q": "机械革命 无界15X的机身重量是多少？",
+      "q": "无界15X 有多重，适合天天背去上课吗",
       "rel": [
         "机械革命 无界15X"
       ],
@@ -6908,7 +6964,7 @@
     {
       "id": "A20",
       "cat": "A",
-      "q": "荣耀 MagicBook Pro 14 2025 Ultra 9版的原装固态硬盘是什么型号？",
+      "q": "荣耀 MagicBook Pro 14 2025 Ultra 9 版用的什么牌子的固态？能再加一块吗",
       "rel": [
         "荣耀 MagicBook Pro 14 2025 Ultra 9版"
       ],
@@ -6934,7 +6990,7 @@
     {
       "id": "A21",
       "cat": "A",
-      "q": "微软 Surface Pro 11的机身重量是多少？",
+      "q": "Surface Pro 11 光平板多重？配上键盘和笔呢",
       "rel": [
         "微软 Surface Pro 11"
       ],
@@ -6949,6 +7005,16 @@
               "quote": "重量 875g"
             }
           ]
+        },
+        {
+          "id": "bundle",
+          "answer": "带键盘和笔约1.16kg",
+          "evidence": [
+            {
+              "ref": "微软 Surface Pro 11",
+              "quote": "带键盘+笔重量 1.16kg"
+            }
+          ]
         }
       ],
       "origin": "expanded",
@@ -6960,7 +7026,7 @@
     {
       "id": "A22",
       "cat": "A",
-      "q": "微星 泰坦18 Pro AI 2025的日常应用仿真续航测试成绩是多少？",
+      "q": "泰坦18 Pro AI 2025 拔了电源能撑多久？",
       "rel": [
         "微星 泰坦18 Pro AI 2025"
       ],
@@ -6986,7 +7052,7 @@
     {
       "id": "A23",
       "cat": "A",
-      "q": "机械师 曙光16S的内存能否自行升级？",
+      "q": "机械师曙光16S 内存是单通道吗，能自己加一条组双通道吗",
       "rel": [
         "机械师 曙光16S"
       ],
@@ -7012,7 +7078,7 @@
     {
       "id": "A24",
       "cat": "A",
-      "q": "联想 ThinkBook 16p 2025满载时的人位噪音有多大，请说明测试环境？",
+      "q": "ThinkBook 16p 2025 全力跑的时候噪音多少？有没有安静点的模式",
       "rel": [
         "联想 ThinkBook 16p 2025"
       ],
@@ -7038,7 +7104,7 @@
     {
       "id": "A25",
       "cat": "A",
-      "q": "机械革命 星耀14的屏幕实测最大亮度是多少？",
+      "q": "机械革命星耀14 屏幕亮度怎么样，HDR 下能到多少",
       "rel": [
         "机械革命 星耀14"
       ],
@@ -7064,7 +7130,7 @@
     {
       "id": "A26",
       "cat": "A",
-      "q": "机械革命 蛟龙16 Pro的原装固态硬盘是什么型号？",
+      "q": "蛟龙16 Pro 512G 不够用，能加第二块硬盘吗？原装的是什么盘",
       "rel": [
         "机械革命 蛟龙16 Pro"
       ],
@@ -7090,7 +7156,7 @@
     {
       "id": "A27",
       "cat": "A",
-      "q": "联想 ThinkBook 16p 锐龙版的机身重量是多少？",
+      "q": "ThinkBook 16p 锐龙版连适配器一起背出门有多重",
       "rel": [
         "联想 ThinkBook 16p 锐龙版"
       ],
@@ -7105,6 +7171,16 @@
               "quote": "重量 2.17kg"
             }
           ]
+        },
+        {
+          "id": "adapter",
+          "answer": "适配器重量817g",
+          "evidence": [
+            {
+              "ref": "联想 ThinkBook 16p 锐龙版",
+              "quote": "适配器重量 817g"
+            }
+          ]
         }
       ],
       "origin": "expanded",
@@ -7116,7 +7192,7 @@
     {
       "id": "A28",
       "cat": "A",
-      "q": "微星 泰坦16 AI的机身重量是多少？",
+      "q": "微星泰坦16 AI 机器本身有多重",
       "rel": [
         "微星 泰坦16 AI"
       ],
@@ -7142,7 +7218,7 @@
     {
       "id": "A29",
       "cat": "A",
-      "q": "雷神 猎刃S的内存能否自行升级？",
+      "q": "雷神猎刃S 出厂几根内存，还能加吗",
       "rel": [
         "雷神 猎刃S"
       ],
@@ -7168,7 +7244,7 @@
     {
       "id": "A30",
       "cat": "A",
-      "q": "ALIENWARE 18 AREA-51满载时的人位噪音有多大，请说明测试环境？",
+      "q": "外星人 18 AREA-51 满载风扇噪音多少分贝",
       "rel": [
         "ALIENWARE 18 AREA-51"
       ],
@@ -7194,7 +7270,7 @@
     {
       "id": "F11",
       "cat": "F",
-      "q": "联想 YOGA Air 14 Ultra Aura的日常应用仿真续航测试成绩是多少？",
+      "q": "YOGA Air 14 Ultra Aura 续航怎么样，一天课够不够",
       "rel": [
         "联想 YOGA Air 14 Ultra Aura"
       ],
@@ -7220,7 +7296,7 @@
     {
       "id": "F12",
       "cat": "F",
-      "q": "联想 来酷GT 16 酷睿版的内存能否自行升级？",
+      "q": "来酷GT16 酷睿版 内存只有16G，能自己再加一条吗",
       "rel": [
         "联想 来酷GT 16 酷睿版"
       ],
@@ -7247,7 +7323,7 @@
     {
       "id": "F13",
       "cat": "F",
-      "q": "联想 ThinkBook 14+ 酷睿版满载时的人位噪音有多大，请说明测试环境？",
+      "q": "ThinkBook 14+ 酷睿版跑满了吵吗？续航多久",
       "rel": [
         "联想 ThinkBook 14+ 酷睿版"
       ],
@@ -7266,6 +7342,16 @@
               "quote": "静音室内满载人位分贝值为48.8dB，双烤为42.6dB。"
             }
           ]
+        },
+        {
+          "id": "battery",
+          "answer": "日常应用续航约15小时14分",
+          "evidence": [
+            {
+              "ref": "联想 ThinkBook 14+ 酷睿版",
+              "quote": "续航方面，日常应用仿真脚本的测试成绩为15小时14分。"
+            }
+          ]
         }
       ],
       "origin": "expanded",
@@ -7277,7 +7363,7 @@
     {
       "id": "F14",
       "cat": "F",
-      "q": "机械革命 耀世16 Ultra RTX 5070 Ti版的屏幕实测最大亮度是多少？",
+      "q": "耀世16 Ultra 5070 Ti 版屏幕最亮多少尼特",
       "rel": [
         "机械革命 耀世16 Ultra RTX 5070 Ti版"
       ],
@@ -7307,7 +7393,7 @@
     {
       "id": "F15",
       "cat": "F",
-      "q": "微星 泰坦18 Pro 锐龙版的原装固态硬盘是什么型号？",
+      "q": "泰坦18 Pro 锐龙版标配什么固态，是 PCIe 5.0 吗",
       "rel": [
         "微星 泰坦18 Pro 锐龙版"
       ],
@@ -7337,7 +7423,7 @@
     {
       "id": "F16",
       "cat": "F",
-      "q": "机械革命 耀世16 Ultra RTX 5090版的机身重量是多少？",
+      "q": "耀世16 Ultra 5090 版本机加电源适配器一共多重",
       "rel": [
         "机械革命 耀世16 Ultra RTX 5090版"
       ],
@@ -7350,6 +7436,16 @@
             {
               "ref": "机械革命 耀世16 Ultra RTX 5090版",
               "quote": "重量 2.86kg"
+            }
+          ]
+        },
+        {
+          "id": "adapter",
+          "answer": "适配器重量806g",
+          "evidence": [
+            {
+              "ref": "机械革命 耀世16 Ultra RTX 5090版",
+              "quote": "适配器重量 806g"
             }
           ]
         }
@@ -7367,7 +7463,7 @@
     {
       "id": "F17",
       "cat": "F",
-      "q": "机械革命 苍龙16 Ultra的机身重量是多少？",
+      "q": "苍龙16 Ultra 有多重",
       "rel": [
         "机械革命 苍龙16 Ultra"
       ],
@@ -7393,7 +7489,7 @@
     {
       "id": "F18",
       "cat": "F",
-      "q": "ROG 幻14 Air 2026的内存能否自行升级？",
+      "q": "幻14 Air 2026 内存能不能后加？硬盘位有几个",
       "rel": [
         "ROG 幻14 Air 2026"
       ],
@@ -7408,6 +7504,16 @@
               "quote": "2，板载内存+单M.2，内部扩展性较差"
             }
           ]
+        },
+        {
+          "id": "ssd",
+          "answer": "只有一个2280 M.2插槽，可自行更换固态",
+          "evidence": [
+            {
+              "ref": "ROG 幻14 Air 2026",
+              "quote": "固态硬盘容量1TB，型号铠侠 BG6，支持PCIe 4.0×4和NVMe，机器只有一个2280规格的M.2插槽，如有需要可自行更换固态硬盘。"
+            }
+          ]
         }
       ],
       "origin": "expanded",
@@ -7419,7 +7525,7 @@
     {
       "id": "F19",
       "cat": "F",
-      "q": "华硕 破晓 Ultra满载时的人位噪音有多大，请说明测试环境？",
+      "q": "华硕破晓 Ultra 高性能模式下噪音大吗",
       "rel": [
         "华硕 破晓 Ultra"
       ],
@@ -7445,7 +7551,7 @@
     {
       "id": "F20",
       "cat": "F",
-      "q": "小米 REDMI Book Pro 14 2026的屏幕实测最大亮度是多少？",
+      "q": "REDMI Book Pro 14 2026 屏幕亮度多少，户外看得清吗",
       "rel": [
         "小米 REDMI Book Pro 14 2026"
       ],
@@ -7471,7 +7577,7 @@
     {
       "id": "F21",
       "cat": "F",
-      "q": "华硕 灵耀16 Air 骁龙版的原装固态硬盘是什么型号？",
+      "q": "灵耀16 Air 骁龙版硬盘是哪家的？能换大容量吗",
       "rel": [
         "华硕 灵耀16 Air 骁龙版"
       ],
@@ -7497,7 +7603,7 @@
     {
       "id": "F22",
       "cat": "F",
-      "q": "华硕 天选Air 2026的机身重量是多少？",
+      "q": "天选Air 2026 机身多重",
       "rel": [
         "华硕 天选Air 2026"
       ],
@@ -7523,7 +7629,7 @@
     {
       "id": "F23",
       "cat": "F",
-      "q": "机械革命 蛟龙16 Pro 潮玩版的机身重量是多少？",
+      "q": "蛟龙16 Pro 潮玩版 多重，适配器重吗",
       "rel": [
         "机械革命 蛟龙16 Pro 潮玩版"
       ],
@@ -7538,6 +7644,16 @@
               "quote": "重量 2.28kg"
             }
           ]
+        },
+        {
+          "id": "adapter",
+          "answer": "适配器重量600g",
+          "evidence": [
+            {
+              "ref": "机械革命 蛟龙16 Pro 潮玩版",
+              "quote": "适配器重量 600g"
+            }
+          ]
         }
       ],
       "origin": "expanded",
@@ -7549,7 +7665,7 @@
     {
       "id": "F24",
       "cat": "F",
-      "q": "惠普 战66 锐龙版的内存能否自行升级？",
+      "q": "战66 锐龙版 内存是板载的吗",
       "rel": [
         "惠普 战66 锐龙版"
       ],
@@ -7575,7 +7691,7 @@
     {
       "id": "F25",
       "cat": "F",
-      "q": "华硕 a豆14 Air 2026满载时的人位噪音有多大，请说明测试环境？",
+      "q": "a豆14 Air 2026 风扇吵不吵，续航能到多久",
       "rel": [
         "华硕 a豆14 Air 2026"
       ],
@@ -7590,6 +7706,16 @@
               "quote": "噪音方面，它的日常环境满载人位分贝值为51.7dB；静音室内满载人位分贝值为43.8dB。（日常环境噪音为29.2dB；静音室内底噪＜15dB）"
             }
           ]
+        },
+        {
+          "id": "battery",
+          "answer": "日常应用续航约9小时59分",
+          "evidence": [
+            {
+              "ref": "华硕 a豆14 Air 2026",
+              "quote": "续航方面，日常应用仿真脚本的测试成绩为9小时59分。"
+            }
+          ]
         }
       ],
       "origin": "expanded",
@@ -7601,7 +7727,7 @@
     {
       "id": "B07",
       "cat": "B",
-      "q": "MacBook Pro 16的机身重量是多少，想确认一下",
+      "q": "mbp16 多重",
       "rel": [
         "苹果 MacBook Pro 16"
       ],
@@ -7623,12 +7749,13 @@
       "group": "苹果 MacBook Pro 16:weight",
       "qrels_complete": true,
       "variant_of": "A09",
-      "split": "test"
+      "split": "test",
+      "style": "abbrev"
     },
     {
       "id": "B08",
       "cat": "B",
-      "q": "ThinkPad X14的日常应用仿真续航测试成绩是多少，想确认一下",
+      "q": "x14 续航咋样",
       "rel": [
         "联想 ThinkPad X14"
       ],
@@ -7654,12 +7781,13 @@
       "agent": {
         "mode": "answer",
         "critical_errors": []
-      }
+      },
+      "style": "abbrev"
     },
     {
       "id": "B09",
       "cat": "B",
-      "q": "HyperX 暗影精灵 PRO 16的内存能否自行升级，想确认一下",
+      "q": "暗夜精灵 pro16 能加内存不",
       "rel": [
         "惠普 HyperX 暗影精灵 PRO 16"
       ],
@@ -7685,12 +7813,13 @@
       "agent": {
         "mode": "answer",
         "critical_errors": []
-      }
+      },
+      "style": "abbrev"
     },
     {
       "id": "B10",
       "cat": "B",
-      "q": "魔霸新锐 酷睿版满载时的人位噪音有多大，请说明测试环境，想确认一下",
+      "q": "魔霸新锐i版 满载噪音",
       "rel": [
         "ROG 魔霸新锐 酷睿版"
       ],
@@ -7712,12 +7841,13 @@
       "group": "ROG 魔霸新锐 酷睿版:noise",
       "qrels_complete": true,
       "variant_of": "A12",
-      "split": "dev"
+      "split": "dev",
+      "style": "abbrev"
     },
     {
       "id": "B11",
       "cat": "B",
-      "q": "MacBook Pro 14的屏幕实测最大亮度是多少，想确认一下",
+      "q": "mbp14 屏幕多亮",
       "rel": [
         "苹果 MacBook Pro 14"
       ],
@@ -7739,12 +7869,13 @@
       "group": "苹果 MacBook Pro 14:brightness",
       "qrels_complete": true,
       "variant_of": "A13",
-      "split": "dev"
+      "split": "dev",
+      "style": "abbrev"
     },
     {
       "id": "B12",
       "cat": "B",
-      "q": "P1 2026的原装固态硬盘是什么型号，想确认一下",
+      "q": "P1 2026 原装ssd型号",
       "rel": [
         "ThinkPad P1 2026"
       ],
@@ -7766,12 +7897,13 @@
       "group": "ThinkPad P1 2026:ssd",
       "qrels_complete": true,
       "variant_of": "A14",
-      "split": "dev"
+      "split": "dev",
+      "style": "abbrev"
     },
     {
       "id": "B13",
       "cat": "B",
-      "q": "MacBook Neo的机身重量是多少，想确认一下",
+      "q": "macbook neo 几斤",
       "rel": [
         "苹果 MacBook Neo"
       ],
@@ -7793,12 +7925,13 @@
       "group": "苹果 MacBook Neo:weight",
       "qrels_complete": true,
       "variant_of": "A15",
-      "split": "dev"
+      "split": "dev",
+      "style": "abbrev"
     },
     {
       "id": "B14",
       "cat": "B",
-      "q": "Xiaomi Book Pro 14的日常应用仿真续航测试成绩是多少，想确认一下",
+      "q": "小米book pro14 能用多久",
       "rel": [
         "小米 Xiaomi Book Pro 14"
       ],
@@ -7820,12 +7953,13 @@
       "group": "小米 Xiaomi Book Pro 14:battery",
       "qrels_complete": true,
       "variant_of": "A16",
-      "split": "dev"
+      "split": "dev",
+      "style": "abbrev"
     },
     {
       "id": "B15",
       "cat": "B",
-      "q": "小新Pro 16 GT的内存能否自行升级，想确认一下",
+      "q": "小新pro16gt 内存板载吗",
       "rel": [
         "联想 小新Pro 16 GT"
       ],
@@ -7847,12 +7981,13 @@
       "group": "联想 小新Pro 16 GT:memory",
       "qrels_complete": true,
       "variant_of": "A17",
-      "split": "dev"
+      "split": "dev",
+      "style": "abbrev"
     },
     {
       "id": "B16",
       "cat": "B",
-      "q": "苍龙16X Pro满载时的人位噪音有多大，请说明测试环境，想确认一下",
+      "q": "沧龙16x pro 吵吗",
       "rel": [
         "机械革命 苍龙16X Pro"
       ],
@@ -7874,12 +8009,13 @@
       "group": "机械革命 苍龙16X Pro:noise",
       "qrels_complete": true,
       "variant_of": "A18",
-      "split": "dev"
+      "split": "dev",
+      "style": "abbrev"
     },
     {
       "id": "B17",
       "cat": "B",
-      "q": "无界15X的机身重量是多少，想确认一下",
+      "q": "无界15x 重量",
       "rel": [
         "机械革命 无界15X"
       ],
@@ -7901,12 +8037,13 @@
       "group": "机械革命 无界15X:weight",
       "qrels_complete": true,
       "variant_of": "A19",
-      "split": "dev"
+      "split": "dev",
+      "style": "abbrev"
     },
     {
       "id": "B18",
       "cat": "B",
-      "q": "MagicBook Pro 14 2025 Ultra 9版的原装固态硬盘是什么型号，想确认一下",
+      "q": "荣耀mbp14 25款 u9 固态型号",
       "rel": [
         "荣耀 MagicBook Pro 14 2025 Ultra 9版"
       ],
@@ -7928,12 +8065,13 @@
       "group": "荣耀 MagicBook Pro 14 2025 Ultra 9版:ssd",
       "qrels_complete": true,
       "variant_of": "A20",
-      "split": "dev"
+      "split": "dev",
+      "style": "abbrev"
     },
     {
       "id": "B19",
       "cat": "B",
-      "q": "Surface Pro 11的机身重量是多少，想确认一下",
+      "q": "sp11 多重",
       "rel": [
         "微软 Surface Pro 11"
       ],
@@ -7955,12 +8093,13 @@
       "group": "微软 Surface Pro 11:weight",
       "qrels_complete": true,
       "variant_of": "A21",
-      "split": "dev"
+      "split": "dev",
+      "style": "abbrev"
     },
     {
       "id": "B20",
       "cat": "B",
-      "q": "泰坦18 Pro AI 2025的日常应用仿真续航测试成绩是多少，想确认一下",
+      "q": "泰坦18pro 2025 续航",
       "rel": [
         "微星 泰坦18 Pro AI 2025"
       ],
@@ -7982,12 +8121,13 @@
       "group": "微星 泰坦18 Pro AI 2025:battery",
       "qrels_complete": true,
       "variant_of": "A22",
-      "split": "dev"
+      "split": "dev",
+      "style": "abbrev"
     },
     {
       "id": "B21",
       "cat": "B",
-      "q": "曙光16S的内存能否自行升级，想确认一下",
+      "q": "曙光16s 加内存",
       "rel": [
         "机械师 曙光16S"
       ],
@@ -8009,12 +8149,13 @@
       "group": "机械师 曙光16S:memory",
       "qrels_complete": true,
       "variant_of": "A23",
-      "split": "dev"
+      "split": "dev",
+      "style": "abbrev"
     },
     {
       "id": "B22",
       "cat": "B",
-      "q": "ThinkBook 16p 2025满载时的人位噪音有多大，请说明测试环境，想确认一下",
+      "q": "tb16p 25款 噪音",
       "rel": [
         "联想 ThinkBook 16p 2025"
       ],
@@ -8036,12 +8177,13 @@
       "group": "联想 ThinkBook 16p 2025:noise",
       "qrels_complete": true,
       "variant_of": "A24",
-      "split": "dev"
+      "split": "dev",
+      "style": "abbrev"
     },
     {
       "id": "B23",
       "cat": "B",
-      "q": "星耀14的屏幕实测最大亮度是多少，想确认一下",
+      "q": "星耀14 亮度多少nit",
       "rel": [
         "机械革命 星耀14"
       ],
@@ -8063,12 +8205,13 @@
       "group": "机械革命 星耀14:brightness",
       "qrels_complete": true,
       "variant_of": "A25",
-      "split": "dev"
+      "split": "dev",
+      "style": "abbrev"
     },
     {
       "id": "B24",
       "cat": "B",
-      "q": "蛟龙16 Pro的原装固态硬盘是什么型号，想确认一下",
+      "q": "蛟龙16pro 硬盘啥型号",
       "rel": [
         "机械革命 蛟龙16 Pro"
       ],
@@ -8090,12 +8233,13 @@
       "group": "机械革命 蛟龙16 Pro:ssd",
       "qrels_complete": true,
       "variant_of": "A26",
-      "split": "dev"
+      "split": "dev",
+      "style": "abbrev"
     },
     {
       "id": "B25",
       "cat": "B",
-      "q": "ThinkBook 16p 锐龙版的机身重量是多少，想确认一下",
+      "q": "16p 锐龙 多沉",
       "rel": [
         "联想 ThinkBook 16p 锐龙版"
       ],
@@ -8117,12 +8261,13 @@
       "group": "联想 ThinkBook 16p 锐龙版:weight",
       "qrels_complete": true,
       "variant_of": "A27",
-      "split": "dev"
+      "split": "dev",
+      "style": "abbrev"
     },
     {
       "id": "C06",
       "cat": "C",
-      "q": "我这台苹果 MacBook Pro 16的机身重量是多少呀，能帮我看看不",
+      "q": "想买 MacBook Pro 16 天天背去图书馆，会不会太压肩膀",
       "rel": [
         "苹果 MacBook Pro 16"
       ],
@@ -8144,12 +8289,13 @@
       "group": "苹果 MacBook Pro 16:weight",
       "qrels_complete": true,
       "variant_of": "A09",
-      "split": "test"
+      "split": "test",
+      "style": "colloquial"
     },
     {
       "id": "C07",
       "cat": "C",
-      "q": "我这台联想 ThinkPad X14的日常应用仿真续航测试成绩是多少呀，能帮我看看不",
+      "q": "ThinkPad X14 早八到晚上满课不带充电器撑得住吗",
       "rel": [
         "联想 ThinkPad X14"
       ],
@@ -8171,12 +8317,13 @@
       "group": "联想 ThinkPad X14:battery",
       "qrels_complete": true,
       "variant_of": "A10",
-      "split": "test"
+      "split": "test",
+      "style": "colloquial"
     },
     {
       "id": "C08",
       "cat": "C",
-      "q": "我这台惠普 HyperX 暗影精灵 PRO 16的内存能否自行升级呀，能帮我看看不",
+      "q": "暗影精灵Pro16 到手16G，打算自己再插一条，有空槽吗",
       "rel": [
         "惠普 HyperX 暗影精灵 PRO 16"
       ],
@@ -8198,12 +8345,13 @@
       "group": "惠普 HyperX 暗影精灵 PRO 16:memory",
       "qrels_complete": true,
       "variant_of": "A11",
-      "split": "dev"
+      "split": "dev",
+      "style": "colloquial"
     },
     {
       "id": "C09",
       "cat": "C",
-      "q": "我这台ROG 魔霸新锐 酷睿版满载时的人位噪音有多大，请说明测试环境呀，能帮我看看不",
+      "q": "魔霸新锐酷睿版宿舍晚上打游戏会不会吵到室友",
       "rel": [
         "ROG 魔霸新锐 酷睿版"
       ],
@@ -8225,12 +8373,13 @@
       "group": "ROG 魔霸新锐 酷睿版:noise",
       "qrels_complete": true,
       "variant_of": "A12",
-      "split": "dev"
+      "split": "dev",
+      "style": "colloquial"
     },
     {
       "id": "C10",
       "cat": "C",
-      "q": "我这台苹果 MacBook Pro 14的屏幕实测最大亮度是多少呀，能帮我看看不",
+      "q": "MacBook Pro 14 拿到室外窗边用屏幕看得清不",
       "rel": [
         "苹果 MacBook Pro 14"
       ],
@@ -8252,12 +8401,13 @@
       "group": "苹果 MacBook Pro 14:brightness",
       "qrels_complete": true,
       "variant_of": "A13",
-      "split": "dev"
+      "split": "dev",
+      "style": "colloquial"
     },
     {
       "id": "C11",
       "cat": "C",
-      "q": "我这台ThinkPad P1 2026的原装固态硬盘是什么型号呀，能帮我看看不",
+      "q": "P1 2026 要跑大数据集，硬盘是啥盘，速度快不快",
       "rel": [
         "ThinkPad P1 2026"
       ],
@@ -8279,12 +8429,13 @@
       "group": "ThinkPad P1 2026:ssd",
       "qrels_complete": true,
       "variant_of": "A14",
-      "split": "dev"
+      "split": "dev",
+      "style": "colloquial"
     },
     {
       "id": "C12",
       "cat": "C",
-      "q": "我这台苹果 MacBook Neo的机身重量是多少呀，能帮我看看不",
+      "q": "给初中的弟弟买 MacBook Neo 背着上学沉不沉",
       "rel": [
         "苹果 MacBook Neo"
       ],
@@ -8306,12 +8457,13 @@
       "group": "苹果 MacBook Neo:weight",
       "qrels_complete": true,
       "variant_of": "A15",
-      "split": "dev"
+      "split": "dev",
+      "style": "colloquial"
     },
     {
       "id": "C13",
       "cat": "C",
-      "q": "我这台小米 Xiaomi Book Pro 14的日常应用仿真续航测试成绩是多少呀，能帮我看看不",
+      "q": "Xiaomi Book Pro 14 出差一天不带电源够用吗",
       "rel": [
         "小米 Xiaomi Book Pro 14"
       ],
@@ -8333,12 +8485,13 @@
       "group": "小米 Xiaomi Book Pro 14:battery",
       "qrels_complete": true,
       "variant_of": "A16",
-      "split": "dev"
+      "split": "dev",
+      "style": "colloquial"
     },
     {
       "id": "C14",
       "cat": "C",
-      "q": "我这台联想 小新Pro 16 GT的内存能否自行升级呀，能帮我看看不",
+      "q": "小新Pro16 GT 以后觉得内存不够还能自己升吗",
       "rel": [
         "联想 小新Pro 16 GT"
       ],
@@ -8360,12 +8513,13 @@
       "group": "联想 小新Pro 16 GT:memory",
       "qrels_complete": true,
       "variant_of": "A17",
-      "split": "dev"
+      "split": "dev",
+      "style": "colloquial"
     },
     {
       "id": "C15",
       "cat": "C",
-      "q": "我这台机械革命 苍龙16X Pro满载时的人位噪音有多大，请说明测试环境呀，能帮我看看不",
+      "q": "苍龙16X Pro 开最高性能模式风扇声音大概多大",
       "rel": [
         "机械革命 苍龙16X Pro"
       ],
@@ -8387,12 +8541,13 @@
       "group": "机械革命 苍龙16X Pro:noise",
       "qrels_complete": true,
       "variant_of": "A18",
-      "split": "dev"
+      "split": "dev",
+      "style": "colloquial"
     },
     {
       "id": "C16",
       "cat": "C",
-      "q": "我这台联想 YOGA Air 14 Ultra Aura的日常应用仿真续航测试成绩是多少呀，能帮我看看不",
+      "q": "YOGA Air 14 Ultra Aura 刷网课看文档能撑多长时间",
       "rel": [
         "联想 YOGA Air 14 Ultra Aura"
       ],
@@ -8414,12 +8569,13 @@
       "group": "联想 YOGA Air 14 Ultra Aura:battery",
       "qrels_complete": true,
       "variant_of": "F11",
-      "split": "dev"
+      "split": "dev",
+      "style": "colloquial"
     },
     {
       "id": "C17",
       "cat": "C",
-      "q": "我这台联想 来酷GT 16 酷睿版的内存能否自行升级呀，能帮我看看不",
+      "q": "来酷GT16 那个酷睿版，16G 跑模型不够想再加点，行不行",
       "rel": [
         "联想 来酷GT 16 酷睿版"
       ],
@@ -8441,12 +8597,13 @@
       "group": "联想 来酷GT 16 酷睿版:memory",
       "qrels_complete": true,
       "variant_of": "F12",
-      "split": "dev"
+      "split": "dev",
+      "style": "colloquial"
     },
     {
       "id": "C18",
       "cat": "C",
-      "q": "我这台联想 ThinkBook 14+ 酷睿版满载时的人位噪音有多大，请说明测试环境呀，能帮我看看不",
+      "q": "ThinkBook 14+ 酷睿版 在自习室跑代码风扇会很响吗",
       "rel": [
         "联想 ThinkBook 14+ 酷睿版"
       ],
@@ -8476,12 +8633,13 @@
       "agent": {
         "mode": "answer",
         "critical_errors": []
-      }
+      },
+      "style": "colloquial"
     },
     {
       "id": "C19",
       "cat": "C",
-      "q": "我这台机械革命 耀世16 Ultra RTX 5070 Ti版的屏幕实测最大亮度是多少呀，能帮我看看不",
+      "q": "耀世16 Ultra 5070Ti 那款 屏幕亮不亮 白天开窗帘玩会不会看不清",
       "rel": [
         "机械革命 耀世16 Ultra RTX 5070 Ti版"
       ],
@@ -8503,12 +8661,13 @@
       "group": "机械革命 耀世16 Ultra RTX 5070 Ti版:brightness",
       "qrels_complete": true,
       "variant_of": "F14",
-      "split": "test"
+      "split": "test",
+      "style": "colloquial"
     },
     {
       "id": "C20",
       "cat": "C",
-      "q": "我这台微星 泰坦18 Pro 锐龙版的原装固态硬盘是什么型号呀，能帮我看看不",
+      "q": "泰坦18 Pro 锐龙版硬盘用的谁家的",
       "rel": [
         "微星 泰坦18 Pro 锐龙版"
       ],
@@ -8530,12 +8689,13 @@
       "group": "微星 泰坦18 Pro 锐龙版:ssd",
       "qrels_complete": true,
       "variant_of": "F15",
-      "split": "test"
+      "split": "test",
+      "style": "colloquial"
     },
     {
       "id": "C21",
       "cat": "C",
-      "q": "我这台机械革命 耀世16 Ultra RTX 5090版的机身重量是多少呀，能帮我看看不",
+      "q": "耀世16 Ultra 顶配 5090 那台背着走得动吗，多重",
       "rel": [
         "机械革命 耀世16 Ultra RTX 5090版"
       ],
@@ -8557,12 +8717,13 @@
       "group": "机械革命 耀世16 Ultra RTX 5090版:weight",
       "qrels_complete": true,
       "variant_of": "F16",
-      "split": "dev"
+      "split": "dev",
+      "style": "colloquial"
     },
     {
       "id": "C22",
       "cat": "C",
-      "q": "我这台机械革命 苍龙16 Ultra的机身重量是多少呀，能帮我看看不",
+      "q": "苍龙16 Ultra 搬回家过年会不会很沉",
       "rel": [
         "机械革命 苍龙16 Ultra"
       ],
@@ -8584,12 +8745,13 @@
       "group": "机械革命 苍龙16 Ultra:weight",
       "qrels_complete": true,
       "variant_of": "F17",
-      "split": "dev"
+      "split": "dev",
+      "style": "colloquial"
     },
     {
       "id": "C23",
       "cat": "C",
-      "q": "我这台ROG 幻14 Air 2026的内存能否自行升级呀，能帮我看看不",
+      "q": "幻14 Air 2026 内存以后能自己加吗",
       "rel": [
         "ROG 幻14 Air 2026"
       ],
@@ -8615,12 +8777,13 @@
       "agent": {
         "mode": "answer",
         "critical_errors": []
-      }
+      },
+      "style": "colloquial"
     },
     {
       "id": "C24",
       "cat": "C",
-      "q": "我这台华硕 破晓 Ultra满载时的人位噪音有多大，请说明测试环境呀，能帮我看看不",
+      "q": "破晓 Ultra 开 Turbo 声音大吗，图书馆能用不",
       "rel": [
         "华硕 破晓 Ultra"
       ],
@@ -8642,12 +8805,13 @@
       "group": "华硕 破晓 Ultra:noise",
       "qrels_complete": true,
       "variant_of": "F19",
-      "split": "dev"
+      "split": "dev",
+      "style": "colloquial"
     },
     {
       "id": "C25",
       "cat": "C",
-      "q": "我这台小米 REDMI Book Pro 14 2026的屏幕实测最大亮度是多少呀，能帮我看看不",
+      "q": "红米 Book Pro 14 2026 屏幕够亮吗",
       "rel": [
         "小米 REDMI Book Pro 14 2026"
       ],
@@ -8669,7 +8833,8 @@
       "group": "小米 REDMI Book Pro 14 2026:brightness",
       "qrels_complete": true,
       "variant_of": "F20",
-      "split": "dev"
+      "split": "dev",
+      "style": "colloquial"
     },
     {
       "id": "D21",
@@ -9087,13 +9252,13 @@
     {
       "id": "G12",
       "cat": "G",
-      "q": "戴尔XPS 14 2026款在日常应用仿真测试里能用几小时？",
+      "q": "戴尔 XPS 14 2026 续航能撑多久",
       "rel": [],
       "facts": [],
       "needs": [
         {
           "id": "boundary",
-          "answer": "说明现有知识库/工具或用户信息不足以给出所问的可靠结论；可追问必要信息，不编造具体数据、记录或实时状态",
+          "answer": "说明知识库没有该机型或该项的可靠资料，不编造数据，不把相近机型或其他属性当作答案；可给出有依据的相关信息",
           "evidence": []
         }
       ],
@@ -9105,18 +9270,19 @@
       "agent": {
         "mode": "no_answer",
         "critical_errors": []
-      }
+      },
+      "g_type": "missing_model"
     },
     {
       "id": "G13",
       "cat": "G",
-      "q": "华为MateBook X Pro 2026款的实测人位噪音是多少分贝？",
+      "q": "ROG 魔霸新锐酷睿版摄像头多少万像素",
       "rel": [],
       "facts": [],
       "needs": [
         {
           "id": "boundary",
-          "answer": "说明现有知识库/工具或用户信息不足以给出所问的可靠结论；可追问必要信息，不编造具体数据、记录或实时状态",
+          "answer": "说明评测资料未提供该机摄像头像素，不编造；可给出有依据的其他配置",
           "evidence": []
         }
       ],
@@ -9124,18 +9290,19 @@
       "construction": "new_fact",
       "group": "G13",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "g_type": "missing_attr"
     },
     {
       "id": "G14",
       "cat": "G",
-      "q": "LG gram 17 2026款屏幕实测最大亮度有多少？",
+      "q": "MacBook Neo 有几个扬声器",
       "rel": [],
       "facts": [],
       "needs": [
         {
           "id": "boundary",
-          "answer": "说明现有知识库/工具或用户信息不足以给出所问的可靠结论；可追问必要信息，不编造具体数据、记录或实时状态",
+          "answer": "说明评测资料未给出该机扬声器数量，不编造",
           "evidence": []
         }
       ],
@@ -9143,18 +9310,19 @@
       "construction": "new_fact",
       "group": "G14",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "g_type": "missing_attr"
     },
     {
       "id": "G15",
       "cat": "G",
-      "q": "微软Surface Laptop 8的拆机图显示有几个内存插槽？",
+      "q": "Surface Laptop 8 内存能自己加吗",
       "rel": [],
       "facts": [],
       "needs": [
         {
           "id": "boundary",
-          "answer": "说明现有知识库/工具或用户信息不足以给出所问的可靠结论；可追问必要信息，不编造具体数据、记录或实时状态",
+          "answer": "说明知识库没有该机型或该项的可靠资料，不编造数据，不把相近机型或其他属性当作答案；可给出有依据的相关信息",
           "evidence": []
         }
       ],
@@ -9162,18 +9330,19 @@
       "construction": "new_fact",
       "group": "G15",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "g_type": "near_model"
     },
     {
       "id": "G16",
       "cat": "G",
-      "q": "来酷GT16 2027款支持最大多少GB内存？",
+      "q": "来酷GT16 2027款最大能加到多少G内存？",
       "rel": [],
       "facts": [],
       "needs": [
         {
           "id": "boundary",
-          "answer": "说明现有知识库/工具或用户信息不足以给出所问的可靠结论；可追问必要信息，不编造具体数据、记录或实时状态",
+          "answer": "说明知识库没有该机型或该项的可靠资料，不编造数据，不把相近机型或其他属性当作答案；可给出有依据的相关信息",
           "evidence": []
         }
       ],
@@ -9185,18 +9354,19 @@
       "agent": {
         "mode": "no_answer",
         "critical_errors": []
-      }
+      },
+      "g_type": "near_model"
     },
     {
       "id": "G17",
       "cat": "G",
-      "q": "ThinkBook 14+ 2027锐龙版续航实测是多少？",
+      "q": "笔记本屏幕突然出现一条彩色竖线怎么回事",
       "rel": [],
       "facts": [],
       "needs": [
         {
           "id": "boundary",
-          "answer": "说明现有知识库/工具或用户信息不足以给出所问的可靠结论；可追问必要信息，不编造具体数据、记录或实时状态",
+          "answer": "说明知识库没有该机型或该项的可靠资料，不编造数据，不把相近机型或其他属性当作答案；可给出有依据的相关信息",
           "evidence": []
         }
       ],
@@ -9204,18 +9374,19 @@
       "construction": "new_fact",
       "group": "G17",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "g_type": "missing_topic"
     },
     {
       "id": "G18",
       "cat": "G",
-      "q": "荣耀WIN H9 2027版的显卡功耗上限是多少？",
+      "q": "荣耀WIN H9 2027款显卡能跑多少瓦",
       "rel": [],
       "facts": [],
       "needs": [
         {
           "id": "boundary",
-          "answer": "说明现有知识库/工具或用户信息不足以给出所问的可靠结论；可追问必要信息，不编造具体数据、记录或实时状态",
+          "answer": "说明知识库没有该机型或该项的可靠资料，不编造数据，不把相近机型或其他属性当作答案；可给出有依据的相关信息",
           "evidence": []
         }
       ],
@@ -9223,18 +9394,19 @@
       "construction": "new_fact",
       "group": "G18",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "g_type": "near_model"
     },
     {
       "id": "G19",
       "cat": "G",
-      "q": "机械革命星耀14 2027版用的什么固态颗粒？",
+      "q": "星耀14 键盘有背光吗",
       "rel": [],
       "facts": [],
       "needs": [
         {
           "id": "boundary",
-          "answer": "说明现有知识库/工具或用户信息不足以给出所问的可靠结论；可追问必要信息，不编造具体数据、记录或实时状态",
+          "answer": "说明评测资料未写明该机键盘是否有背光，不编造",
           "evidence": []
         }
       ],
@@ -9242,12 +9414,13 @@
       "construction": "new_fact",
       "group": "G19",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "g_type": "missing_attr"
     },
     {
       "id": "G20",
       "cat": "G",
-      "q": "这台没提供型号和照片的电脑，主板维修准确要多少钱？",
+      "q": "主板坏了修一下要多少钱",
       "rel": [],
       "facts": [],
       "needs": [
@@ -9265,18 +9438,19 @@
       "agent": {
         "mode": "clarify",
         "critical_errors": []
-      }
+      },
+      "g_type": "out_of_scope"
     },
     {
       "id": "G21",
       "cat": "G",
-      "q": "请查询我这台笔记本的个人保修到期日期，序列号我还没提供。",
+      "q": "帮我查下我这台的保修啥时候到期",
       "rel": [],
       "facts": [],
       "needs": [
         {
           "id": "boundary",
-          "answer": "说明现有知识库/工具或用户信息不足以给出所问的可靠结论；可追问必要信息，不编造具体数据、记录或实时状态",
+          "answer": "说明这需要实时数据、个人记录或实物检测，知识库和工具无法提供；可追问或指引渠道，不编造具体结果",
           "evidence": []
         }
       ],
@@ -9284,18 +9458,19 @@
       "construction": "new_fact",
       "group": "G21",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "g_type": "out_of_scope"
     },
     {
       "id": "G22",
       "cat": "G",
-      "q": "你能查到我上次在IT侠维修时换了哪个零件吗？",
+      "q": "我上次在IT侠修电脑换的是哪个零件？",
       "rel": [],
       "facts": [],
       "needs": [
         {
           "id": "boundary",
-          "answer": "说明现有知识库/工具或用户信息不足以给出所问的可靠结论；可追问必要信息，不编造具体数据、记录或实时状态",
+          "answer": "说明这需要实时数据、个人记录或实物检测，知识库和工具无法提供；可追问或指引渠道，不编造具体结果",
           "evidence": []
         }
       ],
@@ -9303,18 +9478,19 @@
       "construction": "new_fact",
       "group": "G22",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "g_type": "out_of_scope"
     },
     {
       "id": "G23",
       "cat": "G",
-      "q": "能告诉我这台电脑此刻的实际CPU温度吗？我还没有上传监控数据。",
+      "q": "我电脑现在CPU多少度？",
       "rel": [],
       "facts": [],
       "needs": [
         {
           "id": "boundary",
-          "answer": "说明现有知识库/工具或用户信息不足以给出所问的可靠结论；可追问必要信息，不编造具体数据、记录或实时状态",
+          "answer": "说明这需要实时数据、个人记录或实物检测，知识库和工具无法提供；可追问或指引渠道，不编造具体结果",
           "evidence": []
         }
       ],
@@ -9322,18 +9498,19 @@
       "construction": "new_fact",
       "group": "G23",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "g_type": "out_of_scope"
     },
     {
       "id": "G24",
       "cat": "G",
-      "q": "请给出今天京东自营来酷GT16所有优惠叠加后的实时到手价。",
+      "q": "京东来酷GT16今天叠完券到手多少钱",
       "rel": [],
       "facts": [],
       "needs": [
         {
           "id": "boundary",
-          "answer": "说明现有知识库/工具或用户信息不足以给出所问的可靠结论；可追问必要信息，不编造具体数据、记录或实时状态",
+          "answer": "说明这需要实时数据、个人记录或实物检测，知识库和工具无法提供；可追问或指引渠道，不编造具体结果",
           "evidence": []
         }
       ],
@@ -9345,18 +9522,19 @@
       "agent": {
         "mode": "no_answer",
         "critical_errors": []
-      }
+      },
+      "g_type": "out_of_scope"
     },
     {
       "id": "G25",
       "cat": "G",
-      "q": "现在南京哪家店有荣耀H9现货，剩几台？",
+      "q": "南京现在哪家店有荣耀H9现货",
       "rel": [],
       "facts": [],
       "needs": [
         {
           "id": "boundary",
-          "answer": "说明现有知识库/工具或用户信息不足以给出所问的可靠结论；可追问必要信息，不编造具体数据、记录或实时状态",
+          "answer": "说明这需要实时数据、个人记录或实物检测，知识库和工具无法提供；可追问或指引渠道，不编造具体结果",
           "evidence": []
         }
       ],
@@ -9364,18 +9542,19 @@
       "construction": "new_fact",
       "group": "G25",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "g_type": "out_of_scope"
     },
     {
       "id": "G26",
       "cat": "G",
-      "q": "苹果MacBook Air M6的官方维修主板报价是多少？",
+      "q": "MacBook Air M6 官方换主板多少钱",
       "rel": [],
       "facts": [],
       "needs": [
         {
           "id": "boundary",
-          "answer": "说明现有知识库/工具或用户信息不足以给出所问的可靠结论；可追问必要信息，不编造具体数据、记录或实时状态",
+          "answer": "说明这需要实时数据、个人记录或实物检测，知识库和工具无法提供；可追问或指引渠道，不编造具体结果",
           "evidence": []
         }
       ],
@@ -9383,18 +9562,19 @@
       "construction": "new_fact",
       "group": "G26",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "g_type": "out_of_scope"
     },
     {
       "id": "G27",
       "cat": "G",
-      "q": "Windows 12正式版在南大校园网中的激活服务器地址是什么？",
+      "q": "Windows 12 在校园网怎么激活，KMS 地址是多少",
       "rel": [],
       "facts": [],
       "needs": [
         {
           "id": "boundary",
-          "answer": "说明现有知识库/工具或用户信息不足以给出所问的可靠结论；可追问必要信息，不编造具体数据、记录或实时状态",
+          "answer": "说明知识库没有该机型或该项的可靠资料，不编造数据，不把相近机型或其他属性当作答案；可给出有依据的相关信息",
           "evidence": []
         }
       ],
@@ -9402,18 +9582,19 @@
       "construction": "new_fact",
       "group": "G27",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "g_type": "near_model"
     },
     {
       "id": "G28",
       "cat": "G",
-      "q": "未在资料中出现的深圳某维修店是否获得联想官方授权？",
+      "q": "深圳华强北那家联想维修店是官方授权的吗",
       "rel": [],
       "facts": [],
       "needs": [
         {
           "id": "boundary",
-          "answer": "说明现有知识库/工具或用户信息不足以给出所问的可靠结论；可追问必要信息，不编造具体数据、记录或实时状态",
+          "answer": "说明这需要实时数据、个人记录或实物检测，知识库和工具无法提供；可追问或指引渠道，不编造具体结果",
           "evidence": []
         }
       ],
@@ -9421,18 +9602,19 @@
       "construction": "new_fact",
       "group": "G28",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "g_type": "out_of_scope"
     },
     {
       "id": "G29",
       "cat": "G",
-      "q": "我的固态硬盘下个月会不会坏，能给出准确日期吗？",
+      "q": "我的固态下个月会不会坏",
       "rel": [],
       "facts": [],
       "needs": [
         {
           "id": "boundary",
-          "answer": "说明现有知识库/工具或用户信息不足以给出所问的可靠结论；可追问必要信息，不编造具体数据、记录或实时状态",
+          "answer": "说明这需要实时数据、个人记录或实物检测，知识库和工具无法提供；可追问或指引渠道，不编造具体结果",
           "evidence": []
         }
       ],
@@ -9440,18 +9622,19 @@
       "construction": "new_fact",
       "group": "G29",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "g_type": "out_of_scope"
     },
     {
       "id": "G30",
       "cat": "G",
-      "q": "请给出这台具体进水电脑的数据恢复成功率，电脑还没检测。",
+      "q": "电脑泡水了，里面的数据能救回来几成",
       "rel": [],
       "facts": [],
       "needs": [
         {
           "id": "boundary",
-          "answer": "说明现有知识库/工具或用户信息不足以给出所问的可靠结论；可追问必要信息，不编造具体数据、记录或实时状态",
+          "answer": "说明这需要实时数据、个人记录或实物检测，知识库和工具无法提供；可追问或指引渠道，不编造具体结果",
           "evidence": []
         }
       ],
@@ -9459,7 +9642,8 @@
       "construction": "new_fact",
       "group": "G30",
       "qrels_complete": false,
-      "split": "dev"
+      "split": "dev",
+      "g_type": "out_of_scope"
     },
     {
       "id": "T22",
@@ -9621,7 +9805,7 @@
     {
       "id": "T27",
       "cat": "T",
-      "q": "Word文档怎样保存到已经登录的OneDrive同步目录？",
+      "q": "Word 写完想直接存进 OneDrive 同步，保存时怎么选位置？",
       "rel": [
         "证据:如何保存到OneDrive？:a89586"
       ],
@@ -10087,7 +10271,7 @@
     {
       "id": "K37",
       "cat": "K",
-      "q": "睡眠唤醒后经常出现键盘失灵，快速启动功能需要一直开着吗？",
+      "q": "睡眠醒来键盘老失灵，快速启动要不要关？",
       "rel": [
         "证据:*根目录下特殊的文件:13d566"
       ],
@@ -10175,7 +10359,7 @@
     {
       "id": "K40",
       "cat": "K",
-      "q": "笔记本说明里写的PD充电是指什么接口充电？",
+      "q": "说明书上写的 PD 充电是啥意思？",
       "rel": [
         "证据:1. 电脑的主要部件 > （5）电源:3c0d0a"
       ],
@@ -10241,7 +10425,7 @@
     {
       "id": "U29",
       "cat": "U",
-      "q": "Snappy Driver Installer有SDI和SDIO两个版本，资料建议选哪个、为什么？",
+      "q": "Snappy Driver Installer 有 SDI 和 SDIO 两个版本，下哪个好？",
       "rel": [
         "证据:Snappy Driver Instal:aee285"
       ],
@@ -10293,7 +10477,7 @@
     {
       "id": "U31",
       "cat": "U",
-      "q": "CrystalDisk Info和CrystalDisk Mark分别用于健康信息还是读写测速？",
+      "q": "CrystalDisk Info 和 CrystalDisk Mark 有什么区别，看硬盘健康该用哪个？",
       "rel": [
         "证据:硬件检查和测试 > CrystalDis:6bbf21"
       ],
@@ -10463,7 +10647,7 @@
     {
       "id": "U36",
       "cat": "U",
-      "q": "Ventoy哪个程序提供图形化插件配置编辑并生成配置文件？",
+      "q": "Ventoy 的插件配置有没有图形界面可以改，不想手写配置文件",
       "rel": [
         "证据:工具盘维护 > Ventoy:af2c96"
       ],
@@ -10551,7 +10735,7 @@
     {
       "id": "U39",
       "cat": "U",
-      "q": "有没有能查看Windows密钥属性和激活次数的管理工具？",
+      "q": "想看 Windows 密钥还剩多少激活次数，用什么工具？",
       "rel": [
         "证据:Windows密钥信息查看：VAMT:cd7f51"
       ],
@@ -10577,7 +10761,7 @@
     {
       "id": "U40",
       "cat": "U",
-      "q": "用Office Tool Plus安装后要走学校KMS授权，应该选哪种版本和什么网络？",
+      "q": "用 Office Tool Plus 装 Office 想走学校 KMS 激活，版本怎么选，要连什么网？",
       "rel": [
         "证据:优雅安装/管理/卸载Office：Off:4980a0"
       ],
@@ -10755,7 +10939,7 @@
     {
       "id": "R34",
       "cat": "R",
-      "q": "SFC反复修不好，手工替换损坏系统文件时对来源电脑有什么要求？",
+      "q": "SFC 一直修不好，想从别的电脑拷系统文件替换，对那台电脑有要求吗？",
       "rel": [
         "证据:2、系统文件修复:c8a596"
       ],
@@ -10998,7 +11182,7 @@
     {
       "id": "R42",
       "cat": "R",
-      "q": "学校邮箱申请的Office365 A1被误认为个人账号，这两种账号到底能一样改登录邮箱吗？",
+      "q": "学校邮箱开的 Office365 A1，想像个人账号那样改登录邮箱，能改吗？",
       "rel": [
         "证据:三、教育邮箱薅的 Office365 A:c6aff5"
       ],
@@ -11024,7 +11208,7 @@
     {
       "id": "R43",
       "cat": "R",
-      "q": "代理软件明明没启动却还是打不开校园网，为什么还要打开它检查设置？",
+      "q": "代理软件没开着，校园网却打不开，还用去看代理设置吗？",
       "rel": [
         "证据:2、一般方法：无法登录校园网问题排查:6535aa"
       ],
@@ -11050,7 +11234,7 @@
     {
       "id": "R44",
       "cat": "R",
-      "q": "PL2303HXA这类已停产芯片的设备，新驱动装了仍不能用，应继续追最新版吗？",
+      "q": "PL2303HXA 的串口线装了最新驱动还是用不了，怎么办？",
       "rel": [
         "证据:六、驱动的选择与安装的注意事项:ff212a"
       ],
@@ -11102,7 +11286,7 @@
     {
       "id": "E05",
       "cat": "E",
-      "q": "对比苹果 MacBook Pro 16和机械革命 星耀14的机身重量，哪台更轻？",
+      "q": "MacBook Pro 16 和星耀14 哪个轻？差多少",
       "rel": [
         "苹果 MacBook Pro 16",
         "机械革命 星耀14"
@@ -11143,7 +11327,7 @@
     {
       "id": "E06",
       "cat": "E",
-      "q": "对比联想 ThinkPad X14和机械革命 蛟龙16 Pro的机身重量，哪台更轻？",
+      "q": "ThinkPad X14 跟蛟龙16 Pro 比，背起来差多少斤",
       "rel": [
         "联想 ThinkPad X14",
         "机械革命 蛟龙16 Pro"
@@ -11184,7 +11368,7 @@
     {
       "id": "E07",
       "cat": "E",
-      "q": "对比惠普 HyperX 暗影精灵 PRO 16和联想 ThinkBook 16p 锐龙版的内存的可更换性？",
+      "q": "暗影精灵Pro16 和 ThinkBook 16p 锐龙版，都能自己加内存吗",
       "rel": [
         "惠普 HyperX 暗影精灵 PRO 16",
         "联想 ThinkBook 16p 锐龙版"
@@ -11225,7 +11409,7 @@
     {
       "id": "E08",
       "cat": "E",
-      "q": "对比ROG 魔霸新锐 酷睿版和微星 泰坦16 AI的满载人位噪音及对应测试环境？",
+      "q": "魔霸新锐酷睿版和泰坦16 AI 哪个打游戏更吵",
       "rel": [
         "ROG 魔霸新锐 酷睿版",
         "微星 泰坦16 AI"
@@ -11248,7 +11432,7 @@
         },
         {
           "id": "right",
-          "answer": "报告微星泰坦16 AI的一种满载人位噪音并说明环境噪音31.8dB：常规60.4dB或强冷61.5dB，任一即可",
+          "answer": "微星泰坦16 AI满载噪音约60.4dB，强冷模式约61.5dB，任一即可",
           "evidence": [
             {
               "ref": "微星 泰坦16 AI",
@@ -11270,7 +11454,7 @@
     {
       "id": "E09",
       "cat": "E",
-      "q": "对比苹果 MacBook Pro 14和雷神 猎刃S的屏幕实测最大亮度？",
+      "q": "MacBook Pro 14 和雷神猎刃S 的屏幕哪个更亮",
       "rel": [
         "苹果 MacBook Pro 14",
         "雷神 猎刃S"
@@ -11307,7 +11491,7 @@
     {
       "id": "E10",
       "cat": "E",
-      "q": "对比ThinkPad P1 2026和ALIENWARE 18 AREA-51的原装固态硬盘型号？",
+      "q": "P1 2026 和外星人 AREA-51 18寸，原装硬盘各是什么",
       "rel": [
         "ThinkPad P1 2026",
         "ALIENWARE 18 AREA-51"
@@ -11344,7 +11528,7 @@
     {
       "id": "E11",
       "cat": "E",
-      "q": "对比苹果 MacBook Neo和机械革命 苍龙16 Ultra的机身重量，哪台更轻？",
+      "q": "MacBook Neo 和苍龙16 Ultra 重量差多少",
       "rel": [
         "苹果 MacBook Neo",
         "机械革命 苍龙16 Ultra"
@@ -11381,7 +11565,7 @@
     {
       "id": "E12",
       "cat": "E",
-      "q": "对比小米 Xiaomi Book Pro 14和神舟 战神T10 Pro的机身重量，哪台更轻？",
+      "q": "小米 Book Pro 14 和神舟战神T10 Pro 分别多重",
       "rel": [
         "小米 Xiaomi Book Pro 14",
         "神舟 战神T10 Pro"
@@ -11418,7 +11602,7 @@
     {
       "id": "E13",
       "cat": "E",
-      "q": "对比联想 小新Pro 16 GT和机械革命 耀世18 Pro的内存的可更换性？",
+      "q": "小新Pro16 GT 和耀世18 Pro，哪台内存能自己升级",
       "rel": [
         "联想 小新Pro 16 GT",
         "机械革命 耀世18 Pro"
@@ -11455,7 +11639,7 @@
     {
       "id": "E14",
       "cat": "E",
-      "q": "对比机械革命 苍龙16X Pro和ROG 幻14 Air 2026的满载人位噪音及对应测试环境？",
+      "q": "苍龙16X Pro 和幻14 Air 2026 满载谁更安静",
       "rel": [
         "机械革命 苍龙16X Pro",
         "ROG 幻14 Air 2026"
@@ -11492,7 +11676,7 @@
     {
       "id": "E15",
       "cat": "E",
-      "q": "对比机械革命 无界15X和雷神 ZERO Air 15的机身重量，哪台更轻？",
+      "q": "无界15X 和雷神 ZERO Air 15 哪个更轻便",
       "rel": [
         "机械革命 无界15X",
         "雷神 ZERO Air 15"
@@ -11529,7 +11713,7 @@
     {
       "id": "E16",
       "cat": "E",
-      "q": "对比荣耀 MagicBook Pro 14 2025 Ultra 9版和华硕 破晓 Ultra的原装固态硬盘型号？",
+      "q": "荣耀 MagicBook Pro 14 2025 U9 版和破晓 Ultra 的固态分别是什么牌子",
       "rel": [
         "荣耀 MagicBook Pro 14 2025 Ultra 9版",
         "华硕 破晓 Ultra"
@@ -11566,7 +11750,7 @@
     {
       "id": "E17",
       "cat": "E",
-      "q": "对比微软 Surface Pro 11和小米 REDMI Book Pro 14 2026的机身重量，哪台更轻？",
+      "q": "Surface Pro 11 跟 REDMI Book Pro 14 2026 比哪个更适合随身带，重量各多少",
       "rel": [
         "微软 Surface Pro 11",
         "小米 REDMI Book Pro 14 2026"
@@ -11603,7 +11787,7 @@
     {
       "id": "E18",
       "cat": "E",
-      "q": "对比微星 泰坦18 Pro AI 2025和惠普 HyperX 暗影精灵 MAX的机身重量，哪台更轻？",
+      "q": "泰坦18 Pro 2025 和暗影精灵 MAX 两台大块头谁更重",
       "rel": [
         "微星 泰坦18 Pro AI 2025",
         "惠普 HyperX 暗影精灵 MAX"
@@ -11640,7 +11824,7 @@
     {
       "id": "E19",
       "cat": "E",
-      "q": "对比机械师 曙光16S和华硕 灵耀16 Air 骁龙版的机身重量，哪台更轻？",
+      "q": "曙光16S 和灵耀16 Air 骁龙版重量差了多少",
       "rel": [
         "机械师 曙光16S",
         "华硕 灵耀16 Air 骁龙版"
@@ -11677,7 +11861,7 @@
     {
       "id": "E20",
       "cat": "E",
-      "q": "对比联想 ThinkBook 16p 2025和荣耀 MagicBook Pro 14的满载人位噪音及对应测试环境？",
+      "q": "ThinkBook 16p 2025 和荣耀 MagicBook Pro 14 满载噪音对比",
       "rel": [
         "联想 ThinkBook 16p 2025",
         "荣耀 MagicBook Pro 14"
@@ -11714,11 +11898,10 @@
     {
       "id": "X06",
       "cat": "X",
-      "q": "惠普 HyperX 暗影精灵 PRO 16的内存能自己更换吗，如何安全地把新内存装上去？",
+      "q": "暗影精灵Pro16 内存条想自己加，惠普这种电池不好拆的，有没有办法先把电池断掉？",
       "rel": [
         "惠普 HyperX 暗影精灵 PRO 16",
-        "语雀:更换前准备",
-        "语雀:硬件更换"
+        "语雀:惠普电池保护"
       ],
       "facts": [],
       "needs": [
@@ -11733,22 +11916,16 @@
           ]
         },
         {
-          "id": "power",
-          "answer": "操作前断开电源和电池",
+          "id": "battery_safe",
+          "answer": "部分惠普机型可在BIOS开启电池保护模式，开启后仅电池无法开机，拔电源后需确认",
           "evidence": [
             {
-              "ref": "语雀:更换前准备",
-              "quote": "1. **断电**：断开电源，尽可能卸下所有电池。个别老旧机型存在双内置电池的情况，但绝大多数电脑都是一块内置（需要拆机）或外置（可直接拔插）的电池。"
-            }
-          ]
-        },
-        {
-          "id": "install",
-          "answer": "内存条对准缺口斜插，再下压至两侧卡扣锁定",
-          "evidence": [
+              "ref": "语雀:惠普电池保护",
+              "quote": "此模式在有的惠普机型内可直接在BIOS打开功能，其特征为：开启后，只有插入外接电源才能开机，只用电池无法开机。"
+            },
             {
-              "ref": "语雀:硬件更换",
-              "quote": "内存：内存加装，斜插进去（能插进去就能用，它有防呆口） ，下压，两边卡扣卡塔一声后即可。更换的话，两边卡扣同时向外扣去，让原内存弹起来就好。"
+              "ref": "语雀:惠普电池保护",
+              "quote": "拔掉电源线后，务必确认仅使用电池无法开机。"
             }
           ]
         }
@@ -11766,41 +11943,30 @@
     {
       "id": "X07",
       "cat": "X",
-      "q": "ROG 魔霸新锐 酷睿版的内存能自己更换吗，如何安全地把新内存装上去？",
+      "q": "魔霸新锐酷睿版用久了想自己清灰，后盖好拆吗？清的时候重点清哪里",
       "rel": [
         "ROG 魔霸新锐 酷睿版",
-        "语雀:更换前准备",
-        "语雀:硬件更换"
+        "语雀:清灰"
       ],
       "facts": [],
       "needs": [
         {
-          "id": "support",
-          "answer": "该机有两个内存插槽，支持自行加装或更换内存",
+          "id": "open",
+          "answer": "拆机简单，滑动D壳锁扣后下推即可取下底盖",
           "evidence": [
             {
               "ref": "ROG 魔霸新锐 酷睿版",
-              "quote": "单通道 16GB DDR5 5600MT/s内存能满足大部分用途的需求，机器有两个内存插槽，如有需求可自行加装内存。"
+              "quote": "这台笔记本电脑拆机非常简单，滑动D壳上的的锁扣再向下轻推即可取下底部盖板。"
             }
           ]
         },
         {
-          "id": "power",
-          "answer": "操作前断开电源和电池",
+          "id": "clean",
+          "answer": "重点清风扇叶片、鳍片内部，以及鳍片与风扇连接处（最影响散热）",
           "evidence": [
             {
-              "ref": "语雀:更换前准备",
-              "quote": "1. **断电**：断开电源，尽可能卸下所有电池。个别老旧机型存在双内置电池的情况，但绝大多数电脑都是一块内置（需要拆机）或外置（可直接拔插）的电池。"
-            }
-          ]
-        },
-        {
-          "id": "install",
-          "answer": "内存条对准缺口斜插，再下压至两侧卡扣锁定",
-          "evidence": [
-            {
-              "ref": "语雀:硬件更换",
-              "quote": "内存：内存加装，斜插进去（能插进去就能用，它有防呆口） ，下压，两边卡扣卡塔一声后即可。更换的话，两边卡扣同时向外扣去，让原内存弹起来就好。"
+              "ref": "语雀:清灰",
+              "quote": "热管和风扇拿掉后，需要清灰的地方有三处，风扇叶片上的灰，鳍片内部的灰（少），鳍片风扇连接处的灰（最影响散热）。"
             }
           ]
         }
@@ -11818,7 +11984,7 @@
     {
       "id": "X08",
       "cat": "X",
-      "q": "机械革命 苍龙16X Pro的内存能自己更换吗，如何安全地把新内存装上去？",
+      "q": "苍龙16X Pro 还有空位加固态吗？自己装要注意什么",
       "rel": [
         "机械革命 苍龙16X Pro",
         "语雀:更换前准备",
@@ -11828,11 +11994,11 @@
       "needs": [
         {
           "id": "support",
-          "answer": "该机有两个内存插槽，支持自行加装或更换内存",
+          "answer": "原装1TB长江存储PC411，另有一个2280 M.2插槽可加装",
           "evidence": [
             {
               "ref": "机械革命 苍龙16X Pro",
-              "quote": "单条32GB DDR5 5600MT/s内存能满足大部分用途的需求，机器有两个内存插槽，如有需求可自行加装或更换内存。"
+              "quote": "固态硬盘容量1TB，型号长江存储PC411，支持PCIe 4.0×4和NVMe，机器还有一个2280规格的M.2插槽，如有需要可自行加装或更换固态硬盘。"
             }
           ]
         },
@@ -11848,11 +12014,11 @@
         },
         {
           "id": "install",
-          "answer": "内存条对准缺口斜插，再下压至两侧卡扣锁定",
+          "answer": "M.2固态斜插接口，再下压并拧螺丝固定",
           "evidence": [
             {
               "ref": "语雀:硬件更换",
-              "quote": "内存：内存加装，斜插进去（能插进去就能用，它有防呆口） ，下压，两边卡扣卡塔一声后即可。更换的话，两边卡扣同时向外扣去，让原内存弹起来就好。"
+              "quote": "m.2 接口斜插进去，然后下压拧螺丝即可"
             }
           ]
         }
@@ -11866,18 +12032,32 @@
         "mode": "answer",
         "critical_errors": [],
         "turns": [
-          "我只关机并拔掉充电器，内置电池不拔就换，可以吗？"
+          "装好以后想把系统盘整个克隆到新盘，用什么工具，要注意啥？"
         ],
         "turn_checks": [
           {
             "needs": [
               {
-                "id": "power",
-                "answer": "不能仅关机拔充电器；更换前还应断开内置电池",
+                "id": "clone",
+                "answer": "可用DiskGenius分区克隆；操作时笔记本插电，并在PE内操作",
                 "evidence": [
                   {
-                    "ref": "语雀:更换前准备",
-                    "quote": "1. **断电**：断开电源，尽可能卸下所有电池。个别老旧机型存在双内置电池的情况，但绝大多数电脑都是一块内置（需要拆机）或外置（可直接拔插）的电池。"
+                    "ref": "语雀:常用DiskGenius",
+                    "quote": "一款多功能的硬盘工具，可以用于系统分区、分区扩容、分区克隆、数据恢复等操作。"
+                  }
+                ]
+              },
+              {
+                "id": "caution",
+                "answer": "笔记本必须插电，并应在PE内操作分区",
+                "evidence": [
+                  {
+                    "ref": "语雀:常用DiskGenius",
+                    "quote": "笔记本必须插电"
+                  },
+                  {
+                    "ref": "语雀:常用DiskGenius",
+                    "quote": "应该在 PE 内使用 DiskGenius 操作分区"
                   }
                 ]
               }
@@ -11889,11 +12069,10 @@
     {
       "id": "X09",
       "cat": "X",
-      "q": "机械革命 无界15X的内存能自己更换吗，如何安全地把新内存装上去？",
+      "q": "无界15X 想换两条大内存，能自己换吗，换之前要做什么准备",
       "rel": [
         "机械革命 无界15X",
-        "语雀:更换前准备",
-        "语雀:硬件更换"
+        "语雀:更换前准备"
       ],
       "facts": [],
       "needs": [
@@ -11916,16 +12095,6 @@
               "quote": "1. **断电**：断开电源，尽可能卸下所有电池。个别老旧机型存在双内置电池的情况，但绝大多数电脑都是一块内置（需要拆机）或外置（可直接拔插）的电池。"
             }
           ]
-        },
-        {
-          "id": "install",
-          "answer": "内存条对准缺口斜插，再下压至两侧卡扣锁定",
-          "evidence": [
-            {
-              "ref": "语雀:硬件更换",
-              "quote": "内存：内存加装，斜插进去（能插进去就能用，它有防呆口） ，下压，两边卡扣卡塔一声后即可。更换的话，两边卡扣同时向外扣去，让原内存弹起来就好。"
-            }
-          ]
         }
       ],
       "origin": "expanded",
@@ -11937,18 +12106,22 @@
         "mode": "answer",
         "critical_errors": [],
         "turns": [
-          "内存插上后两边卡扣没扣牢，能直接开机试一下吗？"
+          "换完开机了，怎么确认新内存认出来了、容量对不对？"
         ],
         "turn_checks": [
           {
             "needs": [
               {
-                "id": "install",
-                "answer": "卡扣未扣牢时不要开机；应重新插紧、下压，确认两侧卡扣锁牢后再开机",
+                "id": "verify",
+                "answer": "用AIDA64等工具查看主板-内存信息，核对容量与所购配置是否一致",
                 "evidence": [
                   {
-                    "ref": "语雀:硬件更换",
-                    "quote": "内存：内存加装，斜插进去（能插进去就能用，它有防呆口） ，下压，两边卡扣卡塔一声后即可。更换的话，两边卡扣同时向外扣去，让原内存弹起来就好。"
+                    "ref": "语雀:新机验机",
+                    "quote": "这里可以使用刚才拷贝的AIDA64来查看系统各项信息。"
+                  },
+                  {
+                    "ref": "语雀:新机验机",
+                    "quote": "同样是看一下和买回来的配置对不对，和包装箱上、商品页是否一致。"
                   }
                 ]
               }
@@ -11960,41 +12133,30 @@
     {
       "id": "X10",
       "cat": "X",
-      "q": "微星 泰坦18 Pro AI 2025的内存能自己更换吗，如何安全地把新内存装上去？",
+      "q": "泰坦18 Pro AI 2025 买回来想自己烤一下 CPU 看温度正不正常，怎么烤，正常大概多少度",
       "rel": [
         "微星 泰坦18 Pro AI 2025",
-        "语雀:更换前准备",
-        "语雀:硬件更换"
+        "语雀:常用Aida64"
       ],
       "facts": [],
       "needs": [
         {
-          "id": "support",
-          "answer": "该机有两个内存插槽，支持自行加装或更换内存",
+          "id": "method",
+          "answer": "用AIDA64仅勾选Stress FPU后Start，等待数分钟观察温度",
+          "evidence": [
+            {
+              "ref": "语雀:常用Aida64",
+              "quote": "烤 CPU 的方式：仅勾选`Stress FPU`，点击左下角`Start`，等待数分钟，观察温度。"
+            }
+          ]
+        },
+        {
+          "id": "reference",
+          "answer": "该机单烤FPU时CPU约97℃、功耗150W",
           "evidence": [
             {
               "ref": "微星 泰坦18 Pro AI 2025",
-              "quote": "双通道64GB DDR5 6400MT/s内存能满足绝大部分用途的需求，机器有两个内存插槽，如有需求可自行更换内存。"
-            }
-          ]
-        },
-        {
-          "id": "power",
-          "answer": "操作前断开电源和电池",
-          "evidence": [
-            {
-              "ref": "语雀:更换前准备",
-              "quote": "1. **断电**：断开电源，尽可能卸下所有电池。个别老旧机型存在双内置电池的情况，但绝大多数电脑都是一块内置（需要拆机）或外置（可直接拔插）的电池。"
-            }
-          ]
-        },
-        {
-          "id": "install",
-          "answer": "内存条对准缺口斜插，再下压至两侧卡扣锁定",
-          "evidence": [
-            {
-              "ref": "语雀:硬件更换",
-              "quote": "内存：内存加装，斜插进去（能插进去就能用，它有防呆口） ，下压，两边卡扣卡塔一声后即可。更换的话，两边卡扣同时向外扣去，让原内存弹起来就好。"
+              "quote": "单烤Stress FPU，CPU温度维持在97℃，功耗150W，P核频率4.2~4.3GHz，E核频率3.9~4.0GHz。"
             }
           ]
         }
@@ -12012,41 +12174,30 @@
     {
       "id": "X11",
       "cat": "X",
-      "q": "机械师 曙光16S的内存能自己更换吗，如何安全地把新内存装上去？",
+      "q": "刚收到机械师曙光16S，第一次开机要注意啥？内存应该是多大的",
       "rel": [
         "机械师 曙光16S",
-        "语雀:更换前准备",
-        "语雀:硬件更换"
+        "语雀:新机验机"
       ],
       "facts": [],
       "needs": [
         {
-          "id": "support",
-          "answer": "该机有两个内存插槽，支持自行加装或更换内存",
+          "id": "oobe",
+          "answer": "全新机首次开机应出现系统欢迎/设置界面，直接进桌面或要密码应退换",
+          "evidence": [
+            {
+              "ref": "语雀:新机验机",
+              "quote": "如果没有出现欢迎界面而是直接进入桌面或者输入密码，那么可以直接向卖家提出退货或者换货了"
+            }
+          ]
+        },
+        {
+          "id": "config",
+          "answer": "评测机为单通道16GB DDR5，两个内存插槽",
           "evidence": [
             {
               "ref": "机械师 曙光16S",
               "quote": "单通道16GB DDR5 5600MT/s内存（受CPU平台限制实际运行在5200MT/s）能满足大部分用途的需求，机器有两个内存插槽，如有需求可自行加装内存。"
-            }
-          ]
-        },
-        {
-          "id": "power",
-          "answer": "操作前断开电源和电池",
-          "evidence": [
-            {
-              "ref": "语雀:更换前准备",
-              "quote": "1. **断电**：断开电源，尽可能卸下所有电池。个别老旧机型存在双内置电池的情况，但绝大多数电脑都是一块内置（需要拆机）或外置（可直接拔插）的电池。"
-            }
-          ]
-        },
-        {
-          "id": "install",
-          "answer": "内存条对准缺口斜插，再下压至两侧卡扣锁定",
-          "evidence": [
-            {
-              "ref": "语雀:硬件更换",
-              "quote": "内存：内存加装，斜插进去（能插进去就能用，它有防呆口） ，下压，两边卡扣卡塔一声后即可。更换的话，两边卡扣同时向外扣去，让原内存弹起来就好。"
             }
           ]
         }
@@ -12064,41 +12215,30 @@
     {
       "id": "X12",
       "cat": "X",
-      "q": "机械革命 耀世16 Ultra RTX 5070 Ti版的内存能自己更换吗，如何安全地把新内存装上去？",
+      "q": "耀世16 Ultra 5070Ti 原装的是什么固态？想看看硬盘健不健康用什么软件",
       "rel": [
         "机械革命 耀世16 Ultra RTX 5070 Ti版",
-        "语雀:更换前准备",
-        "语雀:硬件更换"
+        "语雀:常用CrystalDisk"
       ],
       "facts": [],
       "needs": [
         {
-          "id": "support",
-          "answer": "双通道32GB DDR5 5600MT/s内存能满足大部分用途的需求，机器有两个内存插槽，如有需求可自行更换内存。",
+          "id": "ssd",
+          "answer": "原装1TB长江存储PC411",
           "evidence": [
             {
               "ref": "机械革命 耀世16 Ultra RTX 5070 Ti版",
-              "quote": "双通道32GB DDR5 5600MT/s内存能满足大部分用途的需求，机器有两个内存插槽，如有需求可自行更换内存。"
+              "quote": "固态硬盘容量1TB，型号长江存储PC411，插槽支持PCIe 5.0×4和NVMe，机器还有一个2280规格的M.2插槽（支持PCIe 4.0×4），如有需要可自行加装或更换固态硬盘。"
             }
           ]
         },
         {
-          "id": "power",
-          "answer": "操作前断开电源和电池",
+          "id": "health",
+          "answer": "用CrystalDisk Info查看硬盘健康、通电时间和读写量",
           "evidence": [
             {
-              "ref": "语雀:更换前准备",
-              "quote": "1. **断电**：断开电源，尽可能卸下所有电池。个别老旧机型存在双内置电池的情况，但绝大多数电脑都是一块内置（需要拆机）或外置（可直接拔插）的电池。"
-            }
-          ]
-        },
-        {
-          "id": "install",
-          "answer": "内存条对准缺口斜插，再下压至两侧卡扣锁定",
-          "evidence": [
-            {
-              "ref": "语雀:硬件更换",
-              "quote": "内存：内存加装，斜插进去（能插进去就能用，它有防呆口） ，下压，两边卡扣卡塔一声后即可。更换的话，两边卡扣同时向外扣去，让原内存弹起来就好。"
+              "ref": "语雀:常用CrystalDisk",
+              "quote": "CrystalDisk Info 用于查看硬盘信息，如通电次数和时间，设计传输速度，读取/写入量等。"
             }
           ]
         }
@@ -12112,41 +12252,30 @@
     {
       "id": "X13",
       "cat": "X",
-      "q": "微星 泰坦18 Pro 锐龙版的内存能自己更换吗，如何安全地把新内存装上去？",
+      "q": "泰坦18 Pro 锐龙版想加块硬盘装双系统，还有空的 M.2 位吗？微星开机按哪个键选U盘启动",
       "rel": [
         "微星 泰坦18 Pro 锐龙版",
-        "语雀:更换前准备",
-        "语雀:硬件更换"
+        "语雀:进入装机盘"
       ],
       "facts": [],
       "needs": [
         {
-          "id": "support",
-          "answer": "双通道64GB DDR5 5600MT/s内存能满足绝大部分用途的需求，机器有两个内存插槽，如有需求可自行更换内存。",
+          "id": "slot",
+          "answer": "还有一个2280 M.2插槽（PCIe 4.0×4）可加装",
           "evidence": [
             {
               "ref": "微星 泰坦18 Pro 锐龙版",
-              "quote": "双通道64GB DDR5 5600MT/s内存能满足绝大部分用途的需求，机器有两个内存插槽，如有需求可自行更换内存。"
+              "quote": "固态硬盘容量2TB，型号三星PM9E1，支持PCIe 5.0×4和NVMe，机器还有一个2280规格，支持PCIe 4.0×4的M.2插槽，如有需要可自行加装或更换固态硬盘。"
             }
           ]
         },
         {
-          "id": "power",
-          "answer": "操作前断开电源和电池",
+          "id": "boot_key",
+          "answer": "微星启动菜单快捷键为F11",
           "evidence": [
             {
-              "ref": "语雀:更换前准备",
-              "quote": "1. **断电**：断开电源，尽可能卸下所有电池。个别老旧机型存在双内置电池的情况，但绝大多数电脑都是一块内置（需要拆机）或外置（可直接拔插）的电池。"
-            }
-          ]
-        },
-        {
-          "id": "install",
-          "answer": "内存条对准缺口斜插，再下压至两侧卡扣锁定",
-          "evidence": [
-            {
-              "ref": "语雀:硬件更换",
-              "quote": "内存：内存加装，斜插进去（能插进去就能用，它有防呆口） ，下压，两边卡扣卡塔一声后即可。更换的话，两边卡扣同时向外扣去，让原内存弹起来就好。"
+              "ref": "语雀:进入装机盘",
+              "quote": "微星 F11"
             }
           ]
         }
@@ -12160,41 +12289,30 @@
     {
       "id": "X14",
       "cat": "X",
-      "q": "联想 ThinkBook 16p 2025的内存能自己更换吗，如何安全地把新内存装上去？",
+      "q": "ThinkBook 16p 2025 要送修，网上搜到的联想售后电话靠谱吗？送修前电脑开了 BitLocker 要做什么",
       "rel": [
-        "联想 ThinkBook 16p 2025",
-        "语雀:更换前准备",
-        "语雀:硬件更换"
+        "语雀:售后注意事项",
+        "语雀:BitLocker维修"
       ],
       "facts": [],
       "needs": [
         {
-          "id": "support",
-          "answer": "双通道32GB DDR5 5600MT/s内存能满足大部分用途的需求，机器有两个内存插槽，如有需求可自行更换内存。",
+          "id": "genuine",
+          "answer": "不要直接用地图或搜索引擎找售后，应通过官网或官方客服确认网点",
           "evidence": [
             {
-              "ref": "联想 ThinkBook 16p 2025",
-              "quote": "双通道32GB DDR5 5600MT/s内存能满足大部分用途的需求，机器有两个内存插槽，如有需求可自行更换内存。"
+              "ref": "语雀:售后注意事项",
+              "quote": "鉴别原则一：没有售后经验的用户禁止使用地图软件、搜索引擎直接搜索"
             }
           ]
         },
         {
-          "id": "power",
-          "answer": "操作前断开电源和电池",
+          "id": "bitlocker",
+          "answer": "拆机或进其他系统前须备份BitLocker恢复密钥",
           "evidence": [
             {
-              "ref": "语雀:更换前准备",
-              "quote": "1. **断电**：断开电源，尽可能卸下所有电池。个别老旧机型存在双内置电池的情况，但绝大多数电脑都是一块内置（需要拆机）或外置（可直接拔插）的电池。"
-            }
-          ]
-        },
-        {
-          "id": "install",
-          "answer": "内存条对准缺口斜插，再下压至两侧卡扣锁定",
-          "evidence": [
-            {
-              "ref": "语雀:硬件更换",
-              "quote": "内存：内存加装，斜插进去（能插进去就能用，它有防呆口） ，下压，两边卡扣卡塔一声后即可。更换的话，两边卡扣同时向外扣去，让原内存弹起来就好。"
+              "ref": "语雀:BitLocker维修",
+              "quote": "必须备份恢复密钥（应让客户自己拍照保存）"
             }
           ]
         }
@@ -12208,11 +12326,10 @@
     {
       "id": "X15",
       "cat": "X",
-      "q": "机械革命 蛟龙16 Pro的内存能自己更换吗，如何安全地把新内存装上去？",
+      "q": "蛟龙16 Pro 只有一条内存想再加一条，拆后盖时螺丝太紧快拧花了怎么办",
       "rel": [
         "机械革命 蛟龙16 Pro",
-        "语雀:更换前准备",
-        "语雀:硬件更换"
+        "语雀:螺丝技巧"
       ],
       "facts": [],
       "needs": [
@@ -12227,22 +12344,12 @@
           ]
         },
         {
-          "id": "power",
-          "answer": "操作前断开电源和电池",
+          "id": "screw",
+          "answer": "用“重压轻拧”：惯用手用力压住螺丝刀，另一只手轻拧",
           "evidence": [
             {
-              "ref": "语雀:更换前准备",
-              "quote": "1. **断电**：断开电源，尽可能卸下所有电池。个别老旧机型存在双内置电池的情况，但绝大多数电脑都是一块内置（需要拆机）或外置（可直接拔插）的电池。"
-            }
-          ]
-        },
-        {
-          "id": "install",
-          "answer": "内存条对准缺口斜插，再下压至两侧卡扣锁定",
-          "evidence": [
-            {
-              "ref": "语雀:硬件更换",
-              "quote": "内存：内存加装，斜插进去（能插进去就能用，它有防呆口） ，下压，两边卡扣卡塔一声后即可。更换的话，两边卡扣同时向外扣去，让原内存弹起来就好。"
+              "ref": "语雀:螺丝技巧",
+              "quote": "对待这种比较难拧的螺丝，可以使用的一个小技巧是“重压轻拧”：用你的惯用手用力按压螺丝刀，用另一只手较轻地拧螺丝刀。"
             }
           ]
         }
@@ -12256,41 +12363,35 @@
     {
       "id": "X16",
       "cat": "X",
-      "q": "联想 ThinkBook 16p 锐龙版的内存能自己更换吗，如何安全地把新内存装上去？",
+      "q": "ThinkBook 16p 锐龙版刚重装完系统，没网卡驱动连不上网，怎么先把驱动装上？",
       "rel": [
-        "联想 ThinkBook 16p 锐龙版",
-        "语雀:更换前准备",
-        "语雀:硬件更换"
+        "语雀:常用SDI",
+        "语雀:SDI",
+        "语雀:应急上网"
       ],
       "facts": [],
       "needs": [
         {
-          "id": "support",
-          "answer": "单条16GB DDR5 5600MT/s内存能满足大部分用途的需求，（因处理器限制实际运行在5200MT/s）机器有两个内存插槽，如有需求可加装内存。",
+          "id": "driver",
+          "answer": "可用离线驱动包SDI安装网卡驱动",
           "evidence": [
             {
-              "ref": "联想 ThinkBook 16p 锐龙版",
-              "quote": "单条16GB DDR5 5600MT/s内存能满足大部分用途的需求，（因处理器限制实际运行在5200MT/s）机器有两个内存插槽，如有需求可加装内存。"
+              "ref": "语雀:常用SDI",
+              "quote": "也可以用于无网卡驱动时方便快捷安装网卡驱动以便联网。"
+            },
+            {
+              "ref": "语雀:SDI",
+              "quote": "在缺少网卡驱动的情况下，SDI可以救急。"
             }
           ]
         },
         {
-          "id": "power",
-          "answer": "操作前断开电源和电池",
+          "id": "tether",
+          "answer": "可临时用手机USB共享网络等方式联网",
           "evidence": [
             {
-              "ref": "语雀:更换前准备",
-              "quote": "1. **断电**：断开电源，尽可能卸下所有电池。个别老旧机型存在双内置电池的情况，但绝大多数电脑都是一块内置（需要拆机）或外置（可直接拔插）的电池。"
-            }
-          ]
-        },
-        {
-          "id": "install",
-          "answer": "内存条对准缺口斜插，再下压至两侧卡扣锁定",
-          "evidence": [
-            {
-              "ref": "语雀:硬件更换",
-              "quote": "内存：内存加装，斜插进去（能插进去就能用，它有防呆口） ，下压，两边卡扣卡塔一声后即可。更换的话，两边卡扣同时向外扣去，让原内存弹起来就好。"
+              "ref": "语雀:应急上网",
+              "quote": "然后用数据线插上电脑，开启共享"
             }
           ]
         }
@@ -12304,41 +12405,30 @@
     {
       "id": "X17",
       "cat": "X",
-      "q": "微星 泰坦16 AI的内存能自己更换吗，如何安全地把新内存装上去？",
+      "q": "泰坦16 AI 想用 Furmark 烤显卡，怎么开始？正常温度大概多少",
       "rel": [
         "微星 泰坦16 AI",
-        "语雀:更换前准备",
-        "语雀:硬件更换"
+        "语雀:常用Furmark"
       ],
       "facts": [],
       "needs": [
         {
-          "id": "support",
-          "answer": "单条16GB DDR5 5600MT/s内存能满足部分用途的需求，机器有两个内存插槽，如有需求可自行加装或更换内存。",
+          "id": "method",
+          "answer": "在FurMark中点击GPU stress test或RUN开始烤机",
+          "evidence": [
+            {
+              "ref": "语雀:常用Furmark",
+              "quote": "点击`GPU stress test`或`RUN`即可开始烤机。"
+            }
+          ]
+        },
+        {
+          "id": "reference",
+          "answer": "该机单烤Furmark显卡约74.9℃、功耗约174W",
           "evidence": [
             {
               "ref": "微星 泰坦16 AI",
-              "quote": "单条16GB DDR5 5600MT/s内存能满足部分用途的需求，机器有两个内存插槽，如有需求可自行加装或更换内存。"
-            }
-          ]
-        },
-        {
-          "id": "power",
-          "answer": "操作前断开电源和电池",
-          "evidence": [
-            {
-              "ref": "语雀:更换前准备",
-              "quote": "1. **断电**：断开电源，尽可能卸下所有电池。个别老旧机型存在双内置电池的情况，但绝大多数电脑都是一块内置（需要拆机）或外置（可直接拔插）的电池。"
-            }
-          ]
-        },
-        {
-          "id": "install",
-          "answer": "内存条对准缺口斜插，再下压至两侧卡扣锁定",
-          "evidence": [
-            {
-              "ref": "语雀:硬件更换",
-              "quote": "内存：内存加装，斜插进去（能插进去就能用，它有防呆口） ，下压，两边卡扣卡塔一声后即可。更换的话，两边卡扣同时向外扣去，让原内存弹起来就好。"
+              "quote": "单烤Furmark，显卡温度维持在74.9℃，功耗约174W，频率2460MHz。"
             }
           ]
         }
@@ -12352,41 +12442,30 @@
     {
       "id": "X18",
       "cat": "X",
-      "q": "雷神 猎刃S的内存能自己更换吗，如何安全地把新内存装上去？",
+      "q": "雷神猎刃S 满载键盘大概多少度？我想自己重新涂硅脂，涂多少合适",
       "rel": [
         "雷神 猎刃S",
-        "语雀:更换前准备",
-        "语雀:硬件更换"
+        "语雀:清灰"
       ],
       "facts": [],
       "needs": [
         {
-          "id": "support",
-          "answer": "单通道16GB DDR5 5600MT/s内存能满足常规用途的需求，机器有两个内存插槽，如有需求可自行加装内存。",
+          "id": "temp",
+          "answer": "满载键帽最高约48.1℃，WASD附近约38.9℃",
           "evidence": [
             {
               "ref": "雷神 猎刃S",
-              "quote": "单通道16GB DDR5 5600MT/s内存能满足常规用途的需求，机器有两个内存插槽，如有需求可自行加装内存。"
+              "quote": "表面温度如上图所示，键盘键帽最高温48.1℃出现在“B”键上，WASD键附近约为38.9℃，方向键39.8℃。左腕托温度为27.7℃。"
             }
           ]
         },
         {
-          "id": "power",
-          "answer": "操作前断开电源和电池",
+          "id": "paste",
+          "answer": "中间挤适量一坨即可，不必涂平，不宜过多或过少",
           "evidence": [
             {
-              "ref": "语雀:更换前准备",
-              "quote": "1. **断电**：断开电源，尽可能卸下所有电池。个别老旧机型存在双内置电池的情况，但绝大多数电脑都是一块内置（需要拆机）或外置（可直接拔插）的电池。"
-            }
-          ]
-        },
-        {
-          "id": "install",
-          "answer": "内存条对准缺口斜插，再下压至两侧卡扣锁定",
-          "evidence": [
-            {
-              "ref": "语雀:硬件更换",
-              "quote": "内存：内存加装，斜插进去（能插进去就能用，它有防呆口） ，下压，两边卡扣卡塔一声后即可。更换的话，两边卡扣同时向外扣去，让原内存弹起来就好。"
+              "ref": "语雀:清灰",
+              "quote": "涂抹新硅脂的时候，直接中间挤一坨就可以，不要太多，会影响散热，也不要太少，会干的太快。没必要涂平，白费力气，没有一点好处。"
             }
           ]
         }
@@ -12400,41 +12479,30 @@
     {
       "id": "X19",
       "cat": "X",
-      "q": "机械革命 耀世16 Ultra RTX 5090版的内存能自己更换吗，如何安全地把新内存装上去？",
+      "q": "耀世16 Ultra 5090 版想加一块固态把系统迁过去，有空位吗，用什么软件迁移",
       "rel": [
         "机械革命 耀世16 Ultra RTX 5090版",
-        "语雀:更换前准备",
-        "语雀:硬件更换"
+        "语雀:常用DiskGenius"
       ],
       "facts": [],
       "needs": [
         {
-          "id": "support",
-          "answer": "双通道64GB DDR5 6400MT/s内存能满足绝大部分用途的需求，机器有两个内存插槽，如有需求可自行更换内存。",
+          "id": "slot",
+          "answer": "还有一个2280 M.2插槽可加装",
           "evidence": [
             {
               "ref": "机械革命 耀世16 Ultra RTX 5090版",
-              "quote": "双通道64GB DDR5 6400MT/s内存能满足绝大部分用途的需求，机器有两个内存插槽，如有需求可自行更换内存。"
+              "quote": "固态硬盘容量2TB，型号长江存储PC411，支持PCIe 4.0×4和NVMe，机器还有一个2280规格的M.2插槽，如有需要可自行加装或更换固态硬盘。"
             }
           ]
         },
         {
-          "id": "power",
-          "answer": "操作前断开电源和电池",
+          "id": "clone",
+          "answer": "可用DiskGenius分区克隆迁移系统",
           "evidence": [
             {
-              "ref": "语雀:更换前准备",
-              "quote": "1. **断电**：断开电源，尽可能卸下所有电池。个别老旧机型存在双内置电池的情况，但绝大多数电脑都是一块内置（需要拆机）或外置（可直接拔插）的电池。"
-            }
-          ]
-        },
-        {
-          "id": "install",
-          "answer": "内存条对准缺口斜插，再下压至两侧卡扣锁定",
-          "evidence": [
-            {
-              "ref": "语雀:硬件更换",
-              "quote": "内存：内存加装，斜插进去（能插进去就能用，它有防呆口） ，下压，两边卡扣卡塔一声后即可。更换的话，两边卡扣同时向外扣去，让原内存弹起来就好。"
+              "ref": "语雀:常用DiskGenius",
+              "quote": "一款多功能的硬盘工具，可以用于系统分区、分区扩容、分区克隆、数据恢复等操作。"
             }
           ]
         }
@@ -12448,10 +12516,9 @@
     {
       "id": "X20",
       "cat": "X",
-      "q": "ALIENWARE 18 AREA-51的内存能自己更换吗，如何安全地把新内存装上去？",
+      "q": "外星人 18 AREA-51 想把内存换成 64G，原来的两条怎么拆下来",
       "rel": [
         "ALIENWARE 18 AREA-51",
-        "语雀:更换前准备",
         "语雀:硬件更换"
       ],
       "facts": [],
@@ -12467,22 +12534,12 @@
           ]
         },
         {
-          "id": "power",
-          "answer": "操作前断开电源和电池",
-          "evidence": [
-            {
-              "ref": "语雀:更换前准备",
-              "quote": "1. **断电**：断开电源，尽可能卸下所有电池。个别老旧机型存在双内置电池的情况，但绝大多数电脑都是一块内置（需要拆机）或外置（可直接拔插）的电池。"
-            }
-          ]
-        },
-        {
-          "id": "install",
-          "answer": "内存条对准缺口斜插，再下压至两侧卡扣锁定",
+          "id": "remove",
+          "answer": "两侧卡扣同时向外扳，原内存弹起后取下",
           "evidence": [
             {
               "ref": "语雀:硬件更换",
-              "quote": "内存：内存加装，斜插进去（能插进去就能用，它有防呆口） ，下压，两边卡扣卡塔一声后即可。更换的话，两边卡扣同时向外扣去，让原内存弹起来就好。"
+              "quote": "更换的话，两边卡扣同时向外扣去，让原内存弹起来就好。"
             }
           ]
         }
@@ -12494,5 +12551,5 @@
       "split": "dev"
     }
   ],
-  "version": "expanded-v1"
+  "version": "expanded-v2"
 }

@@ -324,3 +324,28 @@ dc --profile model down
 ```
 
 `down -v` 会删除所选项目的数据卷，仅用于确认可丢弃的测试数据。真实部署不要这样清理。`.env.docker`、`.runtime/`、Token、备份和私有文章都不应提交。Ollama 示例使用 `latest` 便于试运行，长期部署可把镜像固定到已经验证的标签或 digest。
+
+## 6. 迁移到新机器
+
+仓库只保存代码、清单、规格文件和评测集。以下内容不在 git 中，迁移时要单独处理：
+
+| 内容 | 位置 | 新机器上的处理 |
+| --- | --- | --- |
+| 未推送的提交 | 本地分支 | 先推送到远端，或者整体复制仓库目录 |
+| 部署配置与凭据 | `.env.docker`、`.env.local`、`.runtime/*.token`、`.runtime/eval-llm.env`、`.runtime/persona-stage4.yaml` | 通过安全渠道复制，权限设为 `600`，不要提交 |
+| 正式数据库 | 数据卷 `itxia_postgres_data` | 旧机器执行 `pg_dump`（[维护手册 9.2](maintenance.md#92-备份与恢复)），新机器启动 `db` 后导入，见下文 |
+| 导入原料 | `.runtime/yuque-web-snapshot*`、`.runtime/wechat-capture`、`.runtime/wechat-fetch`、`.runtime/wechat-manifest.toml` 等 | 随 `.runtime/` 一起复制。不恢复数据库而改为重新导入时需要它们 |
+| 评测语料快照与结果 | `.runtime/eval/` | 随 `.runtime/` 一起复制，作为对比基线 |
+| 被忽略的样本 | `fixtures/manual/` | 单独复制 |
+| Embedding 模型 | 数据卷 `itxia_ollama_data` | 按第 2 节重新拉取同名模型；模型名、维度和 revision 须与 `.env.docker` 一致，否则要全量重导 |
+| 真实 Agent 评测宿主 | 不保存 | 按[维护手册 8.5](maintenance.md#85-真实-agent-评测)重建；kei 和 persona 插件仓库要检出到与本仓库同级的目录 |
+
+恢复数据库：
+
+```sh
+dc up -d db
+dc exec -T db sh -c 'psql -U "$POSTGRES_USER" "$POSTGRES_DB"' < .runtime/backup/itxia-<日期>.sql
+dc up -d --build app mcp
+```
+
+恢复后按第 3.2、3.4、3.9 节做冒烟检查，并跑一次召回评测，确认语料规模（报告第一行）与迁移前一致。

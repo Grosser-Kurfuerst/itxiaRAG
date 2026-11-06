@@ -672,6 +672,74 @@ dct run --build --rm test && dct down -v     # Docker 中的全量测试
 
 已有本地测试库时也可以用 `make test`，见[项目测试规则](unit-testing-guidelines.md)。
 
+### 8.5 真实 Agent 评测
+
+真实 Agent 评测由 [agent_eval.py](../eval/agent_eval.py) 驱动，执行的是真实 persona 插件。题目、检索正文和回答会发到外部模型端点，每次运行前要取得授权。用例、指标和评委规则见[评测扩充](phase1/evaluation-expansion.md)。
+
+运行时的组成：
+
+- **宿主**：最小 kei 宿主，带 persona 插件和 mock 适配器。它在 `127.0.0.1:18080` 提供 `/inject` 和 `/sent`。
+- **评测器**：注入问题、读取回答。运行期间它在 `127.0.0.1:19091` 启动模型代理，宿主的模型请求经代理转发到 `EVAL_LLM_*`。
+- **网络**：宿主和评测器都放在临时容器 `itxia-eval-persona` 里，与 `itxia-mcp-1` 共用网络，所以 `127.0.0.1:8001/mcp` 直接可达。
+
+**1. 构建宿主**（一次即可）。需要 Go 1.25，以及与本仓库同级的 [kei](https://github.com/RandomLemon/kei) 和 persona 插件（`kei-plugin-agent`，Go 模块名 `github.com/RandomLemon/kei-plugin-persona`）的检出。构建方法来自插件 `docs/testing.md` 的 11.3 节；这里改为从命令行参数读取配置，并静态编译，以便放进容器运行：
+
+```sh
+mkdir -p .runtime/persona-host && cd .runtime/persona-host
+cat > main.go <<'EOF'
+package main
+
+import (
+	"context"
+	"log"
+	"os"
+
+	_ "github.com/RandomLemon/kei-plugin-persona"
+	_ "github.com/RandomLemon/kei/adapters/mock"
+	"github.com/RandomLemon/kei/pkg/kei"
+)
+
+func main() {
+	if err := kei.Run(context.Background(), kei.Options{ConfigFile: os.Args[1]}); err != nil {
+		log.Fatal(err)
+	}
+}
+EOF
+go mod init persona-host
+go mod edit -replace github.com/RandomLemon/kei=../../../kei \
+  -replace github.com/RandomLemon/kei-plugin-persona=../../../kei-plugin-agent
+go mod tidy && CGO_ENABLED=0 go build -buildvcs=false -o persona-host .
+cd -
+```
+
+2026-11-06 用当时的插件主干验证过：可以编译，并能加载下面的评测配置。插件之后若重命名配置项，按插件文档调整配置。
+
+**2. 准备宿主配置**。配置放在被忽略的 `.runtime/eval/<轮次>/persona.yaml`，以 persona 接入验证用的 `.runtime/persona-stage4.yaml` 为底（结构见[MCP 服务方案 7.3](phase3/mcp-server-design.md#73-persona)），改以下几处：
+
+- `plugins.persona.llm_base_url` 改为 `http://127.0.0.1:19091/v1`，`llm_api_key` 留空，`reply_dedupe: false`，`private_policy: open`；
+- 人格提示词从[工具定义](../products/tool-definitions.md)第 1 节复制，工具名加 `mcp__` 前缀；
+- `mcp_extra_headers.Authorization` 使用只读账号的 Token；
+- 预算保持接入基线：`reply_max_chars` 500、`tools_result_max_chars` 12000、`tools_call_timeout` 15s。
+
+模型凭据写在被忽略的 `.runtime/eval-llm.env`，包括 `EVAL_LLM_BASE_URL`、`EVAL_LLM_MODEL`、`EVAL_LLM_API_KEY`。需要单独指定评委时再加 `EVAL_JUDGE_*`，未设置时复用 `EVAL_LLM_*`。
+
+**3. 启动宿主并运行**。容器使用测试镜像（`dct build test`），并挂载本机虚拟环境里的 PyYAML：
+
+```sh
+docker run -d --name itxia-eval-persona --network container:itxia-mcp-1 \
+  -v "$PWD:/work" -v "$PWD/.runtime/persona-host/persona-host:/tmp/persona-host:ro" \
+  -v "$PWD/.venv/lib/python3.12/site-packages/yaml:/extra/yaml:ro" -e PYTHONPATH=/extra \
+  -w /work --entrypoint /tmp/persona-host itxia-tests-test /work/.runtime/eval/expanded-v1/persona.yaml
+
+docker exec --env-file .runtime/eval-llm.env itxia-eval-persona python eval/agent_eval.py \
+  eval/queries.json .runtime/eval/<轮次>/agent60.json \
+  --corpus .runtime/eval/expanded-v1/corpus.json --runtime-config .runtime/eval/expanded-v1/persona.yaml
+```
+
+- `--ids`、`--split dev` 用于跑小样本；`--recorded` 只重评已有记录，不重新执行。
+- 执行出错时，评测器会停止当批，未跑的题标为 `not_run`。先 `docker restart itxia-eval-persona` 取消在途请求，再用 `--ids` 补跑。
+- 跑完后执行 `docker stop itxia-eval-persona`。容器和宿主都可以随时按本节重建。
+
 ## 9. 账号、备份与例行检查
 
 ### 9.1 账号与 Token

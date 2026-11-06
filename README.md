@@ -21,8 +21,8 @@
 
 **运行与维护**
 
-- [部署与验收](docs/deployment.md)：Docker 部署、账号与冒烟检查
-- [维护手册](docs/maintenance.md)：资料导入与分类、新增类别、评测回归、账号 Token
+- [部署与验收](docs/deployment.md)：Docker 部署、账号、冒烟检查与迁移到新机器
+- [维护手册](docs/maintenance.md)：资料导入与分类、新增类别、评测回归（含真实 Agent 评测）、账号 Token
 - [测试规则](docs/unit-testing-guidelines.md)：测试环境、回归命令与完成定义
 
 **迭代计划与记录**

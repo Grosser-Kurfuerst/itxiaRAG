@@ -59,7 +59,7 @@ T12 的争议还需要确认实施者对可见证据边界的判断，不能直�
 
 语料 JSON 每条含 `title`、`body`、`source`，source 含 schema/metadata/url 等；从正式库只读导出，不提交。`--full` 另核验最终配额、dev/test 和多轮数量。
 
-使用 persona 文档中的最小 kei mock 宿主，HTTP `/inject` 和 `/sent` 在回环地址开放，private_policy=open，reply_dedupe=false。当前接入基线保持 reply_max_chars=500、tools_result_max_chars=12000、tools_call_timeout=15s、默认两轮工具预算；配置内容和 MCP 凭据不提交。更新人格提示词时从 `products/tool-definitions.md` 读取并加上真实工具名称的 `mcp__` 前缀。
+使用 persona 文档中的最小 kei mock 宿主（构建、配置和容器启动步骤见[维护手册 8.5](../maintenance.md#85-真实-agent-评测)），HTTP `/inject` 和 `/sent` 在回环地址开放，private_policy=open，reply_dedupe=false。当前接入基线保持 reply_max_chars=500、tools_result_max_chars=12000、tools_call_timeout=15s、默认两轮工具预算；配置内容和 MCP 凭据不提交。更新人格提示词时从 `products/tool-definitions.md` 读取并加上真实工具名称的 `mcp__` 前缀。
 
 将宿主 `llm_base_url` 指向 `http://127.0.0.1:19091/v1`。本地代理由评测器运行期间启动，宿主仍使用实际模型名，但不需要模型密钥；评测器通过 EVAL_LLM_* 转发请求，模型请求/响应只保留正文，不保存 Authorization。
 
@@ -185,7 +185,7 @@ X类8题均未通过，是最优先的改进方向；这些题共享安装教程
 
 验证：相关离线测试20 passed；快速失败修复后隔离Docker全量629 passed（12.70秒）；最终360/60配额、划分及正文短证据校验通过，Python编译与diff检查通过。第1次review的多轮中途失败丢记录、K36默认规则、C18测试口径及E07额外要求均已修复；第2次补齐E08静音室口径；第3次为本地实现 `NO_BLOCKING_ISSUES`。第4次最终review独立核验真实运行、逐轮证据边界、确定性判分、来源哈希及dev修订与test不变性，最终为 `NO_BLOCKING_ISSUES`，第3轮完成。
 
-验收结束后已停止本任务的临时宿主 `itxia-eval-persona`，正式 API、MCP 和数据库未停止。复现真实 Agent 运行时，先 `docker start itxia-eval-persona`，再按前述配置和命令运行评测器。
+验收结束后已停止本任务的临时宿主 `itxia-eval-persona`，正式 API、MCP 和数据库未停止。该容器和 `/tmp` 下的宿主程序已于 2026-11-05 清理；复现真实 Agent 运行时，按[维护手册 8.5](../maintenance.md#85-真实-agent-评测)重建宿主和容器，再运行评测器。
 
 主要修改文件：[用例](../../eval/queries.json)、[校验器](../../eval/cases.py)、[Agent执行器](../../eval/agent_eval.py)、[评委规则](../../eval/agent-judge.md)、[严格指标](../../eval/metrics.py)、[召回评测](../../eval/recall_eval.py)、[基线比较](../../eval/compare_runs.py)、[推荐专项](../../eval/recommend_eval.py)、[工具选择专项](../../eval/llm_eval.py)、对应5个离线测试文件及2份评测文档。修改限于评测，不新增业务服务；语料、凭据和完整运行结果均位于gitignore忽略目录，不提交。
 
